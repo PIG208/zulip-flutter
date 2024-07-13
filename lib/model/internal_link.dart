@@ -70,6 +70,8 @@ Uri narrowLink(PerAccountStore store, Narrow narrow, {int? nearMessageId}) {
     fragment.write('${element.operator}/');
 
     switch (element) {
+      case ApiNarrowMentioned():
+        fragment.write(element.operand.toString());
       case ApiNarrowStream():
         final streamId = element.operand;
         final name = store.streams[streamId]?.name ?? 'unknown';

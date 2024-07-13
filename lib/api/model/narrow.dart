@@ -34,6 +34,13 @@ sealed class ApiNarrowElement {
   };
 }
 
+class ApiNarrowMentioned extends ApiNarrowElement {
+  @override String get operator => 'is';
+  @override String get operand => 'mentioned';
+
+  ApiNarrowMentioned({super.negated});
+}
+
 class ApiNarrowStream extends ApiNarrowElement {
   @override String get operator => 'stream';
 

@@ -936,6 +936,7 @@ void checkInvariants(MessageListView model) {
       case StreamNarrow():
         check(model.store.isTopicVisibleInStream(message.streamId, message.topic))
           .isTrue();
+      case MentionedNarrow():
       case TopicNarrow():
       case DmNarrow():
     }

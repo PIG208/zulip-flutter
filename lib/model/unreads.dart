@@ -144,6 +144,10 @@ class Unreads extends ChangeNotifier {
     return c;
   }
 
+  int countInMentionedNarrow() {
+    return mentions.length;
+  }
+
   /// The "strict" unread count for this stream,
   /// using [StreamStore.isTopicVisible].
   ///
@@ -197,6 +201,8 @@ class Unreads extends ChangeNotifier {
     switch (narrow) {
       case CombinedFeedNarrow():
         return countInCombinedFeedNarrow();
+      case MentionedNarrow():
+        return countInMentionedNarrow();
       case StreamNarrow():
         return countInStreamNarrow(narrow.streamId);
       case TopicNarrow():
@@ -222,6 +228,8 @@ class Unreads extends ChangeNotifier {
     if (
       message.flags.contains(MessageFlag.mentioned)
       || message.flags.contains(MessageFlag.wildcardMentioned)
+      || message.flags.contains(MessageFlag.channelWildcardMentioned)
+      || message.flags.contains(MessageFlag.topicWildcardMentioned)
     ) {
       mentions.add(message.id);
     }
@@ -308,6 +316,8 @@ class Unreads extends ChangeNotifier {
 
       case MessageFlag.mentioned:
       case MessageFlag.wildcardMentioned:
+      case MessageFlag.channelWildcardMentioned:
+      case MessageFlag.topicWildcardMentioned:
         // Empirically, we don't seem to get these events when a message is edited
         // to add/remove an @-mention, even though @-mention state is represented
         // as flags. Instead, we just get the [UpdateMessageEvent], and that

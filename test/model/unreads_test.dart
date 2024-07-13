@@ -545,6 +545,8 @@ void main() {
         MessageFlag.unknown => true,
         MessageFlag.mentioned => false,
         MessageFlag.wildcardMentioned => false,
+        MessageFlag.channelWildcardMentioned => false,
+        MessageFlag.topicWildcardMentioned => false,
         MessageFlag.read => false,
       });
 

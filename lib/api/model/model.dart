@@ -551,7 +551,9 @@ enum MessageFlag {
   starred,
   collapsed,
   mentioned,
-  wildcardMentioned,
+  wildcardMentioned, // TODO(server-8) deprecated FL 224
+  channelWildcardMentioned,
+  topicWildcardMentioned,
   hasAlertWord,
   historical,
   unknown;

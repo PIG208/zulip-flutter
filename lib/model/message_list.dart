@@ -357,6 +357,7 @@ class MessageListView with ChangeNotifier, _MessageSequence {
   bool _messageVisible(Message message) {
     switch (narrow) {
       case CombinedFeedNarrow():
+      case MentionedNarrow():
         return switch (message) {
           StreamMessage() =>
             store.isTopicVisible(message.streamId, message.topic),
@@ -380,6 +381,7 @@ class MessageListView with ChangeNotifier, _MessageSequence {
   bool get _allMessagesVisible {
     switch (narrow) {
       case CombinedFeedNarrow():
+      case MentionedNarrow():
       case StreamNarrow():
         return false;
 

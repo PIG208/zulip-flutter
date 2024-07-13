@@ -187,7 +187,7 @@ class MentionAutocompleteView extends ChangeNotifier {
     required PerAccountStore store,
     required Narrow narrow,
   }) {
-    assert(narrow is! CombinedFeedNarrow);
+    assert(narrow is SendableNarrow);
     return store.users.values.toList()
       ..sort((userA, userB) => compareByDms(userA, userB, store: store));
   }

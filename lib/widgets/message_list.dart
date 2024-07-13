@@ -63,6 +63,7 @@ class _MessageListPageState extends State<MessageListPage> {
     bool removeAppBarBottomBorder = false;
     switch(widget.narrow) {
       case CombinedFeedNarrow():
+      case MentionedNarrow():
         appBarBackgroundColor = null; // i.e., inherit
 
       case StreamNarrow(:final streamId):
@@ -149,6 +150,8 @@ class MessageListAppBarTitle extends StatelessWidget {
     switch (narrow) {
       case CombinedFeedNarrow():
         return Text(zulipLocalizations.combinedFeedPageTitle);
+      case MentionedNarrow():
+        return Text('mentioned');
 
       case StreamNarrow(:var streamId):
         final store = PerAccountStoreWidget.of(context);
@@ -340,7 +343,7 @@ class _MessageListState extends State<MessageList> with PerAccountStoreAwareStat
           return _buildItem(data, i);
         }));
 
-    if (widget.narrow is CombinedFeedNarrow) {
+    if (widget.narrow is CombinedFeedNarrow || widget.narrow is MentionedNarrow) {
       // TODO(#311) If we have a bottom nav, it will pad the bottom
       //   inset, and this shouldn't be necessary
       sliver = SliverSafeArea(sliver: sliver);
@@ -521,7 +524,7 @@ class RecipientHeader extends StatelessWidget {
     final message = this.message;
     return switch (message) {
       StreamMessage() => StreamMessageRecipientHeader(message: message,
-        showStream: narrow is CombinedFeedNarrow),
+        showStream: narrow is CombinedFeedNarrow || narrow is MentionedNarrow),
       DmMessage() => DmRecipientHeader(message: message),
     };
   }
@@ -1097,6 +1100,13 @@ Future<void> _legacyMarkNarrowAsRead(BuildContext context, Narrow narrow) async 
   switch (narrow) {
     case CombinedFeedNarrow():
       await markAllAsRead(connection);
+    case MentionedNarrow():
+    final unreadMentions = store.unreads.mentions.toList();
+    if (unreadMentions.isEmpty) return;
+    await updateMessageFlags(connection,
+      messages: unreadMentions,
+      op: UpdateMessageFlagsOp.add,
+      flag: MessageFlag.read);
     case StreamNarrow(:final streamId):
       await markStreamAsRead(connection, streamId: streamId);
     case TopicNarrow(:final streamId, :final topic):

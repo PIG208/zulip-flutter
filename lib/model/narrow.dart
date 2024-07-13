@@ -65,6 +65,32 @@ class CombinedFeedNarrow extends Narrow {
   int get hashCode => 'CombinedFeedNarrow'.hashCode;
 }
 
+class MentionedNarrow extends Narrow {
+  const MentionedNarrow();
+
+  @override
+  bool containsMessage(Message message) {
+    return message.flags.any((flag) =>
+      flag == MessageFlag.mentioned
+      || flag == MessageFlag.wildcardMentioned
+      || flag == MessageFlag.channelWildcardMentioned
+      || flag == MessageFlag.topicWildcardMentioned);
+  }
+
+  @override
+  ApiNarrow apiEncode() => [ApiNarrowMentioned()];
+
+  @override
+  bool operator ==(Object other) {
+    if (other is! MentionedNarrow) return false;
+    // Conceptually there's only one value of this type.
+    return true;
+  }
+
+  @override
+  int get hashCode => 'MentionedNarrow'.hashCode;
+}
+
 class StreamNarrow extends Narrow {
   const StreamNarrow(this.streamId);
 
