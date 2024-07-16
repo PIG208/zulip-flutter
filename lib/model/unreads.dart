@@ -222,6 +222,8 @@ class Unreads extends ChangeNotifier {
     if (
       message.flags.contains(MessageFlag.mentioned)
       || message.flags.contains(MessageFlag.wildcardMentioned)
+      || message.flags.contains(MessageFlag.channelWildcardMentioned)
+      || message.flags.contains(MessageFlag.topicWildcardMentioned)
     ) {
       mentions.add(message.id);
     }
@@ -236,7 +238,10 @@ class Unreads extends ChangeNotifier {
     // (As of writing, we don't expect such changes to be signaled by
     // an [UpdateMessageFlagsEvent].)
     final bool isMentioned = event.flags.any(
-      (f) => f == MessageFlag.mentioned || f == MessageFlag.wildcardMentioned,
+      (f) => f == MessageFlag.mentioned
+          || f == MessageFlag.wildcardMentioned
+          // || f == MessageFlag.channelWildcardMentioned
+          // || f == MessageFlag.topicWildcardMentioned,
     );
 
     // We assume this event can't signal a change in a message's 'read' flag.
@@ -308,6 +313,8 @@ class Unreads extends ChangeNotifier {
 
       case MessageFlag.mentioned:
       case MessageFlag.wildcardMentioned:
+      case MessageFlag.channelWildcardMentioned:
+      case MessageFlag.topicWildcardMentioned:
         // Empirically, we don't seem to get these events when a message is edited
         // to add/remove an @-mention, even though @-mention state is represented
         // as flags. Instead, we just get the [UpdateMessageEvent], and that

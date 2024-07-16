@@ -78,6 +78,8 @@ void main() {
       if (
         message.flags.contains(MessageFlag.mentioned)
         || message.flags.contains(MessageFlag.wildcardMentioned)
+        || message.flags.contains(MessageFlag.channelWildcardMentioned)
+        || message.flags.contains(MessageFlag.topicWildcardMentioned)
       ) {
         expectedMentions.add(message.id);
       }
@@ -545,6 +547,8 @@ void main() {
         MessageFlag.unknown => true,
         MessageFlag.mentioned => false,
         MessageFlag.wildcardMentioned => false,
+        MessageFlag.channelWildcardMentioned => false,
+        MessageFlag.topicWildcardMentioned => false,
         MessageFlag.read => false,
       });
 
@@ -609,7 +613,7 @@ void main() {
       });
     }
 
-    for (final mentionFlag in [MessageFlag.mentioned, MessageFlag.wildcardMentioned]) {
+    for (final mentionFlag in [MessageFlag.mentioned, MessageFlag.wildcardMentioned, MessageFlag.channelWildcardMentioned, MessageFlag.topicWildcardMentioned]) {
       // For a read message in this test, the message won't appear in the model.
       // That case is indistinguishable from an unread that's unknown to
       // the model, so we get coverage for that case too.
