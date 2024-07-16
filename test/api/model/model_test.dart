@@ -135,6 +135,12 @@ void main() {
       )).matchTopic.equals('yo');
     });
 
+    test('stream_wildcard_mention -> channelWildcardMention', () {
+      check(Message.fromJson(baseStreamJson()
+        ..['flags'] = ['stream_wildcard_mentioned'],
+      )).flags.deepEquals([MessageFlag.channelWildcardMentioned]);
+    });
+
     test('no crash on unrecognized flag', () {
       final m1 = Message.fromJson(
         (deepToJson(eg.streamMessage()) as Map<String, dynamic>)
