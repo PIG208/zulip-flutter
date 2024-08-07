@@ -582,6 +582,7 @@ InitialSnapshot initialSnapshot({
   List<RecentDmConversation>? recentPrivateConversations,
   List<Subscription>? subscriptions,
   UnreadMessagesSnapshot? unreadMsgs,
+  List<int>? starredMessages,
   List<ZulipStream>? streams,
   UserSettings? userSettings,
   List<UserTopicItem>? userTopics,
@@ -609,6 +610,7 @@ InitialSnapshot initialSnapshot({
     recentPrivateConversations: recentPrivateConversations ?? [],
     subscriptions: subscriptions ?? [], // TODO add subscriptions to default
     unreadMsgs: unreadMsgs ?? _unreadMsgs(),
+    starredMessages: starredMessages ?? [],
     streams: streams ?? [], // TODO add streams to default
     userSettings: userSettings ?? UserSettings(
       twentyFourHourTime: false,

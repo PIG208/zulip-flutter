@@ -42,6 +42,8 @@ class InitialSnapshot {
 
   final UnreadMessagesSnapshot unreadMsgs;
 
+  final List<int> starredMessages;
+
   final List<ZulipStream> streams;
 
   // Servers pre-5.0 don't have `user_settings`, and instead provide whatever
@@ -101,6 +103,7 @@ class InitialSnapshot {
     required this.recentPrivateConversations,
     required this.subscriptions,
     required this.unreadMsgs,
+    required this.starredMessages,
     required this.streams,
     required this.userSettings,
     required this.userTopics,

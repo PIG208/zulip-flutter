@@ -46,6 +46,9 @@ InitialSnapshot _$InitialSnapshotFromJson(Map<String, dynamic> json) =>
           .toList(),
       unreadMsgs: UnreadMessagesSnapshot.fromJson(
           json['unread_msgs'] as Map<String, dynamic>),
+      starredMessages: (json['starred_messages'] as List<dynamic>)
+          .map((e) => (e as num).toInt())
+          .toList(),
       streams: (json['streams'] as List<dynamic>)
           .map((e) => ZulipStream.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -96,6 +99,7 @@ Map<String, dynamic> _$InitialSnapshotToJson(InitialSnapshot instance) =>
       'recent_private_conversations': instance.recentPrivateConversations,
       'subscriptions': instance.subscriptions,
       'unread_msgs': instance.unreadMsgs,
+      'starred_messages': instance.starredMessages,
       'streams': instance.streams,
       'user_settings': instance.userSettings,
       'user_topics': instance.userTopics,
