@@ -252,6 +252,7 @@ class PerAccountStore extends ChangeNotifier with ChannelStore, MessageStore {
       messages: MessageStoreImpl(),
       unreads: Unreads(
         initial: initialSnapshot.unreadMsgs,
+        starredMessages: initialSnapshot.starredMessages,
         selfUserId: account.userId,
         channelStore: channels,
       ),

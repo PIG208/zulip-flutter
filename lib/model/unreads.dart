@@ -38,6 +38,7 @@ import 'channel.dart';
 class Unreads extends ChangeNotifier {
   factory Unreads({
     required UnreadMessagesSnapshot initial,
+    required List<int> starredMessages,
     required int selfUserId,
     required ChannelStore channelStore,
   }) {
@@ -67,6 +68,7 @@ class Unreads extends ChangeNotifier {
       streams: streams,
       dms: dms,
       mentions: mentions,
+      starredMessages: Set.of(starredMessages),
       oldUnreadsMissing: initial.oldUnreadsMissing,
       selfUserId: selfUserId,
     );
@@ -77,6 +79,7 @@ class Unreads extends ChangeNotifier {
     required this.streams,
     required this.dms,
     required this.mentions,
+    required this.starredMessages,
     required this.oldUnreadsMissing,
     required this.selfUserId,
   });
@@ -119,6 +122,8 @@ class Unreads extends ChangeNotifier {
   //
   // TODO(server-8) Remove [1].
   final Set<int> mentions;
+
+  final Set<int> starredMessages;
 
   /// Whether the model is missing data on old unread messages.
   ///
@@ -195,8 +200,7 @@ class Unreads extends ChangeNotifier {
 
   int countInMentionsNarrow() => mentions.length;
 
-  // TODO: Implement unreads handling.
-  int countInStarredMessagesNarrow() => 0;
+  int countInStarredMessagesNarrow() => starredMessages.length;
 
   int countInNarrow(Narrow narrow) {
     switch (narrow) {

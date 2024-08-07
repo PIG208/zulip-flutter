@@ -39,7 +39,7 @@ void main() {
   }) {
     channelStore = eg.store();
     notifiedCount = 0;
-    model = Unreads(initial: initial,
+    model = Unreads(initial: initial, starredMessages: [],
         selfUserId: eg.selfUser.userId, channelStore: channelStore)
       ..addListener(() {
         notifiedCount++;
