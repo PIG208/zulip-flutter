@@ -311,13 +311,25 @@ class Unreads extends ChangeNotifier {
 
   void handleUpdateMessageFlagsEvent(UpdateMessageFlagsEvent event) {
     switch (event.flag) {
-      case MessageFlag.starred:
       case MessageFlag.collapsed:
       case MessageFlag.hasAlertWord:
       case MessageFlag.historical:
       case MessageFlag.unknown:
         // These are irrelevant.
         return;
+
+      case MessageFlag.starred:
+        switch (event) {
+          case UpdateMessageFlagsAddEvent():
+            starredMessages.addAll(
+              event.messages.where(
+                (messageId) => _slowIsPresentInStreams(messageId) || _slowIsPresentInDms(messageId),
+              ),
+            );
+
+          case UpdateMessageFlagsRemoveEvent():
+            starredMessages.removeAll(event.messages);
+        }
 
       case MessageFlag.mentioned:
       case MessageFlag.wildcardMentioned:
@@ -350,10 +362,12 @@ class Unreads extends ChangeNotifier {
               streams.clear();
               dms.clear();
               mentions.clear();
+              starredMessages.clear();
               oldUnreadsMissing = false;
             } else {
               final messageIdsSet = Set.of(event.messages);
               mentions.removeAll(messageIdsSet);
+              starredMessages.removeAll(messageIdsSet);
               _slowRemoveAllInStreams(messageIdsSet);
               _slowRemoveAllInDms(messageIdsSet);
             }
@@ -371,6 +385,8 @@ class Unreads extends ChangeNotifier {
               if (detail.mentioned == true) {
                 mentions.add(messageId);
               }
+              // TODO support starred messages mark as unread
+              // if (event.flag == MessageFlag.read && )
               switch (detail.type) {
                 case MessageType.stream:
                   final topics = (newlyUnreadInStreams[detail.streamId!] ??= {});
