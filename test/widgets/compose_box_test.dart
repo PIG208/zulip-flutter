@@ -20,6 +20,7 @@ import 'package:zulip/widgets/app.dart';
 import 'package:zulip/widgets/compose_box.dart';
 import 'package:zulip/widgets/page.dart';
 import 'package:zulip/widgets/icons.dart';
+import 'package:zulip/widgets/theme.dart';
 
 import '../api/fake_api.dart';
 import '../example_data.dart' as eg;
@@ -436,11 +437,12 @@ void main() {
         of: find.byIcon(ZulipIcons.send),
         matching: find.byType(IconButton)));
       final sendButtonWidget = sendButtonElement.widget as IconButton;
-      final colorScheme = Theme.of(sendButtonElement).colorScheme;
-      final expectedForegroundColor = expected
-        ? colorScheme.onSurface.withValues(alpha: 0.38)
-        : colorScheme.onPrimary;
-      check(sendButtonWidget.color).isNotNull().isSameColorAs(expectedForegroundColor);
+      final designVariables = DesignVariables.of(sendButtonElement);
+      final expectedIconColor = expected
+        ? designVariables.icon.withValues(alpha: 0.5)
+        : designVariables.icon;
+      check(sendButtonWidget.icon)
+        .isA<Icon>().color.isNotNull().isSameColorAs(expectedIconColor);
     }
 
     group('attach from media library', () {

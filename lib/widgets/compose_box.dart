@@ -929,30 +929,18 @@ class _SendButtonState extends State<_SendButton> {
 
   @override
   Widget build(BuildContext context) {
-    final disabled = _hasValidationErrors;
-    final colorScheme = Theme.of(context).colorScheme;
+    final designVariables = DesignVariables.of(context);
     final zulipLocalizations = ZulipLocalizations.of(context);
 
-    // Copy FilledButton defaults (_FilledButtonDefaultsM3.backgroundColor)
-    final backgroundColor = disabled
-      ? colorScheme.onSurface.withValues(alpha: 0.12)
-      : colorScheme.primary;
+    final iconColor = _hasValidationErrors
+      ? designVariables.icon.withValues(alpha: 0.5)
+      : designVariables.icon;
 
-    // Copy FilledButton defaults (_FilledButtonDefaultsM3.foregroundColor)
-    final foregroundColor = disabled
-      ? colorScheme.onSurface.withValues(alpha: 0.38)
-      : colorScheme.onPrimary;
-
-    return Ink(
+    return SizedBox(
       width: _composeButtonWidth,
-      decoration: BoxDecoration(
-        borderRadius: const BorderRadius.all(Radius.circular(8.0)),
-        color: backgroundColor,
-      ),
       child: IconButton(
         tooltip: zulipLocalizations.composeBoxSendTooltip,
-        color: foregroundColor,
-        icon: const Icon(ZulipIcons.send),
+        icon: Icon(ZulipIcons.send, color: iconColor),
         onPressed: _send));
   }
 }
