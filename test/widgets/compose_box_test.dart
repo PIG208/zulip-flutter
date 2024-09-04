@@ -19,6 +19,7 @@ import 'package:zulip/model/typing_status.dart';
 import 'package:zulip/widgets/app.dart';
 import 'package:zulip/widgets/compose_box.dart';
 import 'package:zulip/widgets/page.dart';
+import 'package:zulip/widgets/icons.dart';
 
 import '../api/fake_api.dart';
 import '../example_data.dart' as eg;
@@ -283,7 +284,7 @@ void main() {
 
       connection.prepare(json: {});
       connection.prepare(json: SendMessageResult(id: 123).toJson());
-      await tester.tap(find.byIcon(Icons.send));
+      await tester.tap(find.byIcon(ZulipIcons.send));
       await tester.pump(Duration.zero);
       final requests = connection.takeRequests();
       checkSetTypingStatusRequests([requests.first], [(TypingOp.stop, narrow)]);
@@ -432,7 +433,7 @@ void main() {
   group('uploads', () {
     void checkAppearsLoading(WidgetTester tester, bool expected) {
       final sendButtonElement = tester.element(find.ancestor(
-        of: find.byIcon(Icons.send),
+        of: find.byIcon(ZulipIcons.send),
         matching: find.byType(IconButton)));
       final sendButtonWidget = sendButtonElement.widget as IconButton;
       final colorScheme = Theme.of(sendButtonElement).colorScheme;
@@ -469,7 +470,7 @@ void main() {
         connection.prepare(delay: const Duration(seconds: 1), json:
           UploadFileResult(uri: '/user_uploads/1/4e/m2A3MSqFnWRLUf9SaPzQ0Up_/image.jpg').toJson());
 
-        await tester.tap(find.byIcon(Icons.image));
+        await tester.tap(find.byIcon(ZulipIcons.image));
         await tester.pump();
         final call = testBinding.takePickFilesCalls().single;
         check(call.allowMultiple).equals(true);
@@ -529,7 +530,7 @@ void main() {
         connection.prepare(delay: const Duration(seconds: 1), json:
           UploadFileResult(uri: '/user_uploads/1/4e/m2A3MSqFnWRLUf9SaPzQ0Up_/image.jpg').toJson());
 
-        await tester.tap(find.byIcon(Icons.camera_alt));
+        await tester.tap(find.byIcon(ZulipIcons.camera));
         await tester.pump();
         final call = testBinding.takePickImageCalls().single;
         check(call.source).equals(ImageSource.camera);
@@ -574,9 +575,9 @@ void main() {
 
     void checkComposeBoxParts({required bool areShown}) {
       check(contentFieldFinder().evaluate().length).equals(areShown ? 1 : 0);
-      check(attachButtonFinder(Icons.attach_file).evaluate().length).equals(areShown ? 1 : 0);
-      check(attachButtonFinder(Icons.image).evaluate().length).equals(areShown ? 1 : 0);
-      check(attachButtonFinder(Icons.camera_alt).evaluate().length).equals(areShown ? 1 : 0);
+      check(attachButtonFinder(ZulipIcons.attach_file).evaluate().length).equals(areShown ? 1 : 0);
+      check(attachButtonFinder(ZulipIcons.image).evaluate().length).equals(areShown ? 1 : 0);
+      check(attachButtonFinder(ZulipIcons.camera).evaluate().length).equals(areShown ? 1 : 0);
     }
 
     void checkBanner({required bool isShown}) {
