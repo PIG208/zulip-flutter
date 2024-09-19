@@ -14,9 +14,12 @@ import '../model/compose.dart';
 import '../model/narrow.dart';
 import '../model/store.dart';
 import 'autocomplete.dart';
+import 'color.dart';
 import 'dialog.dart';
 import 'icons.dart';
+import 'inset_shadow.dart';
 import 'store.dart';
+import 'text.dart';
 import 'theme.dart';
 
 const double _composeButtonWidth = 44;
@@ -364,32 +367,76 @@ class _ContentInputState extends State<_ContentInput> with WidgetsBindingObserve
     }
   }
 
+  static double maxHeight(BuildContext context) {
+    final clampingTextScaler = MediaQuery.textScalerOf(context)
+      .clamp(maxScaleFactor: 1.5);
+    final scaledLineHeight = clampingTextScaler.scale(fontSize) * lineHeightRatio;
+
+    // Reserve space to fully show the first 7th lines and just partially
+    // clip the 8th line, where the height matches the spec at
+    //   https://www.figma.com/design/1JTNtYo9memgW7vV6d0ygq/Zulip-Mobile?node-id=3960-5147&node-type=text&m=dev
+    // > Maximum size of the compose box is suggested to be 178px. Which
+    // > has 7 fully visible lines of text
+    //
+    // The partial line hints that the content input is scrollable.
+    //
+    // Using the ambient TextScale means this works for different values of the
+    // system text-size setting. We clamp to a max scale factor to limit
+    // how tall the content input can get; that's to save room for the message
+    // list. The user can still scroll the input to see everything.
+    return verticalPadding + 7.727 * scaledLineHeight;
+  }
+
+  static const verticalPadding = 8.0;
+  static const fontSize = 17.0;
+  static const lineHeight = 22.0;
+  static const lineHeightRatio = lineHeight / fontSize;
+
   @override
   Widget build(BuildContext context) {
-    ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final designVariables = DesignVariables.of(context);
 
-    return InputDecorator(
-      decoration: const InputDecoration(),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          // TODO constrain this adaptively (i.e. not hard-coded 200)
-          maxHeight: 200,
-        ),
-        child: ComposeAutocomplete(
-          narrow: widget.narrow,
-          controller: widget.controller,
-          focusNode: widget.focusNode,
-          fieldViewBuilder: (context) {
-            return TextField(
+    return ComposeAutocomplete(
+      narrow: widget.narrow,
+      controller: widget.controller,
+      focusNode: widget.focusNode,
+      fieldViewBuilder: (context) => ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxHeight(context)),
+        child: ClipRect(
+          child: InsetShadowBox(
+            top: verticalPadding, bottom: verticalPadding,
+            color: designVariables.composeBoxBg,
+            child: TextField(
               controller: widget.controller,
               focusNode: widget.focusNode,
-              style: TextStyle(color: colorScheme.onSurface),
-              decoration: InputDecoration.collapsed(hintText: widget.hintText),
+              // Let the content show through the `contentPadding` so that
+              // our [InsetShadowBox] can fade it smoothly there.
+              clipBehavior: Clip.none,
+              style: TextStyle(
+                fontSize: fontSize,
+                height: lineHeightRatio,
+                color: designVariables.textInput),
+              // From the spec at
+              //   https://www.figma.com/design/1JTNtYo9memgW7vV6d0ygq/Zulip-Mobile?node-id=3960-5147&node-type=text&m=dev
+              // > Compose box has the height to fit 2 lines. This is [done] to
+              // > have a bigger hit area for the user to start the input. […]
+              minLines: 2,
               maxLines: null,
               textCapitalization: TextCapitalization.sentences,
-            );
-          }),
-        ));
+              decoration: InputDecoration(
+                // This padding ensures that the user can always scroll long
+                // content entirely out of the top or bottom shadow if desired.
+                // With this and the `minLines: 2` above, an empty content input
+                // gets 60px vertical distance between the top of the top shadow
+                // and the bottom of the bottom shadow (with no text-size
+                // scaling). That's a bit more than the 54px given in the Figma,
+                // and we can revisit if needed, but it's tricky to get that
+                // 54px distance while also making the scrolling work like this
+                // and offering two lines of touchable area.
+                contentPadding: const EdgeInsets.symmetric(vertical: verticalPadding),
+                hintText: widget.hintText,
+                hintStyle: TextStyle(
+                  color: designVariables.textInput.withFadedAlpha(0.5))))))));
   }
 }
 
@@ -472,20 +519,39 @@ class _TopicInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final zulipLocalizations = ZulipLocalizations.of(context);
-    ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final designVariables = DesignVariables.of(context);
+    TextStyle topicTextStyle = TextStyle(
+      fontSize: 20,
+      height: 22 / 20,
+      color: designVariables.textInput.withFadedAlpha(0.9),
+    ).merge(weightVariableTextStyle(context, wght: 600));
 
     return TopicAutocomplete(
       streamId: streamId,
       controller: controller,
       focusNode: focusNode,
       contentFocusNode: contentFocusNode,
-      fieldViewBuilder: (context) => TextField(
-        controller: controller,
-        focusNode: focusNode,
-        textInputAction: TextInputAction.next,
-        style: TextStyle(color: colorScheme.onSurface),
-        decoration: InputDecoration(hintText: zulipLocalizations.composeBoxTopicHintText),
-      ));
+      fieldViewBuilder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: TextField(
+              controller: controller,
+              focusNode: focusNode,
+              textInputAction: TextInputAction.next,
+              style: topicTextStyle,
+              decoration: InputDecoration(
+                hintText: zulipLocalizations.composeBoxTopicHintText,
+                hintStyle: topicTextStyle.copyWith(
+                  color: designVariables.textInput.withFadedAlpha(0.5))))),
+          SizedBox(height: 0, width: double.infinity,
+            child: DecoratedBox(decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  width: 1,
+                  color: designVariables.foreground.withFadedAlpha(0.2)))))),
+        ]));
   }
 }
 
