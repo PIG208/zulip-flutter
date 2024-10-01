@@ -92,22 +92,30 @@ class _PollWidgetState extends State<PollWidget> {
           crossAxisAlignment: CrossAxisAlignment.baseline,
           textBaseline: localizedTextBaseline(context),
           children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 44),
-              child: Container(
-                height: 44,
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.square(44),
+                // The default visual density is platform dependent.
+                // For those whose density defaults to [VisualDensity.compact],
+                // this button would be 8px smaller if we do not override it.
+                //
+                // See also:
+                // * [ThemeData.visualDensity], which provides the default.
+                visualDensity: VisualDensity.standard,
                 // This padding is only in effect
                 // when the vote count has more than one digit.
                 padding: const EdgeInsets.symmetric(horizontal: 15),
-                decoration: BoxDecoration(
-                  color: theme.colorPollVoteCountBackground,
-                  border: Border.all(color: theme.colorPollVoteCountBorder),
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(3)),
-                child: Center(
-                  child: Text(option.voters.length.toString(),
-                    textAlign: TextAlign.center,
-                    style: textStyleBold.copyWith(
-                      color: theme.colorPollVoteCountText, fontSize: 16))))),
+                backgroundColor: theme.colorPollVoteCountBackground,
+                side: BorderSide(color: theme.colorPollVoteCountBorder),
+                splashFactory: NoSplash.splashFactory,
+              ),
+              onPressed: () => toggleVote(option),
+              child: Text(option.voters.length.toString(),
+                textAlign: TextAlign.center,
+                style: textStyleBold.copyWith(fontSize: 16,
+                  color: theme.colorPollVoteCountText))),
             Expanded(
               child: Wrap(
                 spacing: 5,
