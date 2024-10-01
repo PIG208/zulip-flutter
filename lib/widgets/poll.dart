@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/zulip_localizations.dart';
 
 import '../api/model/submessage.dart';
+import '../api/route/submessage.dart';
 import 'content.dart';
 import 'store.dart';
 import 'text.dart';
@@ -43,6 +46,19 @@ class _PollWidgetState extends State<PollWidget> {
       // The actual state lives in the [Poll] model.
       // This method was called because that just changed.
     });
+  }
+
+  void toggleVote(PollOption option) async {
+    final store = PerAccountStoreWidget.of(context);
+    final optionKey = widget.poll.getOptionKey(option)!;
+    // The poll data in store might be obselete before we get the event
+    // that updates it.  This is fine because the result will be consistent
+    // eventually, regardless of the possible duplicate requests.
+    final op = widget.poll.hasUserVotedFor(userId: store.selfUserId, option: option)
+      ? PollVoteOp.remove
+      : PollVoteOp.add;
+    unawaited(sendSubmessage(store.connection, messageId: widget.messageId,
+      content: PollVoteEventSubmessage(key: optionKey, op: op)));
   }
 
   @override
