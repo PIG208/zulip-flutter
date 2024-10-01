@@ -93,10 +93,12 @@ class _PollWidgetState extends State<PollWidget> {
           textBaseline: localizedTextBaseline(context),
           children: [
             ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 25),
+              constraints: const BoxConstraints(minWidth: 44),
               child: Container(
-                height: 25,
-                padding: const EdgeInsets.symmetric(horizontal: 4),
+                height: 44,
+                // This padding is only in effect
+                // when the vote count has more than one digit.
+                padding: const EdgeInsets.symmetric(horizontal: 15),
                 decoration: BoxDecoration(
                   color: theme.colorPollVoteCountBackground,
                   border: Border.all(color: theme.colorPollVoteCountBorder),
@@ -105,7 +107,7 @@ class _PollWidgetState extends State<PollWidget> {
                   child: Text(option.voters.length.toString(),
                     textAlign: TextAlign.center,
                     style: textStyleBold.copyWith(
-                      color: theme.colorPollVoteCountText, fontSize: 13))))),
+                      color: theme.colorPollVoteCountText, fontSize: 16))))),
             Expanded(
               child: Wrap(
                 spacing: 5,
