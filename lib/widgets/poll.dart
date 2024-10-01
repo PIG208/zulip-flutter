@@ -7,8 +7,9 @@ import 'store.dart';
 import 'text.dart';
 
 class PollWidget extends StatefulWidget {
-  const PollWidget({super.key, required this.poll});
+  const PollWidget({super.key, required this.messageId, required this.poll});
 
+  final int messageId;
   final Poll poll;
 
   @override

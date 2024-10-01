@@ -34,7 +34,7 @@ void main() {
       submessages: [eg.submessage(content: submessageContent)]);
     await store.handleEvent(MessageEvent(id: 0, message: message));
     await tester.pumpWidget(TestZulipApp(accountId: eg.selfAccount.id,
-      child: PollWidget(poll: message.poll!)));
+      child: PollWidget(messageId: message.id, poll: message.poll!)));
     await tester.pump();
 
     for (final (voter, idx) in voterIdxPairs) {
