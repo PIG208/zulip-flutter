@@ -403,9 +403,12 @@ class Poll extends ChangeNotifier {
   /// Contains the text of all options from [_options].
   final Set<String> _existingOptionTexts = {};
   final Map<PollOptionKey, PollOption> _options = {};
+  final Map<PollOption, PollOptionKey> _optionsReverseLookup = {};
 
-  bool hasUserVotedFor({required int userId, required PollOptionKey key}) =>
-    _options[key]?.voters.contains(userId) ?? false;
+  bool hasUserVotedFor({required int userId, required PollOption option}) =>
+    _options[_optionsReverseLookup[option]]?.voters.contains(userId) ?? false;
+
+  PollOptionKey? getOptionKey(PollOption option) => _optionsReverseLookup[option];
 
   void handleSubmessageEvent(SubmessageEvent event) {
     final PollEventSubmessage? pollEventSubmessage;
@@ -439,6 +442,7 @@ class Poll extends ChangeNotifier {
           assert(debugLog('vote for unknown key ${event.key}')); // TODO(log)
           return;
         }
+        assert(_optionsReverseLookup.containsKey(option));
 
         switch (event.op) {
           case PollVoteOp.add:
@@ -462,7 +466,7 @@ class Poll extends ChangeNotifier {
 
     final key = PollEventSubmessage.optionKey(senderId: senderId, idx: idx);
     assert(!_options.containsKey(key));
-    _options[key] = PollOption(text: option);
+    _optionsReverseLookup[_options[key] = PollOption(text: option)] = key;
     _existingOptionTexts.add(option);
   }
 
