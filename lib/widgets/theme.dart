@@ -118,6 +118,8 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       bgCounterUnread: const Color(0xff666699).withValues(alpha: 0.15),
       bgTopBar: const Color(0xfff5f5f5),
       borderBar: Colors.black.withValues(alpha: 0.2),
+      composeBoxBg: const Color(0xffffffff),
+      foreground: const Color(0xff000000),
       editorButtonPressedBg: Colors.black.withValues(alpha: 0.06),
       icon: const Color(0xff6159e1),
       labelCounterUnread: const Color(0xff222222),
@@ -148,6 +150,8 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       bgCounterUnread: const Color(0xff666699).withValues(alpha: 0.37),
       bgTopBar: const Color(0xff242424),
       borderBar: Colors.black.withValues(alpha: 0.5),
+      composeBoxBg: const Color(0xff0f0f0f),
+      foreground: const Color(0xffffffff),
       editorButtonPressedBg: Colors.white.withValues(alpha: 0.06),
       icon: const Color(0xff7977fe),
       labelCounterUnread: const Color(0xffffffff).withValues(alpha: 0.7),
@@ -184,6 +188,8 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
     required this.bgCounterUnread,
     required this.bgTopBar,
     required this.borderBar,
+    required this.composeBoxBg,
+    required this.foreground,
     required this.editorButtonPressedBg,
     required this.icon,
     required this.labelCounterUnread,
@@ -222,6 +228,8 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
   final Color bgCounterUnread;
   final Color bgTopBar;
   final Color borderBar;
+  final Color composeBoxBg;
+  final Color foreground;
   final Color editorButtonPressedBg;
   final Color icon;
   final Color labelCounterUnread;
@@ -255,6 +263,8 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
     Color? bgCounterUnread,
     Color? bgTopBar,
     Color? borderBar,
+    Color? composeBoxBg,
+    Color? foreground,
     Color? editorButtonPressedBg,
     Color? icon,
     Color? labelCounterUnread,
@@ -283,6 +293,8 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       bgCounterUnread: bgCounterUnread ?? this.bgCounterUnread,
       bgTopBar: bgTopBar ?? this.bgTopBar,
       borderBar: borderBar ?? this.borderBar,
+      composeBoxBg: composeBoxBg ?? this.composeBoxBg,
+      foreground: foreground ?? this.foreground,
       editorButtonPressedBg: editorButtonPressedBg ?? this.editorButtonPressedBg,
       icon: icon ?? this.icon,
       labelCounterUnread: labelCounterUnread ?? this.labelCounterUnread,
@@ -318,6 +330,8 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       bgCounterUnread: Color.lerp(bgCounterUnread, other.bgCounterUnread, t)!,
       bgTopBar: Color.lerp(bgTopBar, other.bgTopBar, t)!,
       borderBar: Color.lerp(borderBar, other.borderBar, t)!,
+      composeBoxBg: Color.lerp(composeBoxBg, other.composeBoxBg, t)!,
+      foreground: Color.lerp(foreground, other.foreground, t)!,
       editorButtonPressedBg: Color.lerp(editorButtonPressedBg, other.editorButtonPressedBg, t)!,
       icon: Color.lerp(icon, other.icon, t)!,
       labelCounterUnread: Color.lerp(labelCounterUnread, other.labelCounterUnread, t)!,
