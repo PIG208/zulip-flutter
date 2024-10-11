@@ -44,7 +44,9 @@ class ContentTheme extends ThemeExtension<ContentTheme> {
       colorMessageMediaContainerBackground: const Color.fromRGBO(0, 0, 0, 0.03),
       colorPollNames: const HSLColor.fromAHSL(1, 0, 0, .45).toColor(),
       colorPollVoteCountBackground: const HSLColor.fromAHSL(1, 0, 0, 1).toColor(),
+      colorPollVoteCountBackgroundFocus: const HSLColor.fromAHSL(1, 156, 0.41, 0.9).toColor(),
       colorPollVoteCountBorder: const HSLColor.fromAHSL(1, 156, 0.28, 0.7).toColor(),
+      colorPollVoteCountBorderFocus: const HSLColor.fromAHSL(1, 156, 0.28, 0.7).toColor(),
       colorPollVoteCountText: const HSLColor.fromAHSL(1, 156, 0.41, 0.4).toColor(),
       colorThematicBreak: const HSLColor.fromAHSL(1, 0, 0, .87).toColor(),
       textStylePlainParagraph: _plainParagraphCommon(context).copyWith(
@@ -73,7 +75,9 @@ class ContentTheme extends ThemeExtension<ContentTheme> {
       colorMessageMediaContainerBackground: const HSLColor.fromAHSL(0.03, 0, 0, 1).toColor(),
       colorPollNames: const HSLColor.fromAHSL(1, 236, .15, .7).toColor(),
       colorPollVoteCountBackground: const HSLColor.fromAHSL(0.2, 0, 0, 0).toColor(),
+      colorPollVoteCountBackgroundFocus: const HSLColor.fromAHSL(1, 185, 0.4, 0.35).toColor(),
       colorPollVoteCountBorder: const HSLColor.fromAHSL(1, 185, 0.35, 0.35).toColor(),
+      colorPollVoteCountBorderFocus: const HSLColor.fromAHSL(1, 185, 0.4, 0.5).toColor(),
       colorPollVoteCountText: const HSLColor.fromAHSL(1, 185, 0.35, 0.65).toColor(),
       colorThematicBreak: const HSLColor.fromAHSL(1, 0, 0, .87).toColor().withValues(alpha: 0.2),
       textStylePlainParagraph: _plainParagraphCommon(context).copyWith(
@@ -101,7 +105,9 @@ class ContentTheme extends ThemeExtension<ContentTheme> {
     required this.colorMessageMediaContainerBackground,
     required this.colorPollNames,
     required this.colorPollVoteCountBackground,
+    required this.colorPollVoteCountBackgroundFocus,
     required this.colorPollVoteCountBorder,
+    required this.colorPollVoteCountBorderFocus,
     required this.colorPollVoteCountText,
     required this.colorThematicBreak,
     required this.textStylePlainParagraph,
@@ -130,7 +136,9 @@ class ContentTheme extends ThemeExtension<ContentTheme> {
   final Color colorMessageMediaContainerBackground;
   final Color colorPollNames;
   final Color colorPollVoteCountBackground;
+  final Color colorPollVoteCountBackgroundFocus;
   final Color colorPollVoteCountBorder;
+  final Color colorPollVoteCountBorderFocus;
   final Color colorPollVoteCountText;
   final Color colorThematicBreak;
 
@@ -185,7 +193,9 @@ class ContentTheme extends ThemeExtension<ContentTheme> {
     Color? colorMessageMediaContainerBackground,
     Color? colorPollNames,
     Color? colorPollVoteCountBackground,
+    Color? colorPollVoteCountBackgroundFocus,
     Color? colorPollVoteCountBorder,
+    Color? colorPollVoteCountBorderFocus,
     Color? colorPollVoteCountText,
     Color? colorThematicBreak,
     TextStyle? textStylePlainParagraph,
@@ -204,7 +214,9 @@ class ContentTheme extends ThemeExtension<ContentTheme> {
       colorMessageMediaContainerBackground: colorMessageMediaContainerBackground ?? this.colorMessageMediaContainerBackground,
       colorPollNames: colorPollNames ?? this.colorPollNames,
       colorPollVoteCountBackground: colorPollVoteCountBackground ?? this.colorPollVoteCountBackground,
+      colorPollVoteCountBackgroundFocus: colorPollVoteCountBackgroundFocus ?? this.colorPollVoteCountBackgroundFocus,
       colorPollVoteCountBorder: colorPollVoteCountBorder ?? this.colorPollVoteCountBorder,
+      colorPollVoteCountBorderFocus: colorPollVoteCountBorderFocus ?? this.colorPollVoteCountBorderFocus,
       colorPollVoteCountText: colorPollVoteCountText ?? this.colorPollVoteCountText,
       colorThematicBreak: colorThematicBreak ?? this.colorThematicBreak,
       textStylePlainParagraph: textStylePlainParagraph ?? this.textStylePlainParagraph,
@@ -230,7 +242,9 @@ class ContentTheme extends ThemeExtension<ContentTheme> {
       colorMessageMediaContainerBackground: Color.lerp(colorMessageMediaContainerBackground, other.colorMessageMediaContainerBackground, t)!,
       colorPollNames: Color.lerp(colorPollNames, other.colorPollNames, t)!,
       colorPollVoteCountBackground: Color.lerp(colorPollVoteCountBackground, other.colorPollVoteCountBackground, t)!,
+      colorPollVoteCountBackgroundFocus: Color.lerp(colorPollVoteCountBackgroundFocus, other.colorPollVoteCountBackgroundFocus, t)!,
       colorPollVoteCountBorder: Color.lerp(colorPollVoteCountBorder, other.colorPollVoteCountBorder, t)!,
+      colorPollVoteCountBorderFocus: Color.lerp(colorPollVoteCountBorderFocus, other.colorPollVoteCountBorderFocus, t)!,
       colorPollVoteCountText: Color.lerp(colorPollVoteCountText, other.colorPollVoteCountText, t)!,
       colorThematicBreak: Color.lerp(colorThematicBreak, other.colorThematicBreak, t)!,
       textStylePlainParagraph: TextStyle.lerp(textStylePlainParagraph, other.textStylePlainParagraph, t)!,

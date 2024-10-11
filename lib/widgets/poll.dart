@@ -90,34 +90,23 @@ class _PollWidgetState extends State<PollWidget> {
         crossAxisAlignment: CrossAxisAlignment.baseline,
         textBaseline: localizedTextBaseline(context),
         children: [
-          GestureDetector(
-            // TODO: Implement feedback when the user taps the button
-            onTap: () => _toggleVote(option),
-            behavior: HitTestBehavior.translucent,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                minWidth: 39 + 5, minHeight: 39 + verticalPadding * 2),
-              child: Padding(
-                // For accessibility, the touch target is padded to be larger
-                // than the vote count box.  Still, we avoid padding at the
-                // start because we want to align all the poll options to the
-                // surrounding messages.
-                padding: const EdgeInsetsDirectional.only(
-                  end: 5, top: verticalPadding, bottom: verticalPadding),
-                child: Container(
-                  // Inner padding preserves whitespace even when the text's
-                  // width approaches the button's min-width (e.g. because
-                  // there are more than three digits).
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  decoration: BoxDecoration(
-                    color: theme.colorPollVoteCountBackground,
-                    border: Border.all(color: theme.colorPollVoteCountBorder),
-                    borderRadius: BorderRadius.circular(3)),
-                  child: Center(
-                    child: Text(option.voters.length.toString(),
-                      textAlign: TextAlign.center,
-                      style: textStyleBold.copyWith(
-                        color: theme.colorPollVoteCountText, fontSize: 20))))))),
+          ConstrainedBox(
+            constraints: const BoxConstraints(
+              minWidth: 39 + 5, minHeight: 39 + verticalPadding * 2),
+            child: Padding(
+              // For accessibility, the touch target is padded to be larger
+              // than the vote count box.  Still, we avoid padding at the
+              // start because we want to align all the poll options to the
+              // surrounding messages.
+              padding: const EdgeInsetsDirectional.only(
+                end: 5, top: verticalPadding, bottom: verticalPadding),
+              child: _PollVoteBoxAnimatedContainer(
+                onTap: () => _toggleVote(option),
+                child: Center(
+                  child: Text(option.voters.length.toString(),
+                    textAlign: TextAlign.center,
+                    style: textStyleBold.copyWith(
+                      color: theme.colorPollVoteCountText, fontSize: 20)))))),
           Expanded(
             child: Padding(
               // When the bottom of the text reaches farther than the vote count
@@ -153,5 +142,66 @@ class _PollWidgetState extends State<PollWidget> {
         for (final option in widget.poll.options)
           buildOptionItem(option),
       ]);
+  }
+}
+
+class _PollVoteBoxAnimatedContainer extends StatefulWidget {
+  final GestureTapCallback onTap;
+  final Widget child;
+
+  const _PollVoteBoxAnimatedContainer({
+    required this.onTap,
+    required this.child,
+  });
+
+  @override
+  State<_PollVoteBoxAnimatedContainer> createState() => _PollVoteBoxAnimatedContainerState();
+}
+
+class _PollVoteBoxAnimatedContainerState extends State<_PollVoteBoxAnimatedContainer> {
+  bool _isPressed = false;
+  Timer? _releaseTimer;
+
+  void _setIsPressed(bool isPressed) {
+    _releaseTimer?.cancel();
+    setState(() {
+      _isPressed = isPressed;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ContentTheme.of(context);
+
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () {
+        _setIsPressed(true);
+        _releaseTimer?.cancel();
+        _releaseTimer = Timer(
+          const Duration(milliseconds: 100), () => _setIsPressed(false));
+        widget.onTap();
+      },
+      child: AnimatedScale(
+        scale: _isPressed ? 0.95 : 1,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeOut,
+        child: AnimatedContainer(
+          // Inner padding preserves whitespace even when the text's
+          // width approaches the button's min-width (e.g. because
+          // there are more than three digits).
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          decoration: BoxDecoration(
+            color: (_isPressed)
+              ? theme.colorPollVoteCountBackgroundFocus
+              : theme.colorPollVoteCountBackground,
+            border: Border.all(
+              color: (_isPressed)
+                ? theme.colorPollVoteCountBorderFocus
+                : theme.colorPollVoteCountBorder),
+            borderRadius: BorderRadius.circular(3)),
+          duration: const Duration(milliseconds: 100),
+          curve: Curves.easeOut,
+          child: widget.child)));
   }
 }
