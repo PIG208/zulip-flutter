@@ -86,6 +86,14 @@ ThemeData zulipThemeData(BuildContext context) {
       brightness: brightness,
       seedColor: kZulipBrandColor,
     ),
+    // TODO(design): Apply this for all buttons.
+    iconButtonTheme: IconButtonThemeData(
+      style: IconButton.styleFrom(
+        splashFactory: NoSplash.splashFactory,
+        overlayColor: designVariables.editorButtonPressedBg,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(4)),
+          side: BorderSide(color: Colors.transparent)))),
     scaffoldBackgroundColor: designVariables.mainBackground,
     tooltipTheme: const TooltipThemeData(preferBelow: false),
   );
@@ -110,6 +118,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       bgCounterUnread: const Color(0xff666699).withValues(alpha: 0.15),
       bgTopBar: const Color(0xfff5f5f5),
       borderBar: Colors.black.withValues(alpha: 0.2),
+      editorButtonPressedBg: Colors.black.withValues(alpha: 0.06),
       icon: const Color(0xff6159e1),
       labelCounterUnread: const Color(0xff222222),
       labelEdited: const HSLColor.fromAHSL(0.35, 0, 0, 0).toColor(),
@@ -139,6 +148,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       bgCounterUnread: const Color(0xff666699).withValues(alpha: 0.37),
       bgTopBar: const Color(0xff242424),
       borderBar: Colors.black.withValues(alpha: 0.5),
+      editorButtonPressedBg: Colors.white.withValues(alpha: 0.06),
       icon: const Color(0xff7977fe),
       labelCounterUnread: const Color(0xffffffff).withValues(alpha: 0.7),
       labelEdited: const HSLColor.fromAHSL(0.35, 0, 0, 1).toColor(),
@@ -174,6 +184,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
     required this.bgCounterUnread,
     required this.bgTopBar,
     required this.borderBar,
+    required this.editorButtonPressedBg,
     required this.icon,
     required this.labelCounterUnread,
     required this.labelEdited,
@@ -211,6 +222,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
   final Color bgCounterUnread;
   final Color bgTopBar;
   final Color borderBar;
+  final Color editorButtonPressedBg;
   final Color icon;
   final Color labelCounterUnread;
   final Color labelEdited;
@@ -243,6 +255,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
     Color? bgCounterUnread,
     Color? bgTopBar,
     Color? borderBar,
+    Color? editorButtonPressedBg,
     Color? icon,
     Color? labelCounterUnread,
     Color? labelEdited,
@@ -270,6 +283,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       bgCounterUnread: bgCounterUnread ?? this.bgCounterUnread,
       bgTopBar: bgTopBar ?? this.bgTopBar,
       borderBar: borderBar ?? this.borderBar,
+      editorButtonPressedBg: editorButtonPressedBg ?? this.editorButtonPressedBg,
       icon: icon ?? this.icon,
       labelCounterUnread: labelCounterUnread ?? this.labelCounterUnread,
       labelEdited: labelEdited ?? this.labelEdited,
@@ -304,6 +318,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       bgCounterUnread: Color.lerp(bgCounterUnread, other.bgCounterUnread, t)!,
       bgTopBar: Color.lerp(bgTopBar, other.bgTopBar, t)!,
       borderBar: Color.lerp(borderBar, other.borderBar, t)!,
+      editorButtonPressedBg: Color.lerp(editorButtonPressedBg, other.editorButtonPressedBg, t)!,
       icon: Color.lerp(icon, other.icon, t)!,
       labelCounterUnread: Color.lerp(labelCounterUnread, other.labelCounterUnread, t)!,
       labelEdited: Color.lerp(labelEdited, other.labelEdited, t)!,
