@@ -87,7 +87,7 @@ void showMessageActionSheet({required BuildContext context, required Message mes
                     borderRadius: BorderRadius.circular(7),
                     child: Column(spacing: 1,
                       children: optionButtons))))),
-              const MessageActionSheetCancelButton(),
+              const ActionSheetCancelButton(),
             ])));
     });
 }
@@ -160,8 +160,8 @@ abstract class MessageActionSheetMenuItemButton extends ActionSheetMenuItemButto
   final Message message;
 }
 
-class MessageActionSheetCancelButton extends StatelessWidget {
-  const MessageActionSheetCancelButton({super.key});
+class ActionSheetCancelButton extends StatelessWidget {
+  const ActionSheetCancelButton({super.key});
 
   @override
   Widget build(BuildContext context) {
