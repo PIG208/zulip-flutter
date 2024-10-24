@@ -22,6 +22,59 @@ import 'store.dart';
 import 'text.dart';
 import 'theme.dart';
 
+abstract class ActionSheetMenuItemButton extends StatelessWidget {
+  const ActionSheetMenuItemButton({super.key});
+
+  IconData get icon;
+  String label(ZulipLocalizations zulipLocalizations);
+  void onPressed(BuildContext context);
+
+  @override
+  Widget build(BuildContext context) {
+    final designVariables = DesignVariables.of(context);
+    final zulipLocalizations = ZulipLocalizations.of(context);
+    return MenuItemButton(
+        trailingIcon: Icon(icon, color: designVariables.contextMenuItemText),
+        style: MenuItemButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          foregroundColor: designVariables.contextMenuItemText,
+          splashFactory: NoSplash.splashFactory,
+        ).copyWith(backgroundColor: WidgetStateColor.resolveWith((states) =>
+            designVariables.contextMenuItemBg.withValues(
+              alpha: states.contains(WidgetState.pressed) ? 0.20 : 0.12))),
+        onPressed: () => onPressed(context),
+        child: Text(label(zulipLocalizations),
+          style: const TextStyle(fontSize: 20, height: 24 / 20)
+              .merge(weightVariableTextStyle(context, wght: 600)),
+        ));
+  }
+}
+
+class ActionSheetCancelButton extends StatelessWidget {
+  const ActionSheetCancelButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final designVariables = DesignVariables.of(context);
+    return TextButton(
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.all(10),
+        foregroundColor: designVariables.contextMenuCancelText,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
+        splashFactory: NoSplash.splashFactory,
+      ).copyWith(backgroundColor: WidgetStateColor.resolveWith((states) =>
+          designVariables.contextMenuCancelBg.withValues(
+            alpha: states.contains(WidgetState.pressed) ? 0.20 : 0.15))),
+      onPressed: () {
+        Navigator.pop(context);
+      },
+      child: Text(ZulipLocalizations.of(context).dialogCancel,
+        style: const TextStyle(fontSize: 20, height: 24 / 20)
+          .merge(weightVariableTextStyle(context, wght: 600))),
+    );
+  }
+}
+
 /// Show a sheet of actions you can take on a message in the message list.
 ///
 /// Must have a [MessageListPage] ancestor.
@@ -91,34 +144,6 @@ void showMessageActionSheet({required BuildContext context, required Message mes
     });
 }
 
-abstract class ActionSheetMenuItemButton extends StatelessWidget {
-  const ActionSheetMenuItemButton({super.key});
-
-  IconData get icon;
-  String label(ZulipLocalizations zulipLocalizations);
-  void onPressed(BuildContext context);
-
-  @override
-  Widget build(BuildContext context) {
-    final designVariables = DesignVariables.of(context);
-    final zulipLocalizations = ZulipLocalizations.of(context);
-    return MenuItemButton(
-        trailingIcon: Icon(icon, color: designVariables.contextMenuItemText),
-        style: MenuItemButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          foregroundColor: designVariables.contextMenuItemText,
-          splashFactory: NoSplash.splashFactory,
-        ).copyWith(backgroundColor: WidgetStateColor.resolveWith((states) =>
-            designVariables.contextMenuItemBg.withValues(
-              alpha: states.contains(WidgetState.pressed) ? 0.20 : 0.12))),
-        onPressed: () => onPressed(context),
-        child: Text(label(zulipLocalizations),
-          style: const TextStyle(fontSize: 20, height: 24 / 20)
-              .merge(weightVariableTextStyle(context, wght: 600)),
-        ));
-  }
-}
-
 abstract class MessageActionSheetMenuItemButton extends ActionSheetMenuItemButton {
   MessageActionSheetMenuItemButton({
     super.key,
@@ -128,31 +153,6 @@ abstract class MessageActionSheetMenuItemButton extends ActionSheetMenuItemButto
 
   final Message message;
   final BuildContext messageListContext;
-}
-
-class ActionSheetCancelButton extends StatelessWidget {
-  const ActionSheetCancelButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final designVariables = DesignVariables.of(context);
-    return TextButton(
-      style: TextButton.styleFrom(
-        padding: const EdgeInsets.all(10),
-        foregroundColor: designVariables.contextMenuCancelText,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
-        splashFactory: NoSplash.splashFactory,
-      ).copyWith(backgroundColor: WidgetStateColor.resolveWith((states) =>
-          designVariables.contextMenuCancelBg.withValues(
-            alpha: states.contains(WidgetState.pressed) ? 0.20 : 0.15))),
-      onPressed: () {
-        Navigator.pop(context);
-      },
-      child: Text(ZulipLocalizations.of(context).dialogCancel,
-        style: const TextStyle(fontSize: 20, height: 24 / 20)
-          .merge(weightVariableTextStyle(context, wght: 600))),
-    );
-  }
 }
 
 // This button is very temporary, to complete #125 before we have a way to
