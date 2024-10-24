@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 
+import '../api/backoff.dart';
 import '../api/model/events.dart';
 import '../api/model/model.dart';
 import '../api/route/messages.dart';
@@ -91,6 +92,9 @@ mixin _MessageSequence {
   /// Whether we are currently fetching the next batch of older messages.
   bool get fetchingOlder => _fetchingOlder;
   bool _fetchingOlder = false;
+
+  BackoffMachine? _fetchBackoff;
+  bool _throttled = false;
 
   /// The parsed message contents, as a list parallel to [messages].
   ///
@@ -493,10 +497,18 @@ class MessageListView with ChangeNotifier, _MessageSequence {
     notifyListeners();
   }
 
+  void backoff() async {
+    if (_throttled) return;
+    _throttled = true;
+    await (_fetchBackoff ??= BackoffMachine()).wait();
+    _throttled = false;
+  }
+
   /// Fetch the next batch of older messages, if applicable.
   Future<void> fetchOlder() async {
     if (haveOldest) return;
     if (fetchingOlder) return;
+    if (_throttled) return;
     assert(fetched);
     assert(messages.isNotEmpty);
     _fetchingOlder = true;
@@ -504,14 +516,21 @@ class MessageListView with ChangeNotifier, _MessageSequence {
     notifyListeners();
     final generation = this.generation;
     try {
-      final result = await getMessages(store.connection,
-        narrow: narrow.apiEncode(),
-        anchor: NumericAnchor(messages[0].id),
-        includeAnchor: false,
-        numBefore: kMessageListFetchBatchSize,
-        numAfter: 0,
-      );
+      GetMessagesResult result;
+      try {
+        result = await getMessages(store.connection,
+          narrow: narrow.apiEncode(),
+          anchor: NumericAnchor(messages[0].id),
+          includeAnchor: false,
+          numBefore: kMessageListFetchBatchSize,
+          numAfter: 0,
+        );
+      } catch (e) {
+        backoff();
+        rethrow;
+      }
       if (this.generation > generation) return;
+      _fetchBackoff = null;
 
       if (result.messages.isNotEmpty
           && result.messages.last.id == messages[0].id) {

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:checks/checks.dart';
 import 'package:http/http.dart' as http;
 import 'package:test/scaffolding.dart';
+import 'package:zulip/api/exception.dart';
 import 'package:zulip/api/model/events.dart';
 import 'package:zulip/api/model/model.dart';
 import 'package:zulip/api/model/narrow.dart';
@@ -235,6 +236,39 @@ void main() {
       ..haveOldest.isTrue()
       ..messages.length.equals(30);
   });
+
+  test('fetchOlder nop during backoff', () => awaitFakeAsync((async) async {
+    await prepare(narrow: const CombinedFeedNarrow());
+    await prepareMessages(foundOldest: false, messages:
+      List.generate(30, (i) => eg.streamMessage()));
+    check(model)
+      ..haveOldest.isFalse()
+      ..messages.length.equals(30);
+
+    connection.prepare(httpStatus: 429, json: {
+      'code': 'RATE_LIMIT_HIT',
+      'msg': 'API usage exceeded rate limit',
+      'result': 'error',
+      'retry-after': 30.0,
+    });
+    await check(model.fetchOlder()).throws<ZulipApiException>();
+    // The request has failed, and the backoff timer has started.
+    check(async.pendingTimers).single;
+    checkNotified(count: 2);
+
+    await model.fetchOlder();
+    // We must not have made a request, because we didn't
+    // prepare a response and didn't get an exception.
+    checkNotNotified();
+
+    async.flushTimers();
+    connection.prepare(json: olderResult(
+      anchor: 1000, foundOldest: false,
+      messages: List.generate(100, (i) => eg.streamMessage(id: 900 + i)),
+    ).toJson());
+    await model.fetchOlder();
+    checkNotified(count: 2);
+  }));
 
   test('fetchOlder handles servers not understanding includeAnchor', () async {
     const narrow = CombinedFeedNarrow();
