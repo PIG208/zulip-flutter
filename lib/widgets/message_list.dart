@@ -259,6 +259,17 @@ class _MessageListPageState extends State<MessageListPage> implements MessageLis
         removeAppBarBottomBorder = true;
     }
 
+    List<Widget>? actions;
+    if (narrow is TopicNarrow) {
+      final topicNarrow = narrow as TopicNarrow;
+      actions = [
+        IconButton(onPressed: () => showTopicActionSheet(
+          context: context,
+          streamId: topicNarrow.streamId, topic: topicNarrow.topic,
+        ), icon: const Icon(ZulipIcons.inherit)),
+      ];
+    }
+
     return Scaffold(
       appBar: ZulipAppBar(
         title: MessageListAppBarTitle(narrow: narrow),
@@ -266,6 +277,7 @@ class _MessageListPageState extends State<MessageListPage> implements MessageLis
         shape: removeAppBarBottomBorder
           ? const Border()
           : null, // i.e., inherit
+        actions: actions,
       ),
       // TODO question for Vlad: for a stream view, should we set the Scaffold's
       //   [backgroundColor] based on stream color, as in this frame:
@@ -1016,6 +1028,8 @@ class StreamMessageRecipientHeader extends StatelessWidget {
       onTap: () => Navigator.push(context,
         MessageListPage.buildRoute(context: context,
           narrow: TopicNarrow.ofMessage(message))),
+      onLongPress: () => showTopicActionSheet(
+        context: context, streamId: message.streamId, topic: topic) ,
       child: ColoredBox(
         color: backgroundColor,
         child: Row(

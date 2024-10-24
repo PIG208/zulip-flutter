@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../api/exception.dart';
 import '../api/model/model.dart';
+import '../api/route/channels.dart';
 import '../api/route/messages.dart';
 import '../model/internal_link.dart';
 import '../model/narrow.dart';
@@ -73,6 +74,206 @@ class ActionSheetCancelButton extends StatelessWidget {
           .merge(weightVariableTextStyle(context, wght: 600))),
     );
   }
+}
+
+/// Show a sheet of actions you can take on a topic.
+void showTopicActionSheet({
+  required BuildContext context,
+  required int streamId,
+  required String topic,
+}) {
+  final store = PerAccountStoreWidget.of(context);
+  final subscriptionIsMuted = store.subscriptions[streamId]?.isMuted ?? true;
+  final visibilityPolicy = store.topicVisibilityPolicy(streamId, topic);
+  // TODO(server-7): simplify this condition away
+  final supportsUnmutingTopics = store.connection.zulipFeatureLevel! >= 170;
+  // TODO(server-8): simplify this condition away
+  final supportsFollowingTopics = store.connection.zulipFeatureLevel! >= 219;
+
+  final optionButtons = [
+    if (supportsFollowingTopics)
+      if (visibilityPolicy != UserTopicVisibilityPolicy.followed)
+        TopicFollowButton(
+          streamId: streamId, topic: topic, topicParentContext: context)
+      else TopicResetNotificationButton(
+        streamId: streamId, topic: topic, topicParentContext: context,
+        icon: ZulipIcons.follow, label: 'Unfollow topic'),
+
+    if (subscriptionIsMuted)
+      if (supportsUnmutingTopics)
+        if (visibilityPolicy != UserTopicVisibilityPolicy.unmuted)
+          TopicUnmuteButton(
+            streamId: streamId, topic: topic, topicParentContext: context)
+        else TopicResetNotificationButton(
+          streamId: streamId, topic: topic, topicParentContext: context,
+          icon: ZulipIcons.mute, label: 'Mute topic'),
+
+    if (!subscriptionIsMuted)
+      if (visibilityPolicy != UserTopicVisibilityPolicy.muted)
+        TopicMuteButton(
+          streamId: streamId, topic: topic, topicParentContext: context)
+      else TopicResetNotificationButton(
+        streamId: streamId, topic: topic, topicParentContext: context,
+        icon: ZulipIcons.unmute, label: 'Unmute topic'),
+  ];
+
+  // TODO(server-7): remove
+  if (optionButtons.isEmpty) {
+    // Modern Zulip servers should always support at least some topic actions.
+    assert(store.connection.zulipFeatureLevel! < 170);
+    return;
+  }
+
+  showModalBottomSheet<void>(
+    context: context,
+    // Clip.hardEdge looks bad; Clip.antiAliasWithSaveLayer looks pixel-perfect
+    // on my iPhone 13 Pro but is marked as "much slower":
+    //   https://api.flutter.dev/flutter/dart-ui/Clip.html
+    clipBehavior: Clip.antiAlias,
+    useSafeArea: true,
+    isScrollControlled: true,
+    builder: (BuildContext _) {
+      return SafeArea(
+        minimum: const EdgeInsets.only(bottom: 16),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // TODO(#217): show message text
+              Flexible(child: InsetShadowBox(
+                top: 8, bottom: 8,
+                color: DesignVariables.of(context).bgContextMenu,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.only(top: 16, bottom: 8),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(7),
+                    child: Column(spacing: 1,
+                      children: optionButtons))))),
+              const ActionSheetCancelButton(),
+            ])));
+    });
+}
+
+abstract class TopicActionSheetButton extends ActionSheetMenuItemButton {
+  const TopicActionSheetButton({
+    super.key,
+    required this.streamId,
+    required this.topic,
+    required this.topicParentContext,
+  });
+
+  final int streamId;
+  final String topic;
+  final BuildContext topicParentContext;
+
+  UserTopicVisibilityPolicy get visibilityPolicy;
+
+  @override void onPressed(BuildContext context) async {
+    Navigator.of(context).pop();
+    try {
+      await updateUserTopic(
+        PerAccountStoreWidget.of(topicParentContext).connection,
+        streamId: streamId, topic: topic,
+        visibilityPolicy: visibilityPolicy);
+    } catch (e) {
+      if (!topicParentContext.mounted) return;
+
+      String? errorMessage;
+
+      switch (e) {
+        case ZulipApiException():
+          errorMessage = e.message;
+          // TODO(#741) specific messages for common errors, like network errors
+          //   (support with reusable code)
+        default:
+      }
+
+      showErrorDialog(context: topicParentContext,
+        title: 'Failed to update topic visibility', message: errorMessage);
+    }
+  }
+}
+
+class TopicFollowButton extends TopicActionSheetButton {
+  const TopicFollowButton({
+    super.key,
+    required super.streamId,
+    required super.topic,
+    required super.topicParentContext,
+  });
+
+  @override
+  IconData get icon => ZulipIcons.follow;
+
+  @override
+  String label(ZulipLocalizations zulipLocalizations) => 'Follow topic';
+
+  @override
+  UserTopicVisibilityPolicy get visibilityPolicy =>
+    UserTopicVisibilityPolicy.followed;
+}
+
+class TopicMuteButton extends TopicActionSheetButton {
+  const TopicMuteButton({
+    super.key,
+    required super.streamId,
+    required super.topic,
+    required super.topicParentContext,
+  });
+
+  @override
+  IconData get icon => ZulipIcons.mute;
+
+  @override
+  String label(ZulipLocalizations zulipLocalizations) => 'Mute topic';
+
+  @override
+  UserTopicVisibilityPolicy get visibilityPolicy =>
+    UserTopicVisibilityPolicy.muted;
+}
+
+class TopicUnmuteButton extends TopicActionSheetButton {
+  const TopicUnmuteButton({
+    super.key,
+    required super.streamId,
+    required super.topic,
+    required super.topicParentContext,
+  });
+
+
+  @override
+  IconData get icon => ZulipIcons.unmute;
+
+  @override
+  String label(ZulipLocalizations zulipLocalizations) => 'Unmute topic';
+
+  @override
+  UserTopicVisibilityPolicy get visibilityPolicy =>
+      UserTopicVisibilityPolicy.unmuted;
+}
+
+class TopicResetNotificationButton extends TopicActionSheetButton {
+  const TopicResetNotificationButton({
+    super.key,
+    required super.streamId,
+    required super.topic,
+    required super.topicParentContext,
+    required this.icon,
+    required String label,
+  }) : _label = label;
+
+  @override
+  final IconData icon;
+
+  @override
+  String label(ZulipLocalizations zulipLocalizations) => _label;
+  final String _label;
+
+  @override
+  UserTopicVisibilityPolicy get visibilityPolicy =>
+    UserTopicVisibilityPolicy.none;
 }
 
 /// Show a sheet of actions you can take on a message in the message list.
