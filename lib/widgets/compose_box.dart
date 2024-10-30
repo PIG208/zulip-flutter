@@ -620,6 +620,31 @@ Future<void> _uploadFiles({
   }
 }
 
+class _ComposeButtonRow extends StatelessWidget {
+  const _ComposeButtonRow({
+    required this.contentController,
+    required this.contentFocusNode,
+  });
+
+  final ComposeContentController contentController;
+  final FocusNode contentFocusNode;
+
+  @override
+  Widget build(BuildContext context) {
+    final themeData = Theme.of(context);
+    ColorScheme colorScheme = themeData.colorScheme;
+
+    return Theme(
+      data: themeData.copyWith(
+        iconTheme: themeData.iconTheme.copyWith(color: colorScheme.onSurfaceVariant)),
+      child: Row(children: [
+        _AttachFileButton(contentController: contentController, contentFocusNode: contentFocusNode),
+        _AttachMediaButton(contentController: contentController, contentFocusNode: contentFocusNode),
+        _AttachFromCameraButton(contentController: contentController, contentFocusNode: contentFocusNode),
+      ]));
+  }
+}
+
 abstract class _AttachUploadsButton extends StatelessWidget {
   const _AttachUploadsButton({required this.contentController, required this.contentFocusNode});
 
@@ -990,15 +1015,13 @@ class _ComposeBoxLayout extends StatelessWidget {
     required this.topicInput,
     required this.contentInput,
     required this.sendButton,
-    required this.contentController,
-    required this.contentFocusNode,
+    required this.composeButtonRow,
   });
 
   final Widget? topicInput;
   final Widget contentInput;
   final Widget sendButton;
-  final ComposeContentController contentController;
-  final FocusNode contentFocusNode;
+  final Widget composeButtonRow;
 
   @override
   Widget build(BuildContext context) {
@@ -1033,14 +1056,7 @@ class _ComposeBoxLayout extends StatelessWidget {
           const SizedBox(width: 8),
           sendButton,
         ]),
-        Theme(
-          data: themeData.copyWith(
-            iconTheme: themeData.iconTheme.copyWith(color: colorScheme.onSurfaceVariant)),
-          child: Row(children: [
-            _AttachFileButton(contentController: contentController, contentFocusNode: contentFocusNode),
-            _AttachMediaButton(contentController: contentController, contentFocusNode: contentFocusNode),
-            _AttachFromCameraButton(contentController: contentController, contentFocusNode: contentFocusNode),
-          ])),
+        composeButtonRow,
       ]));
   }
 }
@@ -1089,8 +1105,6 @@ class _StreamComposeBoxState extends State<_StreamComposeBox> implements Compose
   @override
   Widget build(BuildContext context) {
     return _ComposeBoxLayout(
-      contentController: _contentController,
-      contentFocusNode: _contentFocusNode,
       topicInput: _TopicInput(
         streamId: widget.narrow.streamId,
         controller: _topicController,
@@ -1108,6 +1122,10 @@ class _StreamComposeBoxState extends State<_StreamComposeBox> implements Compose
         contentController: _contentController,
         getDestination: () => StreamDestination(
           widget.narrow.streamId, _topicController.textNormalized),
+      ),
+      composeButtonRow: _ComposeButtonRow(
+        contentController: contentController,
+        contentFocusNode: contentFocusNode,
       ));
   }
 }
@@ -1179,8 +1197,6 @@ class _FixedDestinationComposeBoxState extends State<_FixedDestinationComposeBox
     }
 
     return _ComposeBoxLayout(
-      contentController: _contentController,
-      contentFocusNode: _contentFocusNode,
       topicInput: null,
       contentInput: _FixedDestinationContentInput(
         narrow: widget.narrow,
@@ -1191,6 +1207,10 @@ class _FixedDestinationComposeBoxState extends State<_FixedDestinationComposeBox
         topicController: null,
         contentController: _contentController,
         getDestination: () => widget.narrow.destination,
+      ),
+      composeButtonRow: _ComposeButtonRow(
+        contentController: contentController,
+        contentFocusNode: contentFocusNode,
       ));
   }
 }
