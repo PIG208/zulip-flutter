@@ -41,8 +41,12 @@ void main() {
   final contentInputFinder = find.byWidgetPredicate(
     (widget) => widget is TextField && widget.controller is ComposeContentController);
 
-  Future<GlobalKey<ComposeBoxController>> prepareComposeBox(WidgetTester tester,
-      {required Narrow narrow, List<User> users = const []}) async {
+  Future<GlobalKey<ComposeBoxController>> prepareComposeBox(
+    WidgetTester tester, {
+    required Narrow narrow,
+    List<User> users = const [],
+    double? textScaleFactor,
+  }) async {
     addTearDown(testBinding.reset);
     await testBinding.globalStore.add(eg.selfAccount, eg.initialSnapshot());
 
@@ -50,6 +54,11 @@ void main() {
 
     await store.addUsers([eg.selfUser, ...users]);
     connection = store.connection as FakeApiConnection;
+
+    if (textScaleFactor != null) {
+      tester.platformDispatcher.textScaleFactorTestValue = textScaleFactor;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    }
 
     final controllerKey = GlobalKey<ComposeBoxController>();
     await tester.pumpWidget(TestZulipApp(accountId: eg.selfAccount.id,
@@ -669,6 +678,73 @@ void main() {
         await changeUserStatus(tester, user: deactivatedUsers[1], isActive: true);
         checkComposeBox(isShown: true);
       });
+    });
+  });
+
+  group('ComposeBox content input scaling', () {
+    const verticalPadding = 8;
+    final stream = eg.stream();
+    final narrow = TopicNarrow(stream.streamId, 'foo');
+
+    Future<void> checkContentInputMaxHeight(WidgetTester tester, {
+      required double maxHeight,
+      required int maxVisibleLines,
+    }) async {
+      final finder = find.byType(ComposeBox);
+
+      double? height;
+      // The content input contains two lines at minimum.
+      String content = 'foo\nfoo';
+
+      // On top of the existing two lines, add exactly the number of lines
+      // needed such that the last line will not visible in the content input
+      // after reaching the max height.
+      for (int i = 0; i < maxVisibleLines - 2 + 1; i++) {
+        // Add one line at a time,
+        // until the content input reaches its max height.
+        await tester.enterText(finder, content);
+        await tester.pump();
+        final newHeight = tester.getRect(contentInputFinder).height;
+        if (newHeight == height) {
+          break;
+        }
+        height = newHeight;
+        content = '$content\nfoo';
+      }
+      check(height).isNotNull().isCloseTo(maxHeight, 0.5);
+      // The last line added did not stretch the content input,
+      // so only the lines before it are at least partially visible.
+      check(content.split('\n').length - 1).equals(maxVisibleLines);
+    }
+
+    testWidgets('normal text scaler factor', (tester) async {
+      TypingNotifier.debugEnable = false;
+      addTearDown(TypingNotifier.debugReset);
+
+      await prepareComposeBox(
+        tester, narrow: narrow, textScaleFactor: null);
+      await checkContentInputMaxHeight(tester,
+        maxHeight: verticalPadding + 170, maxVisibleLines: 8);
+    });
+
+    testWidgets('higher text scaler factor', (tester) async {
+      TypingNotifier.debugEnable = false;
+      addTearDown(TypingNotifier.debugReset);
+
+      await prepareComposeBox(
+        tester, narrow: narrow, textScaleFactor: 1.5);
+      await checkContentInputMaxHeight(tester,
+        maxHeight: verticalPadding + 170 * 1.5, maxVisibleLines: 8);
+    });
+
+    testWidgets('higher text scaler factor exceeding threshold', (tester) async {
+      TypingNotifier.debugEnable = false;
+      addTearDown(TypingNotifier.debugReset);
+
+      await prepareComposeBox(
+        tester, narrow: narrow, textScaleFactor: 2);
+      await checkContentInputMaxHeight(tester,
+        maxHeight: verticalPadding + 170 * 1.5, maxVisibleLines: 6);
     });
   });
 }
