@@ -55,7 +55,7 @@ void main() {
     }
   }
 
-  group('parseInternalLink', () {
+  group('check if the url is an internal link', () {
     final streams = [
       eg.stream(streamId: 1, name: 'check'),
     ];
