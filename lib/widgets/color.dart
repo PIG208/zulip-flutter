@@ -38,4 +38,13 @@ extension ColorExtension on Color {
            ((g * 255.0).round() & 0xff) << 8 |
            ((b * 255.0).round() & 0xff) << 0;
   }
+
+  /// Makes a copy of this color with the alpha channel multiplied by `factor`.
+  ///
+  /// `factor` must not be less than 0 or greater than 1.
+  Color withFadedAlpha(double factor) {
+    assert(factor >= 0);
+    assert(factor <= 1);
+    return withValues(alpha: a * factor);
+  }
 }
