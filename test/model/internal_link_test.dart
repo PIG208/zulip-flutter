@@ -184,6 +184,36 @@ void main() {
       testExpectedNarrows(testCases, streams: streams);
     });
 
+    group('topic link parsing', () {
+      final stream = eg.stream(name: "general");
+
+      group('basic', () {
+        String mkUrlString(String operand) {
+          return '#narrow/stream/${stream.streamId}-${stream.name}/topic/$operand';
+        }
+        final testCases = [
+          (mkUrlString('(no.20topic)'), TopicNarrow(stream.streamId, '(no topic)')),
+          (mkUrlString('lunch'),        TopicNarrow(stream.streamId, 'lunch')),
+        ];
+        testExpectedNarrows(testCases, streams: [stream]);
+      });
+
+      group('on old topic link, with dot-encoding', () {
+        String mkUrlString(String operand) {
+          return '#narrow/stream/${stream.name}/topic/$operand';
+        }
+        final testCases = [
+          (mkUrlString('(no.20topic)'), TopicNarrow(stream.streamId, '(no topic)')),
+          (mkUrlString('google.2Ecom'), TopicNarrow(stream.streamId, 'google.com')),
+          (mkUrlString('google.com'),   null),
+          (mkUrlString('topic.20name'), TopicNarrow(stream.streamId, 'topic name')),
+          (mkUrlString('stream'),       TopicNarrow(stream.streamId, 'stream')),
+          (mkUrlString('topic'),        TopicNarrow(stream.streamId, 'topic')),
+        ];
+        testExpectedNarrows(testCases, streams: [stream]);
+      });
+    });
+
     group('Both `stream` and `channel` can be used interchangeably', () {
       const testCases = [
         ('/#narrow/stream/check',                         ChannelNarrow(1)),
@@ -203,6 +233,10 @@ void main() {
         ('/#narrow/dm/1,2-group',                        expectedNarrow),
         ('/#narrow/dm/1,2-group/near/1',                 expectedNarrow),
         ('/#narrow/dm/1,2-group/with/2',                 expectedNarrow),
+
+        // The webapp doesn't generate this, but best to handle it anyway.
+        ('#narrow/dm/1,2,${eg.selfUser.userId}-group',   expectedNarrow),
+
         ('/#narrow/dm/a.40b.2Ecom.2Ec.2Ed.2Ecom/near/3', null),
         ('/#narrow/dm/a.40b.2Ecom.2Ec.2Ed.2Ecom/with/4', null),
       ];
@@ -216,6 +250,10 @@ void main() {
         ('/#narrow/pm-with/1,2-group',                        expectedNarrow),
         ('/#narrow/pm-with/1,2-group/near/1',                 expectedNarrow),
         ('/#narrow/pm-with/1,2-group/with/2',                 expectedNarrow),
+
+        // The webapp doesn't generate this, but best to handle it anyway.
+        ('#narrow/pm-with/1,2,${eg.selfUser.userId}-group',   expectedNarrow),
+
         ('/#narrow/pm-with/a.40b.2Ecom.2Ec.2Ed.2Ecom/near/3', null),
         ('/#narrow/pm-with/a.40b.2Ecom.2Ec.2Ed.2Ecom/with/3', null),
       ];
@@ -395,60 +433,6 @@ void main() {
         ('#narrow/stream/check.API/',     null),
       ];
       testExpectedNarrows(testCases, streams: streams);
-    });
-  });
-
-  group('parseInternalLink', () {
-    group('topic link parsing', () {
-      final stream = eg.stream(name: "general");
-
-      group('basic', () {
-        String mkUrlString(String operand) {
-          return '#narrow/stream/${stream.streamId}-${stream.name}/topic/$operand';
-        }
-        final testCases = [
-          (mkUrlString('(no.20topic)'), TopicNarrow(stream.streamId, '(no topic)')),
-          (mkUrlString('lunch'),        TopicNarrow(stream.streamId, 'lunch')),
-        ];
-        testExpectedNarrows(testCases, streams: [stream]);
-      });
-
-      group('on old topic link, with dot-encoding', () {
-        String mkUrlString(String operand) {
-          return '#narrow/stream/${stream.name}/topic/$operand';
-        }
-        final testCases = [
-          (mkUrlString('(no.20topic)'), TopicNarrow(stream.streamId, '(no topic)')),
-          (mkUrlString('google.2Ecom'), TopicNarrow(stream.streamId, 'google.com')),
-          (mkUrlString('google.com'),   null),
-          (mkUrlString('topic.20name'), TopicNarrow(stream.streamId, 'topic name')),
-          (mkUrlString('stream'),       TopicNarrow(stream.streamId, 'stream')),
-          (mkUrlString('topic'),        TopicNarrow(stream.streamId, 'topic')),
-        ];
-        testExpectedNarrows(testCases, streams: [stream]);
-      });
-    });
-
-    group('DM link parsing', () {
-      void testExpectedDmNarrow(String testCase) {
-        final expectedNarrow = DmNarrow.withUsers([1, 2],
-          selfUserId: eg.selfUser.userId);
-        testExpectedNarrows([(testCase, expectedNarrow)], users: [
-          eg.user(userId: 1),
-          eg.user(userId: 2),
-        ]);
-      }
-
-      group('on group PM link', () {
-        testExpectedDmNarrow('#narrow/dm/1,2-group');
-        testExpectedDmNarrow('#narrow/pm-with/1,2-group');
-      });
-
-      group('on group PM link including self', () {
-        // The webapp doesn't generate these, but best to handle them anyway.
-        testExpectedDmNarrow('#narrow/dm/1,2,${eg.selfUser.userId}-group');
-        testExpectedDmNarrow('#narrow/pm-with/1,2,${eg.selfUser.userId}-group');
-      });
     });
   });
 }
