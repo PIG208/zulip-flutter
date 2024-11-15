@@ -114,6 +114,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
   DesignVariables.light() :
     this._(
       background: const Color(0xffffffff),
+      bgBotBar: const Color(0xfff6f6f6),
       bgContextMenu: const Color(0xfff2f2f2),
       bgCounterUnread: const Color(0xff666699).withValues(alpha: 0.15),
       bgTopBar: const Color(0xfff5f5f5),
@@ -125,6 +126,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       editorButtonPressedBg: Colors.black.withValues(alpha: 0.06),
       foreground: const Color(0xff000000),
       icon: const Color(0xff6159e1),
+      iconSelected: const Color(0xff222222),
       labelCounterUnread: const Color(0xff222222),
       labelEdited: const HSLColor.fromAHSL(0.35, 0, 0, 0).toColor(),
       labelMenuButton: const Color(0xff222222),
@@ -155,6 +157,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
   DesignVariables.dark() :
     this._(
       background: const Color(0xff000000),
+      bgBotBar: const Color(0xff222222),
       bgContextMenu: const Color(0xff262626),
       bgCounterUnread: const Color(0xff666699).withValues(alpha: 0.37),
       bgTopBar: const Color(0xff242424),
@@ -166,6 +169,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       editorButtonPressedBg: Colors.white.withValues(alpha: 0.06),
       foreground: const Color(0xffffffff),
       icon: const Color(0xff7977fe),
+      iconSelected: Colors.white.withValues(alpha: 0.8),
       labelCounterUnread: const Color(0xffffffff).withValues(alpha: 0.7),
       labelEdited: const HSLColor.fromAHSL(0.35, 0, 0, 1).toColor(),
       labelMenuButton: const Color(0xffffffff).withValues(alpha: 0.85),
@@ -203,6 +207,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
 
   DesignVariables._({
     required this.background,
+    required this.bgBotBar,
     required this.bgContextMenu,
     required this.bgCounterUnread,
     required this.bgTopBar,
@@ -214,6 +219,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
     required this.editorButtonPressedBg,
     required this.foreground,
     required this.icon,
+    required this.iconSelected,
     required this.labelCounterUnread,
     required this.labelEdited,
     required this.labelMenuButton,
@@ -252,6 +258,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
   }
 
   final Color background;
+  final Color bgBotBar;
   final Color bgContextMenu;
   final Color bgCounterUnread;
   final Color bgTopBar;
@@ -263,6 +270,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
   final Color editorButtonPressedBg;
   final Color foreground;
   final Color icon;
+  final Color iconSelected;
   final Color labelCounterUnread;
   final Color labelEdited;
   final Color labelMenuButton;
@@ -296,6 +304,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
   @override
   DesignVariables copyWith({
     Color? background,
+    Color? bgBotBar,
     Color? bgContextMenu,
     Color? bgCounterUnread,
     Color? bgTopBar,
@@ -307,6 +316,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
     Color? editorButtonPressedBg,
     Color? foreground,
     Color? icon,
+    Color? iconSelected,
     Color? labelCounterUnread,
     Color? labelEdited,
     Color? labelMenuButton,
@@ -335,6 +345,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
   }) {
     return DesignVariables._(
       background: background ?? this.background,
+      bgBotBar: bgBotBar ?? this.bgBotBar,
       bgContextMenu: bgContextMenu ?? this.bgContextMenu,
       bgCounterUnread: bgCounterUnread ?? this.bgCounterUnread,
       bgTopBar: bgTopBar ?? this.bgTopBar,
@@ -346,6 +357,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       editorButtonPressedBg: editorButtonPressedBg ?? this.editorButtonPressedBg,
       foreground: foreground ?? this.foreground,
       icon: icon ?? this.icon,
+      iconSelected: iconSelected ?? this.iconSelected,
       labelCounterUnread: labelCounterUnread ?? this.labelCounterUnread,
       labelEdited: labelEdited ?? this.labelEdited,
       labelMenuButton: labelMenuButton ?? this.labelMenuButton,
@@ -381,6 +393,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
     }
     return DesignVariables._(
       background: Color.lerp(background, other.background, t)!,
+      bgBotBar: Color.lerp(bgBotBar, other.bgBotBar, t)!,
       bgContextMenu: Color.lerp(bgContextMenu, other.bgContextMenu, t)!,
       bgCounterUnread: Color.lerp(bgCounterUnread, other.bgCounterUnread, t)!,
       bgTopBar: Color.lerp(bgTopBar, other.bgTopBar, t)!,
@@ -392,6 +405,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       editorButtonPressedBg: Color.lerp(editorButtonPressedBg, other.editorButtonPressedBg, t)!,
       foreground: Color.lerp(foreground, other.foreground, t)!,
       icon: Color.lerp(icon, other.icon, t)!,
+      iconSelected: Color.lerp(iconSelected, other.iconSelected, t)!,
       labelCounterUnread: Color.lerp(labelCounterUnread, other.labelCounterUnread, t)!,
       labelEdited: Color.lerp(labelEdited, other.labelEdited, t)!,
       labelMenuButton: Color.lerp(labelMenuButton, other.labelMenuButton, t)!,
