@@ -1282,23 +1282,34 @@ class _StreamComposeBoxState extends State<_StreamComposeBox> implements Compose
 }
 
 class _ErrorBanner extends StatelessWidget {
-  const _ErrorBanner({required this.label});
+  const _ErrorBanner({required this.label, this.action});
 
   final String label;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
     final designVariables = DesignVariables.of(context);
+    final labelTextStyle = TextStyle(fontSize: 17,
+      color: designVariables.btnLabelAttMediumDanger,
+    ).merge(weightVariableTextStyle(context,
+      // The Figma uses a weight of SemiBold,
+      // which is a variable equivalent to this value.
+      wght: 600));
+
     return Container(
-      padding: const EdgeInsets.all(8),
+      constraints: const BoxConstraints(minHeight: 40),
       decoration: BoxDecoration(
-        color: designVariables.errorBannerBackground,
-        border: Border.all(color: designVariables.errorBannerBorder),
-        borderRadius: BorderRadius.circular(5)),
-      child: Text(label,
-        style: TextStyle(fontSize: 18, color: designVariables.errorBannerLabel),
-      ),
-    );
+        color: designVariables.bannerBgIntDanger),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(16, 5, 8, 5),
+              child: Text(label, style: labelTextStyle))),
+          if (action != null) action!,
+        ]));
   }
 }
 
@@ -1419,10 +1430,7 @@ class ComposeBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final errorBanner = _errorBanner(context);
     if (errorBanner != null) {
-      return _ComposeBoxContainer(children: [
-          SafeArea(minimum: const EdgeInsets.symmetric(horizontal: 8),
-            child: errorBanner)
-        ]);
+      return _ComposeBoxContainer(children: [errorBanner]);
     }
 
     final narrow = this.narrow;
