@@ -272,6 +272,19 @@ class ComposeContentController extends ComposeController<ContentValidationError>
   }
 }
 
+class _TopBar extends StatelessWidget {
+  const _TopBar({required this.enabled});
+
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(children: [
+        if (!enabled) _progressIndicator(context),
+      ]);
+  }
+}
+
 class _ContentInput extends StatefulWidget {
   const _ContentInput({
     required this.enabled,
@@ -1072,6 +1085,14 @@ class _SendButtonState extends State<_SendButton> {
   }
 }
 
+Widget _progressIndicator(BuildContext context) {
+  final designVariables = DesignVariables.of(context);
+  return LinearProgressIndicator(
+    minHeight: 2.0,
+    backgroundColor: designVariables.foreground.withFadedAlpha(0.2),
+    color: designVariables.foreground.withFadedAlpha(0.5));
+}
+
 class _ComposeBoxContainer extends StatelessWidget {
   const _ComposeBoxContainer({required this.children});
 
@@ -1094,12 +1115,14 @@ class _ComposeBoxContainer extends StatelessWidget {
 
 class _ComposeBoxLayout extends StatelessWidget {
   const _ComposeBoxLayout({
+    required this.topBar,
     required this.topicInput,
     required this.contentInput,
     required this.composeButtonBar,
     required this.sendButton,
   });
 
+  final Widget topBar;
   final Widget? topicInput;
   final Widget contentInput;
   final Widget composeButtonBar;
@@ -1131,6 +1154,7 @@ class _ComposeBoxLayout extends StatelessWidget {
 
     return _ComposeBoxContainer(
       children: [
+        topBar,
         SafeArea(
           minimum: const EdgeInsets.symmetric(horizontal: 8),
           child: Column(children: [
@@ -1218,6 +1242,7 @@ class _StreamComposeBoxState extends State<_StreamComposeBox> implements Compose
   @override
   Widget build(BuildContext context) {
     return _ComposeBoxLayout(
+      topBar: _TopBar(enabled: enabled),
       topicInput: _TopicInput(
         enabled: enabled,
         streamId: widget.narrow.streamId,
@@ -1312,6 +1337,7 @@ class _FixedDestinationComposeBoxState extends State<_FixedDestinationComposeBox
   @override
   Widget build(BuildContext context) {
     return _ComposeBoxLayout(
+      topBar: _TopBar(enabled: enabled),
       topicInput: null,
       contentInput: _FixedDestinationContentInput(
         enabled: enabled,
