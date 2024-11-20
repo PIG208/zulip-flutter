@@ -275,15 +275,63 @@ class ComposeContentController extends ComposeController<ContentValidationError>
   }
 }
 
-class _TopBar extends StatelessWidget {
-  const _TopBar({required this.enabled});
+class SendErrorController extends ChangeNotifier {
+  SendErrorController();
+
+  Iterable<String> get errors => _errors;
+  Set<String> _errors = {};
+  set errors (Iterable<String> value) {
+    _errors = Set.from(value);
+    assert(_errors.length == value.length, 'There should not be duplicate errors');
+    notifyListeners();
+  }
+
+  void remove(String value) {
+    final removed = _errors.remove(value);
+    assert(removed);
+    notifyListeners();
+  }
+}
+
+class _TopBar extends StatefulWidget {
+  const _TopBar({required this.enabled, required this.sendErrorController});
 
   final bool enabled;
+  final SendErrorController sendErrorController;
+
+  @override
+  State<_TopBar> createState() => _TopBarState();
+}
+
+class _TopBarState extends State<_TopBar> {
+  @override
+  void initState() {
+    super.initState();
+    widget.sendErrorController.addListener(_sendErrorChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.sendErrorController.removeListener(_sendErrorChanged);
+    super.dispose();
+  }
+
+  void _sendErrorChanged() {
+    setState(() {
+      // The actual state lives in `widget.sendErrorController`.
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final designVariables = DesignVariables.of(context);
     return Column(children: [
-        if (!enabled) _progressIndicator(context),
+      if (!widget.enabled) _progressIndicator(context),
+      for (final value in widget.sendErrorController.errors)
+        _ErrorBanner(label: value,
+          action: IconButton(icon: Icon(
+            ZulipIcons.remove, color: designVariables.btnLabelAttLowIntDanger),
+          onPressed: () => widget.sendErrorController.remove(value))),
       ]);
   }
 }
@@ -966,12 +1014,14 @@ class _SendButton extends StatefulWidget {
     required this.enabled,
     required this.topicController,
     required this.contentController,
+    required this.sendErrorController,
     required this.getDestination,
   });
 
   final ValueNotifier<bool> enabled;
   final ComposeTopicController? topicController;
   final ComposeContentController contentController;
+  final SendErrorController sendErrorController;
   final MessageDestination Function() getDestination;
 
   @override
@@ -1027,10 +1077,7 @@ class _SendButtonState extends State<_SendButton> {
         for (final error in widget.contentController.validationErrors)
           error.message(zulipLocalizations),
       ];
-      showErrorDialog(
-        context: context,
-        title: zulipLocalizations.errorMessageNotSent,
-        message: validationErrorMessages.join('\n\n'));
+      widget.sendErrorController.errors = validationErrorMessages;
       return;
     }
     if (!widget.enabled.value) {
@@ -1045,6 +1092,7 @@ class _SendButtonState extends State<_SendButton> {
 
     store.typingNotifier.stoppedComposing();
     widget.enabled.value = false;
+    widget.sendErrorController.errors = [];
 
     try {
       await store
@@ -1062,9 +1110,7 @@ class _SendButtonState extends State<_SendButton> {
         case ApiRequestException(): message = e.message;
         default: rethrow;
       }
-      showErrorDialog(context: context,
-        title: zulipLocalizations.errorMessageNotSent,
-        message: message);
+      widget.sendErrorController.errors = [message];
       return;
     } finally {
       widget.enabled.value = true;
@@ -1194,6 +1240,7 @@ abstract class ComposeBoxController<T extends StatefulWidget> extends State<T> {
   bool get enabled;
   ComposeTopicController? get topicController;
   ComposeContentController get contentController;
+  SendErrorController get sendErrorController;
   FocusNode get contentFocusNode;
 }
 
@@ -1227,6 +1274,9 @@ class _StreamComposeBoxState extends State<_StreamComposeBox> implements Compose
   FocusNode get topicFocusNode => _topicFocusNode;
   final _topicFocusNode = FocusNode();
 
+  @override SendErrorController get sendErrorController => _sendErrorController;
+  final _sendErrorController = SendErrorController();
+
   @override
   void initState() {
     super.initState();
@@ -1239,6 +1289,7 @@ class _StreamComposeBoxState extends State<_StreamComposeBox> implements Compose
     _topicController.dispose();
     _contentController.dispose();
     _contentFocusNode.dispose();
+    _sendErrorController.dispose();
     super.dispose();
   }
 
@@ -1251,7 +1302,7 @@ class _StreamComposeBoxState extends State<_StreamComposeBox> implements Compose
   @override
   Widget build(BuildContext context) {
     return _ComposeBoxLayout(
-      topBar: _TopBar(enabled: enabled),
+      topBar: _TopBar(enabled: enabled, sendErrorController: sendErrorController),
       topicInput: _TopicInput(
         enabled: enabled,
         streamId: widget.narrow.streamId,
@@ -1275,6 +1326,7 @@ class _StreamComposeBoxState extends State<_StreamComposeBox> implements Compose
         enabled: _enabled,
         topicController: _topicController,
         contentController: _contentController,
+        sendErrorController: _sendErrorController,
         getDestination: () => StreamDestination(
           widget.narrow.streamId, _topicController.textNormalized),
       ));
@@ -1334,6 +1386,9 @@ class _FixedDestinationComposeBoxState extends State<_FixedDestinationComposeBox
   @override FocusNode get contentFocusNode => _contentFocusNode;
   final _contentFocusNode = FocusNode();
 
+  @override SendErrorController get sendErrorController => _sendErrorController;
+  final _sendErrorController = SendErrorController();
+
   @override
   void initState() {
     super.initState();
@@ -1345,6 +1400,7 @@ class _FixedDestinationComposeBoxState extends State<_FixedDestinationComposeBox
     _enabled.dispose();
     _contentController.dispose();
     _contentFocusNode.dispose();
+    _sendErrorController.dispose();
     super.dispose();
   }
 
@@ -1357,7 +1413,7 @@ class _FixedDestinationComposeBoxState extends State<_FixedDestinationComposeBox
   @override
   Widget build(BuildContext context) {
     return _ComposeBoxLayout(
-      topBar: _TopBar(enabled: enabled),
+      topBar: _TopBar(enabled: enabled, sendErrorController: sendErrorController),
       topicInput: null,
       contentInput: _FixedDestinationContentInput(
         enabled: enabled,
@@ -1374,6 +1430,7 @@ class _FixedDestinationComposeBoxState extends State<_FixedDestinationComposeBox
         enabled: _enabled,
         topicController: null,
         contentController: _contentController,
+        sendErrorController: _sendErrorController,
         getDestination: () => widget.narrow.destination,
       ));
   }

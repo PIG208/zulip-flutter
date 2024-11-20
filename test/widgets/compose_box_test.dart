@@ -30,7 +30,6 @@ import '../model/binding.dart';
 import '../model/test_store.dart';
 import '../model/typing_status_test.dart';
 import '../stdlib_checks.dart';
-import 'dialog_checks.dart';
 import 'test_app.dart';
 
 void main() {
@@ -488,9 +487,7 @@ void main() {
 
       await tester.pump(kSendMessageTimeout);
       final zulipLocalizations = GlobalLocalizations.zulipLocalizations;
-      await tester.tap(find.byWidget(checkErrorDialog(tester,
-        expectedTitle: zulipLocalizations.errorMessageNotSent,
-        expectedMessage: zulipLocalizations.errorSendMessageTimeout)));
+      check(find.text(zulipLocalizations.errorSendMessageTimeout)).findsOne();
 
       await tester.pump(longDelay);
     });
@@ -506,11 +503,54 @@ void main() {
           });
       });
       final zulipLocalizations = GlobalLocalizations.zulipLocalizations;
-      await tester.tap(find.byWidget(checkErrorDialog(tester,
-        expectedTitle: zulipLocalizations.errorMessageNotSent,
-        expectedMessage: zulipLocalizations.errorServerMessage(
-          'You do not have permission to initiate direct message conversations.'),
-      )));
+      check(find.text(zulipLocalizations.errorServerMessage(
+        'You do not have permission to initiate direct message conversations.'))).findsOne();
+    });
+
+    testWidgets('dismiss validation error banner by clicking remove icon', (tester) async {
+      final channel = eg.stream();
+      final zulipLocalizations = GlobalLocalizations.zulipLocalizations;
+      await prepareComposeBox(tester,
+          narrow: TopicNarrow(channel.streamId, 'topic'), streams: [channel]);
+
+      await tester.tap(find.byIcon(ZulipIcons.send));
+      await tester.pump();
+      check(find.text(zulipLocalizations.contentValidationErrorEmpty)).findsOne();
+
+      await tester.tap(find.byIcon(ZulipIcons.remove));
+      await tester.pump();
+      check(find.text(zulipLocalizations.contentValidationErrorEmpty)).findsNothing();
+    });
+
+
+    testWidgets('dismiss timeout error banner by hitting send again', (tester) async {
+      const longDelay = Duration(hours: 1);
+      assert(longDelay > kSendMessageTimeout);
+      final controllerKey = await setupAndTapSend(tester, prepareResponse: (_) {
+        connection.prepare(
+            httpStatus: 400,
+            json: {'result': 'error', 'code': 'BAD_REQUEST'},
+            delay: longDelay);
+      });
+      final composeBoxController = controllerKey.currentState!;
+      check(composeBoxController.enabled).isFalse();
+
+      await tester.pump(kSendMessageTimeout);
+      final zulipLocalizations = GlobalLocalizations.zulipLocalizations;
+      check(find.text(zulipLocalizations.errorSendMessageTimeout)).findsOne();
+      check(composeBoxController.enabled).isTrue();
+
+      connection.prepare(
+        httpStatus: 400,
+        json: {'result': 'error', 'code': 'BAD_REQUEST'},
+        delay: longDelay);
+      await tester.enterText(contentInputFinder, 'hello world');
+      await tester.tap(find.byIcon(ZulipIcons.send));
+      await tester.pump();
+      check(find.text(zulipLocalizations.errorSendMessageTimeout)).findsNothing();
+      check(composeBoxController.enabled).isFalse();
+
+      await tester.pump(longDelay);
     });
   });
 
