@@ -210,10 +210,8 @@ class _ZulipAppState extends State<ZulipApp> with WidgetsBindingObserver {
           onGenerateInitialRoutes: (_) {
             return [
               MaterialWidgetRoute(page: const ChooseAccountPage()),
-              if (initialAccountId != null) ...[
+              if (initialAccountId != null)
                 HomePage.buildRoute(accountId: initialAccountId),
-                InboxPage.buildRoute(accountId: initialAccountId),
-              ],
             ];
           });
         }));
