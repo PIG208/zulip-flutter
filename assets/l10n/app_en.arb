@@ -529,6 +529,10 @@
   "@userRoleUnknown": {
     "description": "Label for UserRole.unknown"
   },
+  "inboxPageTitle": "Inbox",
+  "@inboxPageTitle": {
+    "description": "Title for the page of inbox"
+  },
   "recentDmConversationsPageTitle": "Direct messages",
   "@recentDmConversationsPageTitle": {
     "description": "Title for the page of recent DM conversations"
@@ -544,6 +548,14 @@
   "starredMessagesPageTitle": "Starred messages",
   "@starredMessagesPageTitle": {
     "description": "Title for the page of starred messages."
+  },
+  "channelsPageTitle": "Channels",
+  "@channelsPageTitle": {
+    "description": "Title for the page of channels."
+  },
+  "profilePageTitle": "My profile",
+  "@profilePageTitle": {
+    "description": "Title for the page of the logged in user's profile."
   },
   "channelFeedButtonTooltip": "Channel feed",
   "@channelFeedButtonTooltip": {

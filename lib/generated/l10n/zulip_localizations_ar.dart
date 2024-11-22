@@ -420,6 +420,9 @@ class ZulipLocalizationsAr extends ZulipLocalizations {
   String get userRoleUnknown => 'Unknown';
 
   @override
+  String get inboxPageTitle => 'Inbox';
+
+  @override
   String get recentDmConversationsPageTitle => 'Direct messages';
 
   @override
@@ -430,6 +433,12 @@ class ZulipLocalizationsAr extends ZulipLocalizations {
 
   @override
   String get starredMessagesPageTitle => 'Starred messages';
+
+  @override
+  String get channelsPageTitle => 'Channels';
+
+  @override
+  String get profilePageTitle => 'My profile';
 
   @override
   String get channelFeedButtonTooltip => 'Channel feed';

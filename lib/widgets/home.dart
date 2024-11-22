@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 
+import '../generated/l10n/zulip_localizations.dart';
+import '../model/narrow.dart';
+import 'action_sheet.dart';
 import 'icons.dart';
 import 'inbox.dart';
+import 'inset_shadow.dart';
+import 'message_list.dart';
 import 'page.dart';
+import 'profile.dart';
 import 'recent_dm_conversations.dart';
+import 'store.dart';
 import 'subscription_list.dart';
+import 'text.dart';
 import 'theme.dart';
 
 class HomePage extends StatefulWidget {
@@ -29,7 +37,6 @@ class _HomePageState extends State<HomePage> {
       SubscriptionListPageBody(),
       // Users
       RecentDmConversationsPageBody(),
-      // Menu
     ];
 
     Widget Function(int pageIndex) navigationButtonBuilder(IconData icon, String tooltip) {
@@ -48,7 +55,6 @@ class _HomePageState extends State<HomePage> {
       navigationButtonBuilder(ZulipIcons.hash_italic, 'Channels'),
       // navigationButtonBuilder(ZulipIcons.contacts, 'Users'),
       navigationButtonBuilder(ZulipIcons.user,        'Direct messages'),
-      // navigationButtonBuilder(ZulipIcons.menu,     'Menu'),
     ];
 
     final designVariables = DesignVariables.of(context);
@@ -75,6 +81,9 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   for (final (pageIndex, buildButton) in navigationButtonBuilders.indexed)
                     Expanded(child: buildButton(pageIndex)),
+                  Expanded(child: NavigationButton(
+                    icon: ZulipIcons.menu, tooltip: 'Menu', selected: false,
+                    onPressed: () => showMenu(context))),
                 ]))))));
   }
 }
@@ -117,6 +126,261 @@ class NavigationButton extends StatelessWidget {
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(4))),
         ).copyWith(foregroundColor: iconColor)));
+  }
+}
+
+void showMenu(BuildContext context) {
+  final designVariables = DesignVariables.of(context);
+  final menuItems = <Widget>[
+    // Search
+    // const SizedBox(height: 8),
+    _InboxButton(selected: false, pageContext: context),
+    _RecentDmConversationsButton(selected: false, pageContext: context),
+    _MentionsButton(selected: false, pageContext: context),
+    _StarredMessagesButton(selected: false, pageContext: context),
+    // Drafts
+    // Direct messages
+    _ChannelsButton(selected: false, pageContext: context),
+    // Users
+    _MyProfileButton(selected: false, pageContext: context),
+    // Set my status
+    // const SizedBox(height: 8),
+    // Settings
+    // Notifications
+    // const SizedBox(height: 8),
+    // VersionInfo
+  ];
+
+  showModalBottomSheet<void>(
+    context: context,
+    // Clip.hardEdge looks bad; Clip.antiAliasWithSaveLayer looks pixel-perfect
+    // on my iPhone 13 Pro but is marked as "much slower":
+    //   https://api.flutter.dev/flutter/dart-ui/Clip.html
+    clipBehavior: Clip.antiAlias,
+    useSafeArea: true,
+    isScrollControlled: true,
+    backgroundColor: designVariables.bgBotBar,
+    builder: (BuildContext _) {
+      return SafeArea(
+        minimum: const EdgeInsets.only(bottom: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Expanded(child: InsetShadowBox(
+              top: 8, bottom: 8,
+              color: designVariables.bgBotBar,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: menuItems)))),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Scaled(
+                scaleEnd: 0.95,
+                duration: Duration(milliseconds: 100),
+                child: SizedBox(height: 44, child: ActionSheetCancelButton()))),
+          ]));
+    });
+}
+
+abstract class _MenuButton extends ActionSheetMenuItemButton {
+  const _MenuButton({required this.selected, required super.pageContext});
+
+  final bool selected;
+
+  Widget buildTrailing(BuildContext context) => const SizedBox.shrink();
+
+  void _handlePressed(BuildContext context) {
+    assert(pageContext.mounted);
+    onPressed();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final designVariables = DesignVariables.of(context);
+    final zulipLocalizations = ZulipLocalizations.of(context);
+
+    final borderSide = BorderSide(width: 1,
+      strokeAlign: BorderSide.strokeAlignOutside,
+      color: designVariables.borderMenuButtonSelected);
+    final buttonStyle = TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 8),
+        foregroundColor: designVariables.labelMenuButton,
+        splashFactory: NoSplash.splashFactory,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ).copyWith(
+        backgroundColor: WidgetStateColor.fromMap({
+          WidgetState.pressed: designVariables.bgMenuButtonActive,
+          ~WidgetState.pressed: selected ? designVariables.bgMenuButtonSelected
+                                         : Colors.transparent,
+        }),
+        side: WidgetStateBorderSide.fromMap({
+          WidgetState.pressed: null,
+          ~WidgetState.pressed: selected ? borderSide : null,
+        }));
+
+    return Scaled(
+      duration: const Duration(milliseconds: 100),
+      scaleEnd: 0.95,
+      child: SizedBox(height: 44,
+        child: TextButton(
+          onPressed: () => _handlePressed(context),
+          style: buttonStyle,
+          child: Row(spacing: 8, children: [
+            Icon(icon, size: 24,
+              color: selected ? designVariables.iconSelected
+                              : designVariables.icon),
+            Expanded(child: Text(label(zulipLocalizations),
+              textAlign: TextAlign.start,
+              style: const TextStyle(fontSize: 19, height: 26 / 19)
+                .merge(weightVariableTextStyle(context, wght: selected ? 600 : 400)))),
+            buildTrailing(context),
+          ]))));
+  }
+}
+
+enum _MenuItemCounterVariant {
+  unreads,
+  quantity,
+}
+
+class _MenuItemCounter extends StatelessWidget {
+  const _MenuItemCounter({required this.value, required this.variant});
+
+  final int value;
+  final _MenuItemCounterVariant variant;
+
+  @override
+  Widget build(BuildContext context) {
+    final designVariables = DesignVariables.of(context);
+    final Color bgColor, textColor;
+    switch (variant) {
+      case _MenuItemCounterVariant.unreads:
+        bgColor = designVariables.bgCounterUnread;
+        textColor = designVariables.labelCounterUnread;
+      case _MenuItemCounterVariant.quantity:
+        bgColor = Colors.transparent;
+        textColor = designVariables.labelCounterQuantity;
+    }
+    return Container(height: 24,
+      padding: const EdgeInsets.fromLTRB(6, 1, 6, 2),
+      decoration: ShapeDecoration(color: bgColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5))),
+      child: Text(value.toString(), style: TextStyle(
+        fontSize: 18,
+        height: 21 / 18,
+        color: textColor,
+      ).merge(weightVariableTextStyle(context, wght: 600))));
+  }
+}
+
+class _InboxButton extends _MenuButton {
+  const _InboxButton({required super.selected, required super.pageContext});
+
+  @override
+  IconData get icon => ZulipIcons.inbox;
+
+  @override
+  String label(ZulipLocalizations zulipLocalizations) {
+    return zulipLocalizations.inboxPageTitle;
+  }
+
+  @override
+  void onPressed() async {
+    await Navigator.of(pageContext).push(InboxPage.buildRoute(context: pageContext));
+  }
+}
+
+class _RecentDmConversationsButton extends _MenuButton {
+  const _RecentDmConversationsButton({required super.selected, required super.pageContext});
+
+  @override
+  IconData get icon => ZulipIcons.clock;
+
+  @override
+  String label(ZulipLocalizations zulipLocalizations) {
+    return zulipLocalizations.recentDmConversationsPageTitle;
+  }
+
+  @override
+  void onPressed() {
+    Navigator.of(pageContext).push(
+      RecentDmConversationsPage.buildRoute(context: pageContext));
+  }
+}
+
+class _MentionsButton extends _MenuButton {
+  const _MentionsButton({required super.selected, required super.pageContext});
+
+  @override
+  IconData get icon => ZulipIcons.at_sign;
+
+  @override
+  String label(ZulipLocalizations zulipLocalizations) {
+    return zulipLocalizations.mentionsPageTitle;
+  }
+
+  @override
+  void onPressed() {
+    Navigator.of(pageContext).push(MessageListPage.buildRoute(
+      context: pageContext, narrow: const MentionsNarrow()));
+  }
+}
+
+class _StarredMessagesButton extends _MenuButton {
+  const _StarredMessagesButton({required super.selected, required super.pageContext});
+
+  @override
+  IconData get icon => ZulipIcons.star;
+
+  @override
+  String label(ZulipLocalizations zulipLocalizations) {
+    return zulipLocalizations.starredMessagesPageTitle;
+  }
+
+  @override
+  void onPressed() {
+    Navigator.of(pageContext).push(MessageListPage.buildRoute(
+      context: pageContext, narrow: const StarredMessagesNarrow()));
+  }
+}
+
+class _ChannelsButton extends _MenuButton {
+  const _ChannelsButton({required super.selected, required super.pageContext});
+
+  @override
+  IconData get icon => ZulipIcons.hash_italic;
+
+  @override
+  String label(ZulipLocalizations zulipLocalizations) {
+    return zulipLocalizations.channelsPageTitle;
+  }
+
+  @override
+  void onPressed() {
+    Navigator.of(pageContext).push(
+      SubscriptionListPage.buildRoute(context: pageContext));
+  }
+}
+
+class _MyProfileButton extends _MenuButton {
+  const _MyProfileButton({required super.selected, required super.pageContext});
+
+  @override
+  IconData get icon => ZulipIcons.user;
+
+  @override
+  String label(ZulipLocalizations zulipLocalizations) {
+    return zulipLocalizations.profilePageTitle;
+  }
+
+  @override
+  void onPressed() {
+    final store = PerAccountStoreWidget.of(pageContext);
+    Navigator.of(pageContext).push(
+      ProfilePage.buildRoute(context: pageContext, userId: store.selfUserId));
   }
 }
 

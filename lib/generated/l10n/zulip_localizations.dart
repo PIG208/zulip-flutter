@@ -799,6 +799,12 @@ abstract class ZulipLocalizations {
   /// **'Unknown'**
   String get userRoleUnknown;
 
+  /// Title for the page of inbox
+  ///
+  /// In en, this message translates to:
+  /// **'Inbox'**
+  String get inboxPageTitle;
+
   /// Title for the page of recent DM conversations
   ///
   /// In en, this message translates to:
@@ -822,6 +828,18 @@ abstract class ZulipLocalizations {
   /// In en, this message translates to:
   /// **'Starred messages'**
   String get starredMessagesPageTitle;
+
+  /// Title for the page of channels.
+  ///
+  /// In en, this message translates to:
+  /// **'Channels'**
+  String get channelsPageTitle;
+
+  /// Title for the page of the logged in user's profile.
+  ///
+  /// In en, this message translates to:
+  /// **'My profile'**
+  String get profilePageTitle;
 
   /// Tooltip for button to navigate to a given channel's feed
   ///

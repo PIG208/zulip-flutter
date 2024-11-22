@@ -117,8 +117,11 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       bgBotBar: const Color(0xfff6f6f6),
       bgContextMenu: const Color(0xfff2f2f2),
       bgCounterUnread: const Color(0xff666699).withValues(alpha: 0.15),
+      bgMenuButtonActive: Colors.black.withValues(alpha: 0.05),
+      bgMenuButtonSelected: Colors.white,
       bgTopBar: const Color(0xfff5f5f5),
       borderBar: Colors.black.withValues(alpha: 0.2),
+      borderMenuButtonSelected: Colors.black.withValues(alpha: 0.2),
       composeBoxBg: const Color(0xffffffff),
       contextMenuCancelText: const Color(0xff222222),
       contextMenuItemBg: const Color(0xff6159e1),
@@ -127,9 +130,11 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       foreground: const Color(0xff000000),
       icon: const Color(0xff6159e1),
       iconSelected: const Color(0xff222222),
+      labelCounterQuantity: const Color(0xff222222).withValues(alpha: 0.6),
       labelCounterUnread: const Color(0xff222222),
       labelEdited: const HSLColor.fromAHSL(0.35, 0, 0, 0).toColor(),
       labelMenuButton: const Color(0xff222222),
+      labelSearchPrompt: Colors.black.withValues(alpha: 0.5),
       mainBackground: const Color(0xfff0f0f0),
       textInput: const Color(0xff000000),
       title: const Color(0xff1a1a1a),
@@ -160,8 +165,11 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       bgBotBar: const Color(0xff222222),
       bgContextMenu: const Color(0xff262626),
       bgCounterUnread: const Color(0xff666699).withValues(alpha: 0.37),
+      bgMenuButtonActive: Colors.black.withValues(alpha: 0.2),
+      bgMenuButtonSelected: Colors.black.withValues(alpha: 0.25),
       bgTopBar: const Color(0xff242424),
       borderBar: Colors.black.withValues(alpha: 0.5),
+      borderMenuButtonSelected: Colors.white.withValues(alpha: 0.1),
       composeBoxBg: const Color(0xff0f0f0f),
       contextMenuCancelText: const Color(0xffffffff).withValues(alpha: 0.75),
       contextMenuItemBg: const Color(0xff7977fe),
@@ -170,9 +178,11 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       foreground: const Color(0xffffffff),
       icon: const Color(0xff7977fe),
       iconSelected: Colors.white.withValues(alpha: 0.8),
-      labelCounterUnread: const Color(0xffffffff).withValues(alpha: 0.7),
+      labelCounterQuantity: Colors.white.withValues(alpha: 0.7),
+      labelCounterUnread: Colors.white.withValues(alpha: 0.73),
       labelEdited: const HSLColor.fromAHSL(0.35, 0, 0, 1).toColor(),
       labelMenuButton: const Color(0xffffffff).withValues(alpha: 0.85),
+      labelSearchPrompt: Colors.white.withValues(alpha: 0.5),
       mainBackground: const Color(0xff1d1d1d),
       textInput: const Color(0xffffffff).withValues(alpha: 0.9),
       title: const Color(0xffffffff),
@@ -210,8 +220,11 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
     required this.bgBotBar,
     required this.bgContextMenu,
     required this.bgCounterUnread,
+    required this.bgMenuButtonActive,
+    required this.bgMenuButtonSelected,
     required this.bgTopBar,
     required this.borderBar,
+    required this.borderMenuButtonSelected,
     required this.composeBoxBg,
     required this.contextMenuCancelText,
     required this.contextMenuItemBg,
@@ -220,9 +233,11 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
     required this.foreground,
     required this.icon,
     required this.iconSelected,
+    required this.labelCounterQuantity,
     required this.labelCounterUnread,
     required this.labelEdited,
     required this.labelMenuButton,
+    required this.labelSearchPrompt,
     required this.mainBackground,
     required this.textInput,
     required this.title,
@@ -261,8 +276,11 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
   final Color bgBotBar;
   final Color bgContextMenu;
   final Color bgCounterUnread;
+  final Color bgMenuButtonActive;
+  final Color bgMenuButtonSelected;
   final Color bgTopBar;
   final Color borderBar;
+  final Color borderMenuButtonSelected;
   final Color composeBoxBg;
   final Color contextMenuCancelText;
   final Color contextMenuItemBg;
@@ -271,9 +289,11 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
   final Color foreground;
   final Color icon;
   final Color iconSelected;
+  final Color labelCounterQuantity;
   final Color labelCounterUnread;
   final Color labelEdited;
   final Color labelMenuButton;
+  final Color labelSearchPrompt;
   final Color mainBackground;
   final Color textInput;
   final Color title;
@@ -307,8 +327,11 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
     Color? bgBotBar,
     Color? bgContextMenu,
     Color? bgCounterUnread,
+    Color? bgMenuButtonActive,
+    Color? bgMenuButtonSelected,
     Color? bgTopBar,
     Color? borderBar,
+    Color? borderMenuButtonSelected,
     Color? composeBoxBg,
     Color? contextMenuCancelText,
     Color? contextMenuItemBg,
@@ -317,9 +340,11 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
     Color? foreground,
     Color? icon,
     Color? iconSelected,
+    Color? labelCounterQuantity,
     Color? labelCounterUnread,
     Color? labelEdited,
     Color? labelMenuButton,
+    Color? labelSearchPrompt,
     Color? mainBackground,
     Color? textInput,
     Color? title,
@@ -348,8 +373,11 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       bgBotBar: bgBotBar ?? this.bgBotBar,
       bgContextMenu: bgContextMenu ?? this.bgContextMenu,
       bgCounterUnread: bgCounterUnread ?? this.bgCounterUnread,
+      bgMenuButtonActive: bgMenuButtonActive ?? this.bgMenuButtonActive,
+      bgMenuButtonSelected: bgMenuButtonSelected ?? this.bgMenuButtonSelected,
       bgTopBar: bgTopBar ?? this.bgTopBar,
       borderBar: borderBar ?? this.borderBar,
+      borderMenuButtonSelected: borderMenuButtonSelected ?? this.borderMenuButtonSelected,
       composeBoxBg: composeBoxBg ?? this.composeBoxBg,
       contextMenuCancelText: contextMenuCancelText ?? this.contextMenuCancelText,
       contextMenuItemBg: contextMenuItemBg ?? this.contextMenuItemBg,
@@ -358,9 +386,11 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       foreground: foreground ?? this.foreground,
       icon: icon ?? this.icon,
       iconSelected: iconSelected ?? this.iconSelected,
+      labelCounterQuantity: labelCounterQuantity ?? this.labelCounterQuantity,
       labelCounterUnread: labelCounterUnread ?? this.labelCounterUnread,
       labelEdited: labelEdited ?? this.labelEdited,
       labelMenuButton: labelMenuButton ?? this.labelMenuButton,
+      labelSearchPrompt: labelSearchPrompt ?? this.labelSearchPrompt,
       mainBackground: mainBackground ?? this.mainBackground,
       textInput: textInput ?? this.textInput,
       title: title ?? this.title,
@@ -396,8 +426,11 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       bgBotBar: Color.lerp(bgBotBar, other.bgBotBar, t)!,
       bgContextMenu: Color.lerp(bgContextMenu, other.bgContextMenu, t)!,
       bgCounterUnread: Color.lerp(bgCounterUnread, other.bgCounterUnread, t)!,
+      bgMenuButtonActive: Color.lerp(bgMenuButtonActive, other.bgMenuButtonActive, t)!,
+      bgMenuButtonSelected: Color.lerp(bgMenuButtonSelected, other.bgMenuButtonSelected, t)!,
       bgTopBar: Color.lerp(bgTopBar, other.bgTopBar, t)!,
       borderBar: Color.lerp(borderBar, other.borderBar, t)!,
+      borderMenuButtonSelected: Color.lerp(borderMenuButtonSelected, other.borderMenuButtonSelected, t)!,
       composeBoxBg: Color.lerp(composeBoxBg, other.composeBoxBg, t)!,
       contextMenuCancelText: Color.lerp(contextMenuCancelText, other.contextMenuCancelText, t)!,
       contextMenuItemBg: Color.lerp(contextMenuItemBg, other.contextMenuItemBg, t)!,
@@ -406,9 +439,11 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       foreground: Color.lerp(foreground, other.foreground, t)!,
       icon: Color.lerp(icon, other.icon, t)!,
       iconSelected: Color.lerp(iconSelected, other.iconSelected, t)!,
+      labelCounterQuantity: Color.lerp(labelCounterQuantity, other.labelCounterQuantity, t)!,
       labelCounterUnread: Color.lerp(labelCounterUnread, other.labelCounterUnread, t)!,
       labelEdited: Color.lerp(labelEdited, other.labelEdited, t)!,
       labelMenuButton: Color.lerp(labelMenuButton, other.labelMenuButton, t)!,
+      labelSearchPrompt: Color.lerp(labelSearchPrompt, other.labelSearchPrompt, t)!,
       mainBackground: Color.lerp(mainBackground, other.mainBackground, t)!,
       textInput: Color.lerp(textInput, other.textInput, t)!,
       title: Color.lerp(title, other.title, t)!,
