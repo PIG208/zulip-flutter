@@ -133,7 +133,8 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       title: const Color(0xff1a1a1a),
       channelColorSwatches: ChannelColorSwatches.light,
       atMentionMarker: const HSLColor.fromAHSL(0.5, 0, 0, 0.2).toColor(),
-      contextMenuCancelBg: const Color(0xff797986),
+      contextMenuCancelBg: const Color(0xff797986).withValues(alpha: 0.15),
+      contextMenuCancelPressedBg: const Color(0xff797986).withValues(alpha: 0.20),
       dmHeaderBg: const HSLColor.fromAHSL(1, 46, 0.35, 0.93).toColor(),
       errorBannerBackground: const HSLColor.fromAHSL(1, 4, 0.33, 0.90).toColor(),
       errorBannerBorder: const HSLColor.fromAHSL(0.4, 3, 0.57, 0.33).toColor(),
@@ -172,7 +173,8 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       textInput: const Color(0xffffffff).withValues(alpha: 0.9),
       title: const Color(0xffffffff),
       channelColorSwatches: ChannelColorSwatches.dark,
-      contextMenuCancelBg: const Color(0xff797986), // the same as the light mode in Figma
+      contextMenuCancelBg: const Color(0xff797986).withValues(alpha: 0.15), // the same as the light mode in Figma
+      contextMenuCancelPressedBg: const Color(0xff797986).withValues(alpha: 0.20), // the same as the light mode in Figma
       // TODO(design-dark) need proper dark-theme color (this is ad hoc)
       atMentionMarker: const HSLColor.fromAHSL(0.4, 0, 0, 1).toColor(),
       dmHeaderBg: const HSLColor.fromAHSL(1, 46, 0.15, 0.2).toColor(),
@@ -221,6 +223,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
     required this.channelColorSwatches,
     required this.atMentionMarker,
     required this.contextMenuCancelBg,
+    required this.contextMenuCancelPressedBg,
     required this.dmHeaderBg,
     required this.errorBannerBackground,
     required this.errorBannerBorder,
@@ -273,6 +276,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
   // Not named variables in Figma; taken from older Figma drafts, or elsewhere.
   final Color atMentionMarker;
   final Color contextMenuCancelBg; // In Figma, but unnamed.
+  final Color contextMenuCancelPressedBg; // In Figma, but unnamed.
   final Color dmHeaderBg;
   final Color errorBannerBackground;
   final Color errorBannerBorder;
@@ -312,6 +316,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
     ChannelColorSwatches? channelColorSwatches,
     Color? atMentionMarker,
     Color? contextMenuCancelBg,
+    Color? contextMenuCancelPressedBg,
     Color? dmHeaderBg,
     Color? errorBannerBackground,
     Color? errorBannerBorder,
@@ -350,6 +355,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       channelColorSwatches: channelColorSwatches ?? this.channelColorSwatches,
       atMentionMarker: atMentionMarker ?? this.atMentionMarker,
       contextMenuCancelBg: contextMenuCancelBg ?? this.contextMenuCancelBg,
+      contextMenuCancelPressedBg: contextMenuCancelPressedBg ?? this.contextMenuCancelPressedBg,
       dmHeaderBg: dmHeaderBg ?? this.dmHeaderBg,
       errorBannerBackground: errorBannerBackground ?? this.errorBannerBackground,
       errorBannerBorder: errorBannerBorder ?? this.errorBannerBorder,
@@ -395,6 +401,7 @@ class DesignVariables extends ThemeExtension<DesignVariables> {
       channelColorSwatches: ChannelColorSwatches.lerp(channelColorSwatches, other.channelColorSwatches, t),
       atMentionMarker: Color.lerp(atMentionMarker, other.atMentionMarker, t)!,
       contextMenuCancelBg: Color.lerp(contextMenuCancelBg, other.contextMenuCancelBg, t)!,
+      contextMenuCancelPressedBg: Color.lerp(contextMenuCancelPressedBg, other.contextMenuCancelPressedBg, t)!,
       dmHeaderBg: Color.lerp(dmHeaderBg, other.dmHeaderBg, t)!,
       errorBannerBackground: Color.lerp(errorBannerBackground, other.errorBannerBackground, t)!,
       errorBannerBorder: Color.lerp(errorBannerBorder, other.errorBannerBorder, t)!,
