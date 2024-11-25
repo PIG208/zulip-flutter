@@ -314,10 +314,8 @@ class MessageListAppBarTitle extends StatelessWidget {
 
   Widget _buildStreamRow(BuildContext context, {
     ZulipStream? stream,
-    required String text,
   }) {
-    // A null [Icon.icon] makes a blank space.
-    final icon = (stream != null) ? iconDataForStream(stream) : null;
+    final icon = (stream == null) ? ZulipIcons.hash_sign : iconDataForStream(stream);
     return Row(
       mainAxisSize: MainAxisSize.min,
       // TODO(design): The vertical alignment of the stream privacy icon is a bit ad hoc.
@@ -325,10 +323,22 @@ class MessageListAppBarTitle extends StatelessWidget {
       //     https://github.com/zulip/zulip-flutter/pull/219#discussion_r1281024746
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Icon(size: 16, icon),
-        const SizedBox(width: 4),
-        Flexible(child: Text(text)),
+        Padding(padding: const EdgeInsetsDirectional.only(end: 8.0),
+          child: Icon(size: 20, icon)),
+        Flexible(child: Text(stream?.name ?? '(unknown stream)',
+          style: const TextStyle(
+            fontSize: 20,
+          ).merge(weightVariableTextStyle(context)))),
       ]);
+  }
+
+  Widget _buildTopicRow(BuildContext context, {
+    required ZulipStream? stream,
+    required String topic,
+  }) {
+    return Flexible(child: Text(topic, style: const TextStyle(
+      fontSize: 13,
+    ).merge(weightVariableTextStyle(context))));
   }
 
   @override
@@ -348,14 +358,17 @@ class MessageListAppBarTitle extends StatelessWidget {
       case ChannelNarrow(:var streamId):
         final store = PerAccountStoreWidget.of(context);
         final stream = store.streams[streamId];
-        final streamName = stream?.name ?? '(unknown channel)';
-        return _buildStreamRow(context, stream: stream, text: streamName);
+        return _buildStreamRow(context, stream: stream);
 
       case TopicNarrow(:var streamId, :var topic):
         final store = PerAccountStoreWidget.of(context);
         final stream = store.streams[streamId];
-        final streamName = stream?.name ?? '(unknown channel)';
-        return _buildStreamRow(context, stream: stream, text: "$streamName > $topic");
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildStreamRow(context, stream: stream),
+            _buildTopicRow(context, stream: stream, topic: topic),
+          ]);
 
       case DmNarrow(:var otherRecipientIds):
         final store = PerAccountStoreWidget.of(context);
