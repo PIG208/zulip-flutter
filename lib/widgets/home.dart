@@ -160,12 +160,12 @@ void _showMenu(BuildContext context, {required ValueNotifier<_HomePageTab> tab})
     // Search
     // const SizedBox(height: 8),
     _InboxButton(tab: tab, pageContext: context),
-    _RecentDmConversationsButton(pageContext: context),
+    // Recent conversations
     _MentionsButton(pageContext: context),
     _StarredMessagesButton(pageContext: context),
     // Drafts
-    // Direct messages
-    _ChannelsButton(pageContext: context),
+    _DirectMessages(tab: tab, pageContext: context),
+    _ChannelsButton(tab: tab, pageContext: context),
     // Users
     _MyProfileButton(pageContext: context),
     // Set my status
@@ -298,11 +298,11 @@ class _InboxButton extends _NavigationBarMenuButton {
   _HomePageTab get target => _HomePageTab.inbox;
 }
 
-class _RecentDmConversationsButton extends _MenuButton {
-  const _RecentDmConversationsButton({required super.pageContext});
+class _DirectMessages extends _NavigationBarMenuButton {
+  const _DirectMessages({required super.tab, required super.pageContext});
 
   @override
-  IconData get icon => ZulipIcons.clock;
+  IconData get icon => ZulipIcons.user;
 
   @override
   String label(ZulipLocalizations zulipLocalizations) {
@@ -310,10 +310,22 @@ class _RecentDmConversationsButton extends _MenuButton {
   }
 
   @override
-  void onPressed() {
-    Navigator.of(pageContext).push(
-      RecentDmConversationsPage.buildRoute(context: pageContext));
+  _HomePageTab get target => _HomePageTab.directMessages;
+}
+
+class _ChannelsButton extends _NavigationBarMenuButton {
+  const _ChannelsButton({required super.tab, required super.pageContext});
+
+  @override
+  IconData get icon => ZulipIcons.hash_italic;
+
+  @override
+  String label(ZulipLocalizations zulipLocalizations) {
+    return zulipLocalizations.channelsPageTitle;
   }
+
+  @override
+  _HomePageTab get target => _HomePageTab.channels;
 }
 
 class _MentionsButton extends _MenuButton {
@@ -349,24 +361,6 @@ class _StarredMessagesButton extends _MenuButton {
   void onPressed() {
     Navigator.of(pageContext).push(MessageListPage.buildRoute(
       context: pageContext, narrow: const StarredMessagesNarrow()));
-  }
-}
-
-class _ChannelsButton extends _MenuButton {
-  const _ChannelsButton({required super.pageContext});
-
-  @override
-  IconData get icon => ZulipIcons.hash_italic;
-
-  @override
-  String label(ZulipLocalizations zulipLocalizations) {
-    return zulipLocalizations.channelsPageTitle;
-  }
-
-  @override
-  void onPressed() {
-    Navigator.of(pageContext).push(
-      SubscriptionListPage.buildRoute(context: pageContext));
   }
 }
 
