@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../generated/l10n/zulip_localizations.dart';
 import '../model/narrow.dart';
 import 'action_sheet.dart';
+import 'content.dart';
 import 'icons.dart';
 import 'inbox.dart';
 import 'inset_shadow.dart';
@@ -176,6 +177,8 @@ void _showMenu(BuildContext context, {required ValueNotifier<_HomePageTab> tab})
     // VersionInfo
   ];
 
+  final accountId = PerAccountStoreWidget.accountIdOf(context);
+
   showModalBottomSheet<void>(
     context: context,
     // Clip.hardEdge looks bad; Clip.antiAliasWithSaveLayer looks pixel-perfect
@@ -186,27 +189,29 @@ void _showMenu(BuildContext context, {required ValueNotifier<_HomePageTab> tab})
     isScrollControlled: true,
     backgroundColor: designVariables.bgBotBar,
     builder: (BuildContext _) {
-      return SafeArea(
-        minimum: const EdgeInsets.only(bottom: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Expanded(child: InsetShadowBox(
-              top: 8, bottom: 8,
-              color: designVariables.bgBotBar,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: menuItems)))),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Scaled(
-                scaleEnd: 0.95,
-                duration: Duration(milliseconds: 100),
-                child: SizedBox(height: 44, child: ActionSheetCancelButton()))),
-          ]));
+      return PerAccountStoreWidget(
+        accountId: accountId,
+        child: SafeArea(
+          minimum: const EdgeInsets.only(bottom: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Expanded(child: InsetShadowBox(
+                top: 8, bottom: 8,
+                color: designVariables.bgBotBar,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: menuItems)))),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Scaled(
+                  scaleEnd: 0.95,
+                  duration: Duration(milliseconds: 100),
+                  child: SizedBox(height: 44, child: ActionSheetCancelButton()))),
+            ])));
     });
 }
 
@@ -214,6 +219,12 @@ abstract class _MenuButton extends ActionSheetMenuItemButton {
   const _MenuButton({required super.pageContext});
 
   bool get selected => false;
+
+  Widget buildLeading(BuildContext context) {
+    final designVariables = DesignVariables.of(context);
+    return Icon(icon, size: 24, color: selected ? designVariables.iconSelected
+                                                : designVariables.icon);
+  }
 
   Widget buildTrailing(BuildContext context) => const SizedBox.shrink();
 
@@ -254,14 +265,12 @@ abstract class _MenuButton extends ActionSheetMenuItemButton {
           onPressed: () => _handlePressed(context),
           style: buttonStyle,
           child: Row(spacing: 8, children: [
-            Icon(icon, size: 24,
-              color: selected ? designVariables.iconSelected
-                              : designVariables.icon),
+            buildLeading(context),
             Expanded(child: Text(label(zulipLocalizations),
               textAlign: TextAlign.start,
               style: const TextStyle(fontSize: 19, height: 26 / 19)
                 .merge(weightVariableTextStyle(context, wght: selected ? 600 : 400)))),
-            buildTrailing(pageContext),
+            buildTrailing(context),
           ]))));
   }
 }
@@ -369,6 +378,12 @@ class _MyProfileButton extends _MenuButton {
 
   @override
   IconData get icon => ZulipIcons.user;
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    final store = PerAccountStoreWidget.of(context);
+    return Avatar(userId: store.selfUserId, size: 24, borderRadius: 4);
+  }
 
   @override
   String label(ZulipLocalizations zulipLocalizations) {
