@@ -160,15 +160,15 @@ void _showMenu(BuildContext context, {required ValueNotifier<_HomePageTab> tab})
   final menuItems = <Widget>[
     // Search
     // const SizedBox(height: 8),
-    _InboxButton(tab: tab, pageContext: context),
+    _InboxButton(tab: tab),
     // Recent conversations
-    _MentionsButton(pageContext: context),
-    _StarredMessagesButton(pageContext: context),
+    const _MentionsButton(),
+    const _StarredMessagesButton(),
     // Drafts
-    _DirectMessages(tab: tab, pageContext: context),
-    _ChannelsButton(tab: tab, pageContext: context),
+    _DirectMessages(tab: tab),
+    _ChannelsButton(tab: tab),
     // Users
-    _MyProfileButton(pageContext: context),
+    const _MyProfileButton(),
     // Set my status
     // const SizedBox(height: 8),
     // Settings
@@ -215,11 +215,14 @@ void _showMenu(BuildContext context, {required ValueNotifier<_HomePageTab> tab})
     });
 }
 
-abstract class _MenuButton extends ActionSheetMenuItemButton {
-  const _MenuButton({required super.pageContext});
+abstract class _MenuButton extends StatelessWidget {
+  const _MenuButton();
+
+  String label(ZulipLocalizations zulipLocalizations);
 
   bool get selected => false;
 
+  IconData get icon;
   Widget buildLeading(BuildContext context) {
     final designVariables = DesignVariables.of(context);
     return Icon(icon, size: 24, color: selected ? designVariables.iconSelected
@@ -228,10 +231,7 @@ abstract class _MenuButton extends ActionSheetMenuItemButton {
 
   Widget buildTrailing(BuildContext context) => const SizedBox.shrink();
 
-  void _handlePressed(BuildContext context) {
-    assert(pageContext.mounted);
-    onPressed();
-  }
+  void onPressed(BuildContext context);
 
   @override
   Widget build(BuildContext context) {
@@ -262,7 +262,7 @@ abstract class _MenuButton extends ActionSheetMenuItemButton {
       scaleEnd: 0.95,
       child: SizedBox(height: 44,
         child: TextButton(
-          onPressed: () => _handlePressed(context),
+          onPressed: () => onPressed(context),
           style: buttonStyle,
           child: Row(spacing: 8, children: [
             buildLeading(context),
@@ -276,7 +276,7 @@ abstract class _MenuButton extends ActionSheetMenuItemButton {
 }
 
 abstract class _NavigationBarMenuButton extends _MenuButton {
-  const _NavigationBarMenuButton({required this.tab, required super.pageContext});
+  const _NavigationBarMenuButton({required this.tab});
 
   final ValueNotifier<_HomePageTab> tab;
 
@@ -286,14 +286,14 @@ abstract class _NavigationBarMenuButton extends _MenuButton {
   bool get selected => tab.value == target;
 
   @override
-  void onPressed() async {
-    Navigator.of(pageContext).pop();
+  void onPressed(BuildContext context) async {
     tab.value = target;
+    Navigator.of(context).pop();
   }
 }
 
 class _InboxButton extends _NavigationBarMenuButton {
-  const _InboxButton({required super.tab, required super.pageContext});
+  const _InboxButton({required super.tab});
 
   @override
   IconData get icon => ZulipIcons.inbox;
@@ -308,7 +308,7 @@ class _InboxButton extends _NavigationBarMenuButton {
 }
 
 class _DirectMessages extends _NavigationBarMenuButton {
-  const _DirectMessages({required super.tab, required super.pageContext});
+  const _DirectMessages({required super.tab});
 
   @override
   IconData get icon => ZulipIcons.user;
@@ -323,7 +323,7 @@ class _DirectMessages extends _NavigationBarMenuButton {
 }
 
 class _ChannelsButton extends _NavigationBarMenuButton {
-  const _ChannelsButton({required super.tab, required super.pageContext});
+  const _ChannelsButton({required super.tab});
 
   @override
   IconData get icon => ZulipIcons.hash_italic;
@@ -338,7 +338,7 @@ class _ChannelsButton extends _NavigationBarMenuButton {
 }
 
 class _MentionsButton extends _MenuButton {
-  const _MentionsButton({required super.pageContext});
+  const _MentionsButton();
 
   @override
   IconData get icon => ZulipIcons.at_sign;
@@ -349,14 +349,14 @@ class _MentionsButton extends _MenuButton {
   }
 
   @override
-  void onPressed() {
-    Navigator.of(pageContext).push(MessageListPage.buildRoute(
-      context: pageContext, narrow: const MentionsNarrow()));
+  void onPressed(BuildContext context) {
+    Navigator.of(context).push(MessageListPage.buildRoute(
+      context: context, narrow: const MentionsNarrow()));
   }
 }
 
 class _StarredMessagesButton extends _MenuButton {
-  const _StarredMessagesButton({required super.pageContext});
+  const _StarredMessagesButton();
 
   @override
   IconData get icon => ZulipIcons.star;
@@ -367,14 +367,14 @@ class _StarredMessagesButton extends _MenuButton {
   }
 
   @override
-  void onPressed() {
-    Navigator.of(pageContext).push(MessageListPage.buildRoute(
-      context: pageContext, narrow: const StarredMessagesNarrow()));
+  void onPressed(BuildContext context) {
+    Navigator.of(context).push(MessageListPage.buildRoute(
+      context: context, narrow: const StarredMessagesNarrow()));
   }
 }
 
 class _MyProfileButton extends _MenuButton {
-  const _MyProfileButton({required super.pageContext});
+  const _MyProfileButton();
 
   @override
   IconData get icon => ZulipIcons.user;
@@ -391,10 +391,10 @@ class _MyProfileButton extends _MenuButton {
   }
 
   @override
-  void onPressed() {
-    final store = PerAccountStoreWidget.of(pageContext);
-    Navigator.of(pageContext).push(
-      ProfilePage.buildRoute(context: pageContext, userId: store.selfUserId));
+  void onPressed(BuildContext context) {
+    final store = PerAccountStoreWidget.of(context);
+    Navigator.of(context).push(
+      ProfilePage.buildRoute(context: context, userId: store.selfUserId));
   }
 }
 
