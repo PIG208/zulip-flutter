@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../generated/l10n/zulip_localizations.dart';
 import '../model/narrow.dart';
 import 'action_sheet.dart';
-import 'content.dart';
 import 'icons.dart';
 import 'inbox.dart';
 import 'inset_shadow.dart';
@@ -29,36 +28,36 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _pageIndex = 0;
+  final ValueNotifier<_HomePageTab> _tab = ValueNotifier(_HomePageTab.inbox);
 
   @override
   Widget build(BuildContext context) {
-    const pageBodies = [
-      InboxPageBody(),
-      SubscriptionListPageBody(),
+    const pageBodies = {
+      _HomePageTab.inbox:          InboxPageBody(),
+      _HomePageTab.channels:       SubscriptionListPageBody(),
       // Users
-      RecentDmConversationsPageBody(),
-    ];
+      _HomePageTab.directMessages: RecentDmConversationsPageBody(),
+    };
 
-    Widget Function(int pageIndex) navigationButtonBuilder(IconData icon, String tooltip) {
-      return (pageIndex) => NavigationButton(
+    Widget Function(_HomePageTab tab) buildButton(IconData icon, String tooltip) {
+      return (tab) => NavigationButton(
         icon: icon, tooltip: tooltip,
-        selected: _pageIndex == pageIndex,
+        selected: _tab.value == tab,
         onPressed: () {
           setState(() {
-            _pageIndex = pageIndex;
+            _tab.value = tab;
           });
         });
     }
 
     final designVariables = DesignVariables.of(context);
 
-    final navigationButtonBuilders = [
-      navigationButtonBuilder(ZulipIcons.inbox,       'Inbox'),
-      navigationButtonBuilder(ZulipIcons.hash_italic, 'Channels'),
+    final navigationButtonBuilders = {
+      _HomePageTab.inbox:          buildButton(ZulipIcons.inbox,       'Inbox'),
+      _HomePageTab.channels:       buildButton(ZulipIcons.hash_italic, 'Channels'),
       // navigationButtonBuilder(ZulipIcons.contacts, 'Users'),
-      navigationButtonBuilder(ZulipIcons.user,        'Direct messages'),
-    ];
+      _HomePageTab.directMessages: buildButton(ZulipIcons.user,        'Direct messages'),
+    };
     final menuButton = NavigationButton(
       icon: ZulipIcons.menu, tooltip: 'Menu', selected: false,
       onPressed: () => showMenu(context));
@@ -66,8 +65,8 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: Stack(
         children: [
-          for (int index = 0; index < pageBodies.length; index++)
-            Offstage(offstage: index != _pageIndex, child: pageBodies[index])
+          for (final MapEntry(key:tab, value:body) in pageBodies.entries)
+            Offstage(offstage: tab != _tab.value, child: body)
         ]),
       bottomNavigationBar: SafeArea(
         child: DecoratedBox(
@@ -83,11 +82,17 @@ class _HomePageState extends State<HomePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  for (final (pageIndex, buildButton) in navigationButtonBuilders.indexed)
-                    Expanded(child: buildButton(pageIndex)),
+                  for (final MapEntry(key:tab, value:buildButton) in navigationButtonBuilders.entries)
+                    Expanded(child: buildButton(tab)),
                   Expanded(child: menuButton),
                 ]))))));
   }
+}
+
+enum _HomePageTab {
+  inbox,
+  channels,
+  directMessages,
 }
 
 class NavigationButton extends StatelessWidget {
@@ -240,41 +245,6 @@ abstract class _MenuButton extends ActionSheetMenuItemButton {
                 .merge(weightVariableTextStyle(context, wght: selected ? 600 : 400)))),
             buildTrailing(pageContext),
           ]))));
-  }
-}
-
-enum _MenuItemCounterVariant {
-  unreads,
-  quantity,
-}
-
-class _MenuItemCounter extends StatelessWidget {
-  const _MenuItemCounter({required this.value, required this.variant});
-
-  final int value;
-  final _MenuItemCounterVariant variant;
-
-  @override
-  Widget build(BuildContext context) {
-    final designVariables = DesignVariables.of(context);
-    final Color bgColor, textColor;
-    switch (variant) {
-      case _MenuItemCounterVariant.unreads:
-        bgColor = designVariables.bgCounterUnread;
-        textColor = designVariables.labelCounterUnread;
-      case _MenuItemCounterVariant.quantity:
-        bgColor = Colors.transparent;
-        textColor = designVariables.labelCounterQuantity;
-    }
-    return Container(height: 24,
-      padding: const EdgeInsets.fromLTRB(6, 1, 6, 2),
-      decoration: ShapeDecoration(color: bgColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5))),
-      child: Text(value.toString(), style: TextStyle(
-        fontSize: 18,
-        height: 21 / 18,
-        color: textColor,
-      ).merge(weightVariableTextStyle(context, wght: 600))));
   }
 }
 
