@@ -186,6 +186,7 @@ class _ZulipAppState extends State<ZulipApp> with WidgetsBindingObserver {
           localizationsDelegates: ZulipLocalizations.localizationsDelegates,
           supportedLocales: ZulipLocalizations.supportedLocales,
           theme: themeData,
+          debugShowCheckedModeBanner: false,
 
           navigatorKey: ZulipApp.navigatorKey,
           navigatorObservers: widget.navigatorObservers ?? const [],

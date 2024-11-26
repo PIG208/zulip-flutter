@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../generated/l10n/zulip_localizations.dart';
 import '../model/narrow.dart';
 import 'action_sheet.dart';
+import 'content.dart';
 import 'icons.dart';
 import 'inbox.dart';
 import 'inset_shadow.dart';
@@ -50,14 +51,17 @@ class _HomePageState extends State<HomePage> {
         });
     }
 
+    final designVariables = DesignVariables.of(context);
+
     final navigationButtonBuilders = [
       navigationButtonBuilder(ZulipIcons.inbox,       'Inbox'),
       navigationButtonBuilder(ZulipIcons.hash_italic, 'Channels'),
       // navigationButtonBuilder(ZulipIcons.contacts, 'Users'),
       navigationButtonBuilder(ZulipIcons.user,        'Direct messages'),
     ];
-
-    final designVariables = DesignVariables.of(context);
+    final menuButton = NavigationButton(
+      icon: ZulipIcons.menu, tooltip: 'Menu', selected: false,
+      onPressed: () => showMenu(context));
 
     return Scaffold(
       body: Stack(
@@ -81,9 +85,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   for (final (pageIndex, buildButton) in navigationButtonBuilders.indexed)
                     Expanded(child: buildButton(pageIndex)),
-                  Expanded(child: NavigationButton(
-                    icon: ZulipIcons.menu, tooltip: 'Menu', selected: false,
-                    onPressed: () => showMenu(context))),
+                  Expanded(child: menuButton),
                 ]))))));
   }
 }
@@ -236,7 +238,7 @@ abstract class _MenuButton extends ActionSheetMenuItemButton {
               textAlign: TextAlign.start,
               style: const TextStyle(fontSize: 19, height: 26 / 19)
                 .merge(weightVariableTextStyle(context, wght: selected ? 600 : 400)))),
-            buildTrailing(context),
+            buildTrailing(pageContext),
           ]))));
   }
 }
