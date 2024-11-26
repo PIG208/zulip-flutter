@@ -1073,27 +1073,26 @@ abstract class _ComposeBoxBody extends StatelessWidget {
     ];
 
     final topicInput = this.topicInput();
-    return _ComposeBoxContainer(
-      child: Column(children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Theme(
-            data: inputThemeData,
-            child: Column(children: [
-              if (topicInput != null) topicInput,
-              contentInput(),
+    return Column(children: [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Theme(
+          data: inputThemeData,
+          child: Column(children: [
+            if (topicInput != null) topicInput,
+            contentInput(),
+          ]))),
+      SizedBox(
+        height: _composeButtonSize,
+        child: IconButtonTheme(
+          data: iconButtonThemeData,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(children: composeButtons),
+              sendButton(),
             ]))),
-        SizedBox(
-          height: _composeButtonSize,
-          child: IconButtonTheme(
-            data: iconButtonThemeData,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(children: composeButtons),
-                sendButton(),
-              ]))),
-      ]));
+    ]);
   }
 }
 
@@ -1298,21 +1297,24 @@ class _ComposeBoxState extends State<ComposeBox> implements ComposeBoxState {
     }
 
     final narrow = widget.narrow;
+    final Widget body;
     switch (narrow) {
       case ChannelNarrow():
         _controller as StreamComposeBoxController;
-        return _StreamComposeBoxBody(controller: _controller, narrow: narrow);
+        body = _StreamComposeBoxBody(controller: _controller, narrow: narrow);
       case TopicNarrow():
         _controller as FixedDestinationComposeBoxController;
-        return _FixedDestinationComposeBoxBody(controller: _controller, narrow: narrow);
+        body = _FixedDestinationComposeBoxBody(controller: _controller, narrow: narrow);
       case DmNarrow():
         _controller as FixedDestinationComposeBoxController;
-        return _FixedDestinationComposeBoxBody(controller: _controller, narrow: narrow);
+        body = _FixedDestinationComposeBoxBody(controller: _controller, narrow: narrow);
       case CombinedFeedNarrow():
       case MentionsNarrow():
       case StarredMessagesNarrow():
         assert(false);
-        return const SizedBox.shrink();
+        body = const SizedBox.shrink();
     }
+
+    return _ComposeBoxContainer(child: body);
   }
 }
