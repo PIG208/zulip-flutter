@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../generated/l10n/zulip_localizations.dart';
 import '../model/narrow.dart';
 import 'action_sheet.dart';
+import 'app.dart';
 import 'content.dart';
 import 'icons.dart';
 import 'inbox.dart';
@@ -168,11 +169,13 @@ void _showMenu(BuildContext context, {
     // Recent conversations
     const _MentionsButton(),
     const _StarredMessagesButton(),
+    const _CombinedFeedButton(),
     // Drafts
-    _DirectMessages(tab: tab),
     _ChannelsButton(tab: tab),
+    _DirectMessagesButton(tab: tab),
     // Users
     const _MyProfileButton(),
+    const _ChooseAccountButton(),
     // Set my status
     // const SizedBox(height: 8),
     // Settings
@@ -310,8 +313,8 @@ class _InboxButton extends _NavigationBarMenuButton {
   HomePageTab get target => HomePageTab.inbox;
 }
 
-class _DirectMessages extends _NavigationBarMenuButton {
-  const _DirectMessages({required super.tab});
+class _DirectMessagesButton extends _NavigationBarMenuButton {
+  const _DirectMessagesButton({required super.tab});
 
   @override
   IconData get icon => ZulipIcons.user;
@@ -338,6 +341,24 @@ class _ChannelsButton extends _NavigationBarMenuButton {
 
   @override
   HomePageTab get target => HomePageTab.channels;
+}
+
+class _CombinedFeedButton extends _MenuButton {
+  const _CombinedFeedButton();
+
+  @override
+  IconData get icon => ZulipIcons.message_feed;
+
+  @override
+  String label(ZulipLocalizations zulipLocalizations) {
+    return zulipLocalizations.combinedFeedPageTitle;
+  }
+
+  @override
+  void onPressed(BuildContext context) {
+    Navigator.of(context).push(MessageListPage.buildRoute(
+      context: context, narrow: const CombinedFeedNarrow()));
+  }
 }
 
 class _MentionsButton extends _MenuButton {
@@ -398,6 +419,23 @@ class _MyProfileButton extends _MenuButton {
     final store = PerAccountStoreWidget.of(context);
     Navigator.of(context).push(
       ProfilePage.buildRoute(context: context, userId: store.selfUserId));
+  }
+}
+
+class _ChooseAccountButton extends _MenuButton {
+  const _ChooseAccountButton();
+
+  @override
+  IconData get icon => ZulipIcons.globe;
+
+  @override
+  String label(ZulipLocalizations zulipLocalizations) {
+    return zulipLocalizations.chooseAccountPageTitle;
+  }
+
+  @override
+  void onPressed(BuildContext context) {
+    Navigator.of(context).push(MaterialWidgetRoute(page: const ChooseAccountPage()));
   }
 }
 
