@@ -204,7 +204,7 @@ void main() {
         check(controller).isA<StreamComposeBoxController>();
         final topicTextField = tester.widgetList<TextField>(
           find.byWidgetPredicate((widget) {
-            final topicController = (controller as StreamComposeBoxController).topicController;
+            final topicController = (controller as StreamComposeBoxController).topic;
             return widget is TextField && widget.controller == topicController;
           })).singleOrNull;
         check(topicTextField).isNotNull()
@@ -216,7 +216,7 @@ void main() {
 
       final contentTextField = tester.widget<TextField>(find.byWidgetPredicate(
         (widget) => widget is TextField
-          && widget.controller == controller!.contentController));
+          && widget.controller == controller!.content));
       check(contentTextField)
         .textCapitalization.equals(TextCapitalization.sentences);
     }
@@ -362,7 +362,7 @@ void main() {
       checkTypingRequest(TypingOp.stop, narrow);
 
       connection.prepare(json: {});
-      controller!.contentController.selection =
+      controller!.content.selection =
         const TextSelection(baseOffset: 0, extentOffset: 2);
       checkTypingRequest(TypingOp.start, narrow);
 
@@ -477,7 +477,7 @@ void main() {
         // (When we check that the send button looks disabled, it should be because
         // the file is uploading, not a pre-existing reason.)
         await enterTopic(tester, narrow: narrow, topic: 'some topic');
-        controller!.contentController.value = const TextEditingValue(text: 'see image: ');
+        controller!.content.value = const TextEditingValue(text: 'see image: ');
         await tester.pump();
         checkAppearsLoading(tester, false);
 
@@ -501,7 +501,7 @@ void main() {
         final errorDialogs = tester.widgetList(find.byType(AlertDialog));
         check(errorDialogs).isEmpty();
 
-        check(controller!.contentController.text)
+        check(controller!.content.text)
           .equals('see image: [Uploading image.jpg…]()\n\n');
         // (the request is checked more thoroughly in API tests)
         check(connection.lastRequest!).isA<http.MultipartRequest>()
@@ -517,7 +517,7 @@ void main() {
         checkAppearsLoading(tester, true);
 
         await tester.pump(const Duration(seconds: 1));
-        check(controller!.contentController.text)
+        check(controller!.content.text)
           .equals('see image: [image.jpg](/user_uploads/1/4e/m2A3MSqFnWRLUf9SaPzQ0Up_/image.jpg)\n\n');
         checkAppearsLoading(tester, false);
       });
@@ -537,7 +537,7 @@ void main() {
         // (When we check that the send button looks disabled, it should be because
         // the file is uploading, not a pre-existing reason.)
         await enterTopic(tester, narrow: narrow, topic: 'some topic');
-        controller!.contentController.value = const TextEditingValue(text: 'see image: ');
+        controller!.content.value = const TextEditingValue(text: 'see image: ');
         await tester.pump();
         checkAppearsLoading(tester, false);
 
@@ -561,7 +561,7 @@ void main() {
         final errorDialogs = tester.widgetList(find.byType(AlertDialog));
         check(errorDialogs).isEmpty();
 
-        check(controller!.contentController.text)
+        check(controller!.content.text)
           .equals('see image: [Uploading image.jpg…]()\n\n');
         // (the request is checked more thoroughly in API tests)
         check(connection.lastRequest!).isA<http.MultipartRequest>()
@@ -577,7 +577,7 @@ void main() {
         checkAppearsLoading(tester, true);
 
         await tester.pump(const Duration(seconds: 1));
-        check(controller!.contentController.text)
+        check(controller!.content.text)
           .equals('see image: [image.jpg](/user_uploads/1/4e/m2A3MSqFnWRLUf9SaPzQ0Up_/image.jpg)\n\n');
         checkAppearsLoading(tester, false);
       });
