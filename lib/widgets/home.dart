@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
 
 import '../generated/l10n/zulip_localizations.dart';
 import '../model/narrow.dart';
@@ -31,6 +32,24 @@ class _HomePageState extends State<HomePage> {
   final ValueNotifier<_HomePageTab> _tab = ValueNotifier(_HomePageTab.inbox);
 
   @override
+  void initState() {
+    super.initState();
+    _tab.addListener(_tabChanged);
+  }
+
+  @override
+  void dispose() {
+    _tab.dispose();
+    super.dispose();
+  }
+
+  void _tabChanged() {
+    setState(() {
+      // The actual state lives in [_tab]
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     const pageBodies = {
       _HomePageTab.inbox:          InboxPageBody(),
@@ -60,7 +79,7 @@ class _HomePageState extends State<HomePage> {
     };
     final menuButton = NavigationButton(
       icon: ZulipIcons.menu, tooltip: 'Menu', selected: false,
-      onPressed: () => showMenu(context));
+      onPressed: () => _showMenu(context, tab: _tab));
 
     return Scaffold(
       body: Stack(
@@ -136,12 +155,12 @@ class NavigationButton extends StatelessWidget {
   }
 }
 
-void showMenu(BuildContext context) {
+void _showMenu(BuildContext context, {required ValueNotifier<_HomePageTab> tab}) {
   final designVariables = DesignVariables.of(context);
   final menuItems = <Widget>[
     // Search
     // const SizedBox(height: 8),
-    _InboxButton(selected: false, pageContext: context),
+    _InboxButton(selected: false, tab: tab, pageContext: context),
     _RecentDmConversationsButton(selected: false, pageContext: context),
     _MentionsButton(selected: false, pageContext: context),
     _StarredMessagesButton(selected: false, pageContext: context),
@@ -249,7 +268,9 @@ abstract class _MenuButton extends ActionSheetMenuItemButton {
 }
 
 class _InboxButton extends _MenuButton {
-  const _InboxButton({required super.selected, required super.pageContext});
+  const _InboxButton({required super.selected, required this.tab, required super.pageContext});
+
+  final ValueNotifier<_HomePageTab> tab;
 
   @override
   IconData get icon => ZulipIcons.inbox;
@@ -261,7 +282,8 @@ class _InboxButton extends _MenuButton {
 
   @override
   void onPressed() async {
-    await Navigator.of(pageContext).push(InboxPage.buildRoute(context: pageContext));
+    Navigator.of(pageContext).pop();
+    tab.value = _HomePageTab.inbox;
   }
 }
 
