@@ -5,7 +5,6 @@ import 'package:zulip/log.dart';
 import 'package:zulip/model/database.dart';
 import 'package:zulip/widgets/app.dart';
 import 'package:zulip/widgets/home.dart';
-import 'package:zulip/widgets/inbox.dart';
 import 'package:zulip/widgets/page.dart';
 
 import '../example_data.dart' as eg;
@@ -40,7 +39,7 @@ void main() {
       ]);
     });
 
-    testWidgets('when have accounts, go to inbox for first account', (tester) async {
+    testWidgets('when have accounts, go to home page for first account', (tester) async {
       addTearDown(testBinding.reset);
 
       // We'll need per-account data for the account that a page will be opened
@@ -49,13 +48,9 @@ void main() {
       await testBinding.globalStore.insertAccount(eg.otherAccount.toCompanion(false));
 
       check(await initialRoutes(tester)).deepEquals(<Condition<Object?>>[
-        (it) => it.isA<WidgetRoute>().page.isA<ChooseAccountPage>(),
         (it) => it.isA<MaterialAccountWidgetRoute>()
           ..accountId.equals(eg.selfAccount.id)
           ..page.isA<HomePage>(),
-        (it) => it.isA<MaterialAccountWidgetRoute>()
-          ..accountId.equals(eg.selfAccount.id)
-          ..page.isA<InboxPage>(),
       ]);
     });
   });
