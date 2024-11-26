@@ -266,10 +266,25 @@ abstract class _MenuButton extends ActionSheetMenuItemButton {
   }
 }
 
-class _InboxButton extends _MenuButton {
-  const _InboxButton({required this.tab, required super.pageContext});
+abstract class _NavigationBarMenuButton extends _MenuButton {
+  const _NavigationBarMenuButton({required this.tab, required super.pageContext});
 
   final ValueNotifier<_HomePageTab> tab;
+
+  _HomePageTab get target;
+
+  @override
+  bool get selected => tab.value == target;
+
+  @override
+  void onPressed() async {
+    Navigator.of(pageContext).pop();
+    tab.value = target;
+  }
+}
+
+class _InboxButton extends _NavigationBarMenuButton {
+  const _InboxButton({required super.tab, required super.pageContext});
 
   @override
   IconData get icon => ZulipIcons.inbox;
@@ -280,10 +295,7 @@ class _InboxButton extends _MenuButton {
   }
 
   @override
-  void onPressed() async {
-    Navigator.of(pageContext).pop();
-    tab.value = _HomePageTab.inbox;
-  }
+  _HomePageTab get target => _HomePageTab.inbox;
 }
 
 class _RecentDmConversationsButton extends _MenuButton {
