@@ -21,7 +21,7 @@ class ZulipLocalizationsJa extends ZulipLocalizations {
   String get aboutPageTapToView => 'Tap to view';
 
   @override
-  String get chooseAccountPageTitle => 'アカウントを選択';
+  String get switchAccountPageTitle => 'Switch account';
 
   @override
   String get chooseAccountPageLogOutButton => 'Log out';

@@ -124,8 +124,8 @@ abstract class ZulipLocalizations {
   /// Title for ChooseAccountPage
   ///
   /// In en, this message translates to:
-  /// **'Choose account'**
-  String get chooseAccountPageTitle;
+  /// **'Switch account'**
+  String get switchAccountPageTitle;
 
   /// Label for the 'Log out' button for an account on the choose-account page
   ///

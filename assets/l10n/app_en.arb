@@ -15,8 +15,8 @@
   "@aboutPageTapToView": {
     "description": "Item subtitle in About Zulip page to navigate to Licenses page"
   },
-  "chooseAccountPageTitle": "Choose account",
-  "@chooseAccountPageTitle": {
+  "switchAccountPageTitle": "Switch account",
+  "@switchAccountPageTitle": {
     "description": "Title for ChooseAccountPage"
   },
   "chooseAccountPageLogOutButton": "Log out",
