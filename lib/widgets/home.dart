@@ -16,20 +16,28 @@ import 'subscription_list.dart';
 import 'text.dart';
 import 'theme.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+enum HomePageTab {
+  inbox,
+  channels,
+  directMessages,
+}
 
-  static Route<void> buildRoute({required int accountId}) {
+class HomePage extends StatefulWidget {
+  const HomePage({super.key, required this.initialTab});
+
+  static Route<void> buildRoute({required int accountId, HomePageTab? initialTab}) {
     return MaterialAccountWidgetRoute(accountId: accountId,
-      page: const HomePage());
+      page: HomePage(initialTab: initialTab ?? HomePageTab.inbox));
   }
+
+  final HomePageTab initialTab;
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  final ValueNotifier<_HomePageTab> _tab = ValueNotifier(_HomePageTab.inbox);
+  late final ValueNotifier<HomePageTab> _tab = ValueNotifier(widget.initialTab);
 
   @override
   void initState() {
@@ -52,13 +60,13 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     const pageBodies = {
-      _HomePageTab.inbox:          InboxPageBody(),
-      _HomePageTab.channels:       SubscriptionListPageBody(),
+      HomePageTab.inbox:          InboxPageBody(),
+      HomePageTab.channels:       SubscriptionListPageBody(),
       // Users
-      _HomePageTab.directMessages: RecentDmConversationsPageBody(),
+      HomePageTab.directMessages: RecentDmConversationsPageBody(),
     };
 
-    Widget Function(_HomePageTab tab) buildButton(IconData icon, String tooltip) {
+    Widget Function(HomePageTab tab) buildButton(IconData icon, String tooltip) {
       return (tab) => NavigationButton(
         icon: icon, tooltip: tooltip,
         selected: _tab.value == tab,
@@ -72,10 +80,10 @@ class _HomePageState extends State<HomePage> {
     final designVariables = DesignVariables.of(context);
 
     final navigationButtonBuilders = {
-      _HomePageTab.inbox:          buildButton(ZulipIcons.inbox,       'Inbox'),
-      _HomePageTab.channels:       buildButton(ZulipIcons.hash_italic, 'Channels'),
+      HomePageTab.inbox:          buildButton(ZulipIcons.inbox,       'Inbox'),
+      HomePageTab.channels:       buildButton(ZulipIcons.hash_italic, 'Channels'),
       // navigationButtonBuilder(ZulipIcons.contacts, 'Users'),
-      _HomePageTab.directMessages: buildButton(ZulipIcons.user,        'Direct messages'),
+      HomePageTab.directMessages: buildButton(ZulipIcons.user,        'Direct messages'),
     };
     final menuButton = NavigationButton(
       icon: ZulipIcons.menu, tooltip: 'Menu', selected: false,
@@ -106,12 +114,6 @@ class _HomePageState extends State<HomePage> {
                   Expanded(child: menuButton),
                 ]))))));
   }
-}
-
-enum _HomePageTab {
-  inbox,
-  channels,
-  directMessages,
 }
 
 class NavigationButton extends StatelessWidget {
@@ -155,7 +157,9 @@ class NavigationButton extends StatelessWidget {
   }
 }
 
-void _showMenu(BuildContext context, {required ValueNotifier<_HomePageTab> tab}) {
+void _showMenu(BuildContext context, {
+  required ValueNotifier<HomePageTab> tab,
+}) {
   final designVariables = DesignVariables.of(context);
   final menuItems = <Widget>[
     // Search
@@ -221,7 +225,6 @@ abstract class _MenuButton extends StatelessWidget {
   String label(ZulipLocalizations zulipLocalizations);
 
   bool get selected => false;
-
   IconData get icon;
   Widget buildLeading(BuildContext context) {
     final designVariables = DesignVariables.of(context);
@@ -278,9 +281,9 @@ abstract class _MenuButton extends StatelessWidget {
 abstract class _NavigationBarMenuButton extends _MenuButton {
   const _NavigationBarMenuButton({required this.tab});
 
-  final ValueNotifier<_HomePageTab> tab;
+  final ValueNotifier<HomePageTab> tab;
 
-  _HomePageTab get target;
+  HomePageTab get target;
 
   @override
   bool get selected => tab.value == target;
@@ -304,7 +307,7 @@ class _InboxButton extends _NavigationBarMenuButton {
   }
 
   @override
-  _HomePageTab get target => _HomePageTab.inbox;
+  HomePageTab get target => HomePageTab.inbox;
 }
 
 class _DirectMessages extends _NavigationBarMenuButton {
@@ -319,7 +322,7 @@ class _DirectMessages extends _NavigationBarMenuButton {
   }
 
   @override
-  _HomePageTab get target => _HomePageTab.directMessages;
+  HomePageTab get target => HomePageTab.directMessages;
 }
 
 class _ChannelsButton extends _NavigationBarMenuButton {
@@ -334,7 +337,7 @@ class _ChannelsButton extends _NavigationBarMenuButton {
   }
 
   @override
-  _HomePageTab get target => _HomePageTab.channels;
+  HomePageTab get target => HomePageTab.channels;
 }
 
 class _MentionsButton extends _MenuButton {
