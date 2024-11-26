@@ -13,7 +13,6 @@ import 'about_zulip.dart';
 import 'actions.dart';
 import 'dialog.dart';
 import 'home.dart';
-import 'inbox.dart';
 import 'login.dart';
 import 'page.dart';
 import 'store.dart';

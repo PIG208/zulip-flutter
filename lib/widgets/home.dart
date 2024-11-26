@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:path/path.dart';
 
 import '../generated/l10n/zulip_localizations.dart';
 import '../model/narrow.dart';
@@ -160,15 +159,15 @@ void _showMenu(BuildContext context, {required ValueNotifier<_HomePageTab> tab})
   final menuItems = <Widget>[
     // Search
     // const SizedBox(height: 8),
-    _InboxButton(selected: false, tab: tab, pageContext: context),
-    _RecentDmConversationsButton(selected: false, pageContext: context),
-    _MentionsButton(selected: false, pageContext: context),
-    _StarredMessagesButton(selected: false, pageContext: context),
+    _InboxButton(tab: tab, pageContext: context),
+    _RecentDmConversationsButton(pageContext: context),
+    _MentionsButton(pageContext: context),
+    _StarredMessagesButton(pageContext: context),
     // Drafts
     // Direct messages
-    _ChannelsButton(selected: false, pageContext: context),
+    _ChannelsButton(pageContext: context),
     // Users
-    _MyProfileButton(selected: false, pageContext: context),
+    _MyProfileButton(pageContext: context),
     // Set my status
     // const SizedBox(height: 8),
     // Settings
@@ -212,9 +211,9 @@ void _showMenu(BuildContext context, {required ValueNotifier<_HomePageTab> tab})
 }
 
 abstract class _MenuButton extends ActionSheetMenuItemButton {
-  const _MenuButton({required this.selected, required super.pageContext});
+  const _MenuButton({required super.pageContext});
 
-  final bool selected;
+  bool get selected => false;
 
   Widget buildTrailing(BuildContext context) => const SizedBox.shrink();
 
@@ -268,7 +267,7 @@ abstract class _MenuButton extends ActionSheetMenuItemButton {
 }
 
 class _InboxButton extends _MenuButton {
-  const _InboxButton({required super.selected, required this.tab, required super.pageContext});
+  const _InboxButton({required this.tab, required super.pageContext});
 
   final ValueNotifier<_HomePageTab> tab;
 
@@ -288,7 +287,7 @@ class _InboxButton extends _MenuButton {
 }
 
 class _RecentDmConversationsButton extends _MenuButton {
-  const _RecentDmConversationsButton({required super.selected, required super.pageContext});
+  const _RecentDmConversationsButton({required super.pageContext});
 
   @override
   IconData get icon => ZulipIcons.clock;
@@ -306,7 +305,7 @@ class _RecentDmConversationsButton extends _MenuButton {
 }
 
 class _MentionsButton extends _MenuButton {
-  const _MentionsButton({required super.selected, required super.pageContext});
+  const _MentionsButton({required super.pageContext});
 
   @override
   IconData get icon => ZulipIcons.at_sign;
@@ -324,7 +323,7 @@ class _MentionsButton extends _MenuButton {
 }
 
 class _StarredMessagesButton extends _MenuButton {
-  const _StarredMessagesButton({required super.selected, required super.pageContext});
+  const _StarredMessagesButton({required super.pageContext});
 
   @override
   IconData get icon => ZulipIcons.star;
@@ -342,7 +341,7 @@ class _StarredMessagesButton extends _MenuButton {
 }
 
 class _ChannelsButton extends _MenuButton {
-  const _ChannelsButton({required super.selected, required super.pageContext});
+  const _ChannelsButton({required super.pageContext});
 
   @override
   IconData get icon => ZulipIcons.hash_italic;
@@ -360,7 +359,7 @@ class _ChannelsButton extends _MenuButton {
 }
 
 class _MyProfileButton extends _MenuButton {
-  const _MyProfileButton({required super.selected, required super.pageContext});
+  const _MyProfileButton({required super.pageContext});
 
   @override
   IconData get icon => ZulipIcons.user;
