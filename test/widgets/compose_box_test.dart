@@ -38,7 +38,7 @@ void main() {
 
   late PerAccountStore store;
   late FakeApiConnection connection;
-  late GlobalKey<ComposeBoxController> controllerKey;
+  late ComposeBoxController? controller;
 
   final contentInputFinder = find.byWidgetPredicate(
     (widget) => widget is TextField && widget.controller is ComposeContentController);
@@ -66,16 +66,17 @@ void main() {
     await store.addStreams(streams);
     connection = store.connection as FakeApiConnection;
 
-    controllerKey = GlobalKey<ComposeBoxController>();
     await tester.pumpWidget(TestZulipApp(accountId: selfAccount.id,
       child: Column(
         // This positions the compose box at the bottom of the screen,
         // simulating the layout of the message list page.
         children: [
           const Expanded(child: SizedBox.expand()),
-          ComposeBox(controllerKey: controllerKey, narrow: narrow),
+          ComposeBox(narrow: narrow),
         ])));
     await tester.pumpAndSettle();
+
+    controller = tester.state<ComposeBoxState>(find.byType(ComposeBox)).controller;
   }
 
   Future<void> enterTopic(WidgetTester tester, {
@@ -199,21 +200,23 @@ void main() {
     void checkComposeBoxTextFields(WidgetTester tester, {
       required bool expectTopicTextField,
     }) {
-      final composeBoxController = controllerKey.currentState!;
-
-      final topicTextField = tester.widgetList<TextField>(find.byWidgetPredicate(
-        (widget) => widget is TextField
-          && widget.controller == composeBoxController.topicController)).singleOrNull;
       if (expectTopicTextField) {
+        check(controller).isA<StreamComposeBoxController>();
+        final topicTextField = tester.widgetList<TextField>(
+          find.byWidgetPredicate((widget) {
+            final topicController = (controller as StreamComposeBoxController).topicController;
+            return widget is TextField && widget.controller == topicController;
+          })).singleOrNull;
         check(topicTextField).isNotNull()
           .textCapitalization.equals(TextCapitalization.none);
       } else {
-        check(topicTextField).isNull();
+        check(controller).isA<FixedDestinationComposeBoxController>();
+        check(find.byType(TextField)).findsOne(); // just content input, no topic
       }
 
       final contentTextField = tester.widget<TextField>(find.byWidgetPredicate(
         (widget) => widget is TextField
-          && widget.controller == composeBoxController.contentController));
+          && widget.controller == controller!.contentController));
       check(contentTextField)
         .textCapitalization.equals(TextCapitalization.sentences);
     }
@@ -351,7 +354,6 @@ void main() {
 
     testWidgets('selection change sends a "typing started" notice', (tester) async {
       await prepareComposeBox(tester, narrow: narrow, streams: [channel]);
-      final composeBoxController = controllerKey.currentState!;
 
       await checkStartTyping(tester, narrow);
 
@@ -360,7 +362,7 @@ void main() {
       checkTypingRequest(TypingOp.stop, narrow);
 
       connection.prepare(json: {});
-      composeBoxController.contentController.selection =
+      controller!.contentController.selection =
         const TextSelection(baseOffset: 0, extentOffset: 2);
       checkTypingRequest(TypingOp.start, narrow);
 
@@ -471,12 +473,11 @@ void main() {
         final channel = eg.stream();
         final narrow = ChannelNarrow(channel.streamId);
         await prepareComposeBox(tester, narrow: narrow, streams: [channel]);
-        final composeBoxController = controllerKey.currentState!;
 
         // (When we check that the send button looks disabled, it should be because
         // the file is uploading, not a pre-existing reason.)
         await enterTopic(tester, narrow: narrow, topic: 'some topic');
-        composeBoxController.contentController.value = const TextEditingValue(text: 'see image: ');
+        controller!.contentController.value = const TextEditingValue(text: 'see image: ');
         await tester.pump();
         checkAppearsLoading(tester, false);
 
@@ -500,7 +501,7 @@ void main() {
         final errorDialogs = tester.widgetList(find.byType(AlertDialog));
         check(errorDialogs).isEmpty();
 
-        check(composeBoxController.contentController.text)
+        check(controller!.contentController.text)
           .equals('see image: [Uploading image.jpg…]()\n\n');
         // (the request is checked more thoroughly in API tests)
         check(connection.lastRequest!).isA<http.MultipartRequest>()
@@ -516,7 +517,7 @@ void main() {
         checkAppearsLoading(tester, true);
 
         await tester.pump(const Duration(seconds: 1));
-        check(composeBoxController.contentController.text)
+        check(controller!.contentController.text)
           .equals('see image: [image.jpg](/user_uploads/1/4e/m2A3MSqFnWRLUf9SaPzQ0Up_/image.jpg)\n\n');
         checkAppearsLoading(tester, false);
       });
@@ -532,12 +533,11 @@ void main() {
         final channel = eg.stream();
         final narrow = ChannelNarrow(channel.streamId);
         await prepareComposeBox(tester, narrow: narrow, streams: [channel]);
-        final composeBoxController = controllerKey.currentState!;
 
         // (When we check that the send button looks disabled, it should be because
         // the file is uploading, not a pre-existing reason.)
         await enterTopic(tester, narrow: narrow, topic: 'some topic');
-        composeBoxController.contentController.value = const TextEditingValue(text: 'see image: ');
+        controller!.contentController.value = const TextEditingValue(text: 'see image: ');
         await tester.pump();
         checkAppearsLoading(tester, false);
 
@@ -561,7 +561,7 @@ void main() {
         final errorDialogs = tester.widgetList(find.byType(AlertDialog));
         check(errorDialogs).isEmpty();
 
-        check(composeBoxController.contentController.text)
+        check(controller!.contentController.text)
           .equals('see image: [Uploading image.jpg…]()\n\n');
         // (the request is checked more thoroughly in API tests)
         check(connection.lastRequest!).isA<http.MultipartRequest>()
@@ -577,7 +577,7 @@ void main() {
         checkAppearsLoading(tester, true);
 
         await tester.pump(const Duration(seconds: 1));
-        check(composeBoxController.contentController.text)
+        check(controller!.contentController.text)
           .equals('see image: [image.jpg](/user_uploads/1/4e/m2A3MSqFnWRLUf9SaPzQ0Up_/image.jpg)\n\n');
         checkAppearsLoading(tester, false);
       });
