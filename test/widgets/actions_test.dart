@@ -18,7 +18,7 @@ import 'package:zulip/model/store.dart';
 import 'package:zulip/notifications/receive.dart';
 import 'package:zulip/widgets/actions.dart';
 import 'package:zulip/widgets/app.dart';
-import 'package:zulip/widgets/inbox.dart';
+import 'package:zulip/widgets/home.dart';
 import 'package:zulip/widgets/page.dart';
 
 import '../api/fake_api.dart';
@@ -182,8 +182,10 @@ void main() {
 
       final pushedRoutes = <Route<dynamic>>[];
       testNavObserver.onPushed = (route, prevRoute) => pushedRoutes.add(route);
-      final account1Route = InboxPage.buildRoute(accountId: account1.id);
-      final account2Route = InboxPage.buildRoute(accountId: account2.id);
+      final account1Route = HomePage.buildRoute(
+        accountId: account1.id, initialTab: HomePageTab.inbox);
+      final account2Route = HomePage.buildRoute(
+        accountId: account2.id, initialTab: HomePageTab.inbox);
       unawaited(navigator.push(account1Route));
       unawaited(navigator.push(account2Route));
       await tester.pumpAndSettle();

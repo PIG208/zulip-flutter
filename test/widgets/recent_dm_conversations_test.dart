@@ -6,6 +6,7 @@ import 'package:zulip/api/model/events.dart';
 import 'package:zulip/api/model/model.dart';
 import 'package:zulip/model/narrow.dart';
 import 'package:zulip/widgets/content.dart';
+import 'package:zulip/widgets/home.dart';
 import 'package:zulip/widgets/icons.dart';
 import 'package:zulip/widgets/message_list.dart';
 import 'package:zulip/widgets/page.dart';
@@ -49,7 +50,7 @@ Future<void> setupPage(WidgetTester tester, {
   await tester.pumpWidget(TestZulipApp(
     accountId: eg.selfAccount.id,
     navigatorObservers: navigatorObserver != null ? [navigatorObserver] : [],
-    child: const RecentDmConversationsPage()));
+    child: const HomePage(initialTab: HomePageTab.directMessages)));
 
   // global store, per-account store, and page get loaded
   await tester.pumpAndSettle();
@@ -96,7 +97,7 @@ void main() {
         DmNarrow.ofMessage(messages.first, selfUserId: eg.selfUser.userId));
 
       check(tester.any(oldestConversationFinder)).isFalse(); // not onscreen
-      await tester.fling(find.byType(RecentDmConversationsPage),
+      await tester.fling(find.byType(RecentDmConversationsPageBody),
         const Offset(0, -200), 4000);
       await tester.pumpAndSettle();
       check(tester.any(oldestConversationFinder)).isTrue(); // onscreen
