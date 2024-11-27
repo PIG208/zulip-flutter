@@ -175,7 +175,7 @@ void _showMenu(BuildContext context, {
     _DirectMessagesButton(tab: tab),
     // Users
     const _MyProfileButton(),
-    const _ChooseAccountButton(),
+    const _SwitchAccountButton(),
     // Set my status
     // const SizedBox(height: 8),
     // Settings
@@ -422,15 +422,15 @@ class _MyProfileButton extends _MenuButton {
   }
 }
 
-class _ChooseAccountButton extends _MenuButton {
-  const _ChooseAccountButton();
+class _SwitchAccountButton extends _MenuButton {
+  const _SwitchAccountButton();
 
   @override
   IconData get icon => ZulipIcons.globe;
 
   @override
   String label(ZulipLocalizations zulipLocalizations) {
-    return zulipLocalizations.chooseAccountPageTitle;
+    return zulipLocalizations.switchAccountPageTitle;
   }
 
   @override
