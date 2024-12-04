@@ -336,9 +336,19 @@ class MessageListAppBarTitle extends StatelessWidget {
     required ZulipStream? stream,
     required String topic,
   }) {
-    return Flexible(child: Text(topic, style: const TextStyle(
-      fontSize: 13,
-    ).merge(weightVariableTextStyle(context))));
+    final store = PerAccountStoreWidget.of(context);
+    final icon = (stream == null) ? null
+      : iconDataForTopic(store.topicVisibilityPolicy(stream.streamId, topic));
+    return Row(
+      children: [
+        Flexible(child: Text(topic, style: const TextStyle(
+          fontSize: 13,
+        ).merge(weightVariableTextStyle(context)))),
+        if (icon != null)
+          Padding(
+            padding: const EdgeInsetsDirectional.only(start: 4),
+            child: Opacity(opacity: 0.4, child: Icon(icon, size: 14))),
+      ]);
   }
 
   @override
