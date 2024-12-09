@@ -430,6 +430,7 @@ class _LoginPageState extends State<LoginPage> {
           final icon = method.displayIcon;
           return OutlinedButton.icon(
             style: ButtonStyle(
+              tapTargetSize: MaterialTapTargetSize.padded,
               backgroundColor: WidgetStatePropertyAll(colorScheme.secondaryContainer),
               foregroundColor: WidgetStatePropertyAll(colorScheme.onSecondaryContainer)),
             icon: icon != null
