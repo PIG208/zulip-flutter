@@ -28,17 +28,21 @@ class TestZulipApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlobalStoreWidget(
-      child: MaterialApp(
-        title: 'Zulip',
-        localizationsDelegates: ZulipLocalizations.localizationsDelegates,
-        supportedLocales: ZulipLocalizations.supportedLocales,
-        theme: zulipThemeData(context),
+      child: Builder(
+        builder: (context) {
+          return MaterialApp(
+            title: 'Zulip',
+            localizationsDelegates: ZulipLocalizations.localizationsDelegates,
+            supportedLocales: ZulipLocalizations.supportedLocales,
+            theme: zulipThemeData(context),
 
-        navigatorObservers: navigatorObservers ?? const [],
+            navigatorObservers: navigatorObservers ?? const [],
 
-        home: accountId != null
-          ? PerAccountStoreWidget(accountId: accountId!, child: child)
-          : child,
+            home: accountId != null
+              ? PerAccountStoreWidget(accountId: accountId!, child: child)
+              : child,
+          );
+        }
       ));
   }
 }
