@@ -809,6 +809,7 @@ ChannelUpdateEvent channelUpdateEvent(
 
 const defaultGlobalSettings = GlobalSettingsData(
   themeSetting: ThemeSetting.unset,
+  browserPreference: BrowserPreference.unset,
 );
 
 TestGlobalStore globalStore({
