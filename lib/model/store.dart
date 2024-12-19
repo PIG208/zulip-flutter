@@ -19,6 +19,7 @@ import '../api/backoff.dart';
 import '../api/route/realm.dart';
 import '../log.dart';
 import '../notifications/receive.dart';
+import 'actions.dart';
 import 'autocomplete.dart';
 import 'database.dart';
 import 'emoji.dart';
@@ -149,7 +150,29 @@ abstract class GlobalStore extends ChangeNotifier {
   /// and/or [perAccountSync].
   Future<PerAccountStore> loadPerAccount(int accountId) async {
     assert(_accounts.containsKey(accountId));
-    final store = await doLoadPerAccount(accountId);
+    final realmUrl = getAccount(accountId)!.realmUrl;
+    final PerAccountStore store;
+    try {
+      store = await doLoadPerAccount(accountId);
+    } catch (e) {
+      switch (e) {
+        case HttpException(httpStatus: 401):
+          // The API key is invalid and the store can never be loaded
+          // unless the user retries manually.
+          final zulipLocalizations = GlobalLocalizations.zulipLocalizations;
+          reportErrorToUserModally(
+            zulipLocalizations.errorCouldNotConnectTitle,
+            details: zulipLocalizations.errorInvalidApiKeyMessage(
+              realmUrl.toString()));
+          // The account could be logged out from the choose-account page.
+          if (_accounts.containsKey(accountId)) {
+            await logOutAccount(this, accountId);
+          }
+          throw AccountNotFoundException();
+        default:
+          rethrow;
+      }
+    }
     if (!_accounts.containsKey(accountId)) {
       // [removeAccount] was called during [doLoadPerAccount].
       store.dispose();
@@ -913,12 +936,19 @@ class UpdateMachine {
       try {
         return await registerQueue(connection);
       } catch (e, s) {
-        assert(debugLog('Error fetching initial snapshot: $e'));
-        // Print stack trace in its own log entry; log entries are truncated
-        // at 1 kiB (at least on Android), and stack can be longer than that.
-        assert(debugLog('Stack:\n$s'));
-        assert(debugLog('Backing off, then will retry…'));
         // TODO(#890): tell user if initial-fetch errors persist, or look non-transient
+        switch (e) {
+          case HttpException(httpStatus: 401):
+            // We cannot recover from this error through retrying.
+            // Leave it to [GlobalStore.loadPerAccount].
+            rethrow;
+          default:
+            assert(debugLog('Error fetching initial snapshot: $e'));
+            // Print stack trace in its own log entry; log entries are truncated
+            // at 1 kiB (at least on Android), and stack can be longer than that.
+            assert(debugLog('Stack:\n$s'));
+        }
+        assert(debugLog('Backing off, then will retry…'));
         await (backoffMachine ??= BackoffMachine()).wait();
         assert(debugLog('… Backoff wait complete, retrying initial fetch.'));
       }
@@ -1219,8 +1249,17 @@ class UpdateMachine {
       if (_disposed) return;
     }
 
-    await store._globalStore._reloadPerAccount(store.accountId);
-    assert(_disposed);
+    try {
+      await store._globalStore._reloadPerAccount(store.accountId);
+    } on AccountNotFoundException {
+      // The account was logged out while we retry to replace the store,
+      // but that's OK as long as other code will be removing it from the UI
+      // (usually by using [routeToRemoveOnLogout]).
+      assert(debugLog('… Event queue not replaced; account logged out.'));
+      return;
+    } finally {
+      assert(_disposed);
+    }
     assert(debugLog('… Event queue replaced.'));
   }
 
