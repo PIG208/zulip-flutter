@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:checks/checks.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_checks/flutter_checks.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -574,6 +575,91 @@ void main() {
       });
 
       // TODO test what happens when capturing/uploading fails
+    });
+
+    group('attach from keyboard', () {
+      // This is adapted from:
+      //   https://github.com/flutter/flutter/blob/0ffc4ce00ea7bb912e379adf39354644eab2c17e/packages/flutter/test/widgets/editable_text_test.dart#L724-L740
+      Future<void> insertContentFromKeyboard(WidgetTester tester, {
+        required List<int> data,
+        required String attachedFileUrl,
+        required String mimeType,
+      }) async {
+        // This fakes data originally provided by the Flutter engine:
+        //   https://github.com/flutter/flutter/blob/0ffc4ce00ea7bb912e379adf39354644eab2c17e/engine/src/flutter/shell/platform/android/io/flutter/plugin/editing/InputConnectionAdaptor.java#L497-L548
+        final ByteData? messageBytes = const JSONMessageCodec().encodeMessage({
+          'args': [
+            -1,
+            'TextInputAction.commitContent',
+            {
+              "mimeType": mimeType,
+              "data": data,
+              "uri": attachedFileUrl,
+            },
+          ],
+          'method': 'TextInputClient.performAction',
+        });
+        // This calls [EditableText]'s implementation of
+        // [TextInputClient.performAction] on the content [TextField],
+        // which did not expose an API for testing.
+        await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+          'flutter/textinput',
+          messageBytes,
+          (ByteData? _) {},
+        );
+      }
+
+      testWidgets('success', (tester) async {
+        const fileContent = [1, 0, 1, 0, 0];
+        await prepare(tester);
+        const uploadUrl = '/user_uploads/1/4e/m2A3MSqFnWRLUf9SaPzQ0Up_/test.gif';
+        connection.prepare(json: UploadFileResult(uri: uploadUrl).toJson());
+        await insertContentFromKeyboard(tester,
+          data: fileContent,
+          attachedFileUrl:
+            'content://com.samsung.android.zulipboard.provider'
+            '/root/com.zulip.android.zulipboard/candidate_temp/test.gif',
+          mimeType: 'image/gif');
+
+        await tester.pump();
+        check(controller!.content.text)
+          .equals('see image: [Uploading test.gif…]()\n\n');
+        check(connection.lastRequest!).isA<http.MultipartRequest>()
+          ..method.equals('POST')
+          ..files.single.which((it) => it
+            ..field.equals('file')
+            ..length.equals(fileContent.length)
+            ..filename.equals('test.gif')
+            ..contentType.asString.equals('image/gif')
+            ..has<Future<List<int>>>((f) => f.finalize().toBytes(), 'contents')
+              .completes((it) => it.deepEquals(fileContent))
+          );
+        checkAppearsLoading(tester, true);
+
+        await tester.pump(Duration.zero);
+        check(controller!.content.text)
+          .equals('see image: [test.gif]($uploadUrl)\n\n');
+        checkAppearsLoading(tester, false);
+      });
+
+      testWidgets('empty file', (tester) async {
+        await prepare(tester);
+        await insertContentFromKeyboard(tester,
+          data: [],
+          attachedFileUrl:
+            'content://com.samsung.android.zulipboard.provider'
+            '/root/com.zulip.android.zulipboard/candidate_temp/test.gif',
+          mimeType: 'image/jpeg');
+
+        await tester.pump();
+        check(controller!.content.text).equals('see image: ');
+        check(connection.takeRequests()).isEmpty();
+        checkErrorDialog(tester,
+          expectedTitle: 'Content not inserted',
+          expectedMessage: 'The file to be inserted is empty or cannot be found.');
+        checkAppearsLoading(tester, false);
+      });
+
     });
   });
 
