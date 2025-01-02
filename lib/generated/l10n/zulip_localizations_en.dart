@@ -174,7 +174,7 @@ class ZulipLocalizationsEn extends ZulipLocalizations {
   }
 
   @override
-  String get errorLoginCouldNotConnectTitle => 'Could not connect';
+  String get errorCouldNotConnectTitle => 'Could not connect';
 
   @override
   String get errorMessageDoesNotSeemToExist => 'That message does not seem to exist.';
