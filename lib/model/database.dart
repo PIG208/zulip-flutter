@@ -74,10 +74,15 @@ class AppDatabase extends _$AppDatabase {
           // TODO(log): log schema downgrade as an error
           // This should only ever happen in dev.  As a dev convenience,
           // drop everything from the database and start over.
-          for (final entity in allSchemaEntities) {
-            // This will miss any entire tables (or indexes, etc.) that
-            // don't exist at this version.  For a dev-only feature, that's OK.
-            await m.drop(entity);
+          final query = m.database.customSelect(
+            "SELECT name FROM sqlite_master WHERE type='table'");
+          // m.database.transaction(() {});
+          for (final row in await query.get()) {
+            final data = row.data;
+            final tableName = data['name'] as String;
+            if (tableName.startsWith('sqlite')) continue;
+            // This is fine here
+            await m.database.customStatement('DROP TABLE $tableName');
           }
           await m.createAll();
           return;
