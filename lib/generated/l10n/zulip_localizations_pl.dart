@@ -607,6 +607,18 @@ class ZulipLocalizationsPl extends ZulipLocalizations {
   }
 
   @override
+  String get themeSettingTitle => 'THEME';
+
+  @override
+  String get themeSettingDark => 'Dark';
+
+  @override
+  String get themeSettingLight => 'Light';
+
+  @override
+  String get themeSettingSystem => 'System';
+
+  @override
   String get pollWidgetQuestionMissing => 'Brak pytania.';
 
   @override

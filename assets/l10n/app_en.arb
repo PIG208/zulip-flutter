@@ -773,6 +773,22 @@
       "voterNames": {"type":  "String", "example": "Alice, Bob, Chad"}
     }
   },
+  "themeSettingTitle": "THEME",
+  "@themeSettingTitle": {
+    "description": "Title for theme setting. (Use ALL CAPS for cased alphabets: Latin, Greek, Cyrillic, etc.)"
+  },
+  "themeSettingDark": "Dark",
+  "@themeSettingDark": {
+    "description": "Label for dark theme setting."
+  },
+  "themeSettingLight": "Light",
+  "@themeSettingLight": {
+    "description": "Label for light theme setting."
+  },
+  "themeSettingSystem": "System",
+  "@themeSettingSystem": {
+    "description": "Label for following system theme setting."
+  },
   "pollWidgetQuestionMissing": "No question.",
   "@pollWidgetQuestionMissing": {
     "description": "Text to display for a poll when the question is missing"

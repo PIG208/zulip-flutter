@@ -1137,6 +1137,30 @@ abstract class ZulipLocalizations {
   /// **'({voterNames})'**
   String pollVoterNames(String voterNames);
 
+  /// Title for theme setting. (Use ALL CAPS for cased alphabets: Latin, Greek, Cyrillic, etc.)
+  ///
+  /// In en, this message translates to:
+  /// **'THEME'**
+  String get themeSettingTitle;
+
+  /// Label for dark theme setting.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeSettingDark;
+
+  /// Label for light theme setting.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeSettingLight;
+
+  /// Label for following system theme setting.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get themeSettingSystem;
+
   /// Text to display for a poll when the question is missing
   ///
   /// In en, this message translates to:
