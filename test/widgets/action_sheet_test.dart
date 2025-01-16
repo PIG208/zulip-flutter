@@ -50,12 +50,16 @@ late FakeApiConnection connection;
 Future<void> setupToMessageActionSheet(WidgetTester tester, {
   required Message message,
   required Narrow narrow,
+  int? zulipFeatureLevel,
 }) async {
   addTearDown(testBinding.reset);
   assert(narrow.containsMessage(message));
 
-  await testBinding.globalStore.add(eg.selfAccount, eg.initialSnapshot());
-  store = await testBinding.globalStore.perAccount(eg.selfAccount.id);
+  final account = eg.account(user: eg.selfUser,
+    zulipFeatureLevel: zulipFeatureLevel);
+  await testBinding.globalStore.add(account, eg.initialSnapshot(
+    zulipFeatureLevel: zulipFeatureLevel));
+  store = await testBinding.globalStore.perAccount(account.id);
   await store.addUsers([
     eg.selfUser,
     eg.user(userId: message.senderId),
@@ -71,7 +75,7 @@ Future<void> setupToMessageActionSheet(WidgetTester tester, {
 
   connection.prepare(json: eg.newestGetMessagesResult(
     foundOldest: true, messages: [message]).toJson());
-  await tester.pumpWidget(TestZulipApp(accountId: eg.selfAccount.id,
+  await tester.pumpWidget(TestZulipApp(accountId: account.id,
     child: MessageListPage(initNarrow: narrow)));
 
   // global store, per-account store, and message list get loaded
@@ -922,6 +926,31 @@ void main() {
         await setupToMessageActionSheet(tester, message: message, narrow: const StarredMessagesNarrow());
         check(findQuoteAndReplyButton(tester)).isNull();
       });
+
+      testWidgets('handle empty topic', (tester) async {
+        final message = eg.streamMessage();
+        await setupToMessageActionSheet(tester, message: message, narrow: TopicNarrow.ofMessage(message),
+          zulipFeatureLevel: 334);
+
+        prepareRawContentResponseSuccess(message: message, rawContent: 'Hello world');
+        await tapQuoteAndReplyButton(tester);
+        check(connection.lastRequest).isA<http.Request>()
+          .url.queryParameters['allow_empty_topic_name'].equals('true');
+        await tester.pump(Duration.zero);
+      });
+
+      testWidgets('legacy: handle empty topic', (tester) async {
+        final message = eg.streamMessage();
+        await setupToMessageActionSheet(tester, message: message, narrow: TopicNarrow.ofMessage(message),
+          zulipFeatureLevel: 333);
+
+        prepareRawContentResponseSuccess(message: message, rawContent: 'Hello world');
+        await tapQuoteAndReplyButton(tester);
+        check(connection.lastRequest).isA<http.Request>()
+          .url.queryParameters
+            .not((it) => it.containsKey('allow_empty_topic_name'));
+        await tester.pump(Duration.zero);
+      });
     });
 
     group('MarkAsUnread', () {
@@ -1087,6 +1116,31 @@ void main() {
         )));
         check(await Clipboard.getData('text/plain')).isNull();
       });
+
+      testWidgets('handle empty topic', (tester) async {
+        final message = eg.streamMessage();
+        await setupToMessageActionSheet(tester, message: message, narrow: TopicNarrow.ofMessage(message),
+          zulipFeatureLevel: 334);
+
+        prepareRawContentResponseSuccess(message: message, rawContent: 'Hello world');
+        await tapCopyMessageTextButton(tester);
+        check(connection.lastRequest).isA<http.Request>()
+          .url.queryParameters['allow_empty_topic_name'].equals('true');
+        await tester.pump(Duration.zero);
+      });
+
+      testWidgets('legacy: handle empty topic', (tester) async {
+        final message = eg.streamMessage();
+        await setupToMessageActionSheet(tester, message: message, narrow: TopicNarrow.ofMessage(message),
+          zulipFeatureLevel: 333);
+
+        prepareRawContentResponseSuccess(message: message, rawContent: 'Hello world');
+        await tapCopyMessageTextButton(tester);
+        check(connection.lastRequest).isA<http.Request>()
+          .url.queryParameters
+            .not((it) => it.containsKey('allow_empty_topic_name'));
+        await tester.pump(Duration.zero);
+      });
     });
 
     group('CopyMessageLinkButton', () {
@@ -1173,6 +1227,31 @@ void main() {
         )));
 
         check(mockSharePlus.sharedString).isNull();
+      });
+
+      testWidgets('handle empty topic', (tester) async {
+        final message = eg.streamMessage();
+        await setupToMessageActionSheet(tester, message: message, narrow: TopicNarrow.ofMessage(message),
+          zulipFeatureLevel: 334);
+
+        prepareRawContentResponseSuccess(message: message, rawContent: 'Hello world');
+        await tapShareButton(tester);
+        check(connection.lastRequest).isA<http.Request>()
+          .url.queryParameters['allow_empty_topic_name'].equals('true');
+        await tester.pump(Duration.zero);
+      });
+
+      testWidgets('legacy handle empty topic', (tester) async {
+        final message = eg.streamMessage();
+        await setupToMessageActionSheet(tester, message: message, narrow: TopicNarrow.ofMessage(message),
+          zulipFeatureLevel: 333);
+
+        prepareRawContentResponseSuccess(message: message, rawContent: 'Hello world');
+        await tapShareButton(tester);
+        check(connection.lastRequest).isA<http.Request>()
+          .url.queryParameters
+            .not((it) => it.containsKey('allow_empty_topic_name'));
+        await tester.pump(Duration.zero);
       });
     });
 
