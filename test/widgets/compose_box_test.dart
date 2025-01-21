@@ -368,7 +368,7 @@ void main() {
         checkComposeBoxHintTexts(tester,
           topicHintText: 'Topic',
           contentHintText: 'Message #${channel.name} > ${eg.defaultRealmEmptyTopicDisplayName}');
-      }, skip: true); // null topic names soon to be enabled
+      });
 
       testWidgets('legacy: with empty topic', (tester) async {
         await prepare(tester, narrow: ChannelNarrow(channel.streamId),
@@ -398,7 +398,7 @@ void main() {
         checkComposeBoxHintTexts(tester,
           topicHintText: 'Topic',
           contentHintText: 'Message #${channel.name}');
-      }, skip: true); // null topic names soon to be enabled
+      });
 
       testWidgets('legacy: with empty topic', (tester) async {
         await prepare(tester, narrow: ChannelNarrow(channel.streamId),
@@ -435,7 +435,7 @@ void main() {
         mandatoryTopics: false);
       checkComposeBoxHintTexts(tester, contentHintText:
         'Message #${channel.name} > ${eg.defaultRealmEmptyTopicDisplayName}');
-    }, skip: true); // null topic names soon to be enabled
+    });
 
     testWidgets('to DmNarrow with self', (tester) async {
       await prepare(tester, narrow: DmNarrow.withUser(
@@ -746,7 +746,7 @@ void main() {
         ..method.equals('POST')
         ..url.path.equals('/api/v1/messages')
         ..bodyFields['topic'].equals('');
-    }, skip: true); // null topic names soon to be enabled
+    });
 
     testWidgets('legacy: empty topic -> "(no topic)"', (tester) async {
       await setupAndTapSend(tester,
@@ -771,7 +771,7 @@ void main() {
         topicInputText: eg.defaultRealmEmptyTopicDisplayName,
         mandatoryTopics: true);
       checkMessageNotSent(tester);
-    }, skip: true); // null topic names soon to be enabled
+    });
 
     testWidgets('if topics are mandatory, reject "(no topic)"', (tester) async {
       await setupAndTapSend(tester,

@@ -201,7 +201,6 @@ class ComposeTopicController extends ComposeController<TopicValidationError> {
   }
 
   void setTopic(TopicName newTopic) {
-    // ignore: dead_null_aware_expression // null topic names soon to be enabled
     value = TextEditingValue(text: newTopic.displayName ?? '');
   }
 }
@@ -609,7 +608,6 @@ class _StreamContentInputState extends State<_StreamContentInput> {
     if (store.realmMandatoryTopics && widget.controller.topic.isTopicVacuous) {
       topicDisplayName = null;
     } else {
-      // ignore: dead_null_aware_expression // null topic names soon to be enabled
       topicDisplayName = topic.displayName ?? store.realmEmptyTopicDisplayName;
     }
 
