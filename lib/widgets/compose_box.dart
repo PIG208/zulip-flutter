@@ -597,7 +597,8 @@ class _StreamContentInputState extends State<_StreamContentInput> {
         && widget.controller.topic.isTopicVacuumous
           ? zulipLocalizations.composeBoxChannelContentHint(streamName)
           : zulipLocalizations.composeBoxChannelTopicContentHint(
-              '#$streamName > ${topic.displayName}'));
+              // ignore: dead_null_aware_expression // null topic names soon to be enabled
+              '#$streamName > ${topic.displayName ?? store.realmEmptyTopicDisplayName}'));
   }
 }
 
@@ -611,11 +612,22 @@ class _TopicInput extends StatelessWidget {
   Widget build(BuildContext context) {
     final zulipLocalizations = ZulipLocalizations.of(context);
     final designVariables = DesignVariables.of(context);
+    final store = PerAccountStoreWidget.of(context);
     TextStyle topicTextStyle = TextStyle(
       fontSize: 20,
       height: 22 / 20,
       color: designVariables.textInput.withFadedAlpha(0.9),
     ).merge(weightVariableTextStyle(context, wght: 600));
+
+    final decoration =
+      store.connection.zulipFeatureLevel! >= 334 && !store.realmMandatoryTopics
+        ? InputDecoration(
+            hintText: store.realmEmptyTopicDisplayName,
+            hintStyle: topicTextStyle.copyWith(fontStyle: FontStyle.italic))
+        : InputDecoration(
+            hintText: zulipLocalizations.composeBoxTopicHintText,
+            hintStyle: topicTextStyle.copyWith(
+              color: designVariables.textInput.withFadedAlpha(0.5)));
 
     return TopicAutocomplete(
       streamId: streamId,
@@ -632,10 +644,7 @@ class _TopicInput extends StatelessWidget {
           focusNode: controller.topicFocusNode,
           textInputAction: TextInputAction.next,
           style: topicTextStyle,
-          decoration: InputDecoration(
-            hintText: zulipLocalizations.composeBoxTopicHintText,
-            hintStyle: topicTextStyle.copyWith(
-              color: designVariables.textInput.withFadedAlpha(0.5))))));
+          decoration: decoration)));
   }
 }
 
@@ -656,7 +665,8 @@ class _FixedDestinationContentInput extends StatelessWidget {
         final streamName = store.streams[streamId]?.name
           ?? zulipLocalizations.unknownChannelName;
         return zulipLocalizations.composeBoxChannelTopicContentHint(
-          '#$streamName > ${topic.displayName}');
+          // ignore: dead_null_aware_expression // null topic names soon to be enabled
+          '#$streamName > ${topic.displayName ?? store.realmEmptyTopicDisplayName}');
 
       case DmNarrow(otherRecipientIds: []): // The self-1:1 thread.
         return zulipLocalizations.composeBoxSelfDmContentHint;
