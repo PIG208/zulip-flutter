@@ -96,6 +96,7 @@ class RecentSenders {
     Iterable<int> messageIds,
     Map<int, Message> cachedMessages,
   ) {
+    assert(isSortedWithoutDuplicates(messageIds.toList()));
     final messagesByUser = <int, QueueList<int>>{};
     for (final id in messageIds) {
       final message = cachedMessages[id] as StreamMessage?;
