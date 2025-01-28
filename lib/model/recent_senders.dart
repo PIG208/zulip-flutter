@@ -71,13 +71,7 @@ class RecentSenders {
   void handleDeleteMessageEvent(DeleteMessageEvent event, Map<int, Message> cachedMessages) {
     if (event.messageType != MessageType.stream) return;
 
-    final messagesByUser = <int, List<int>>{};
-    for (final id in event.messageIds) {
-      final message = cachedMessages[id] as StreamMessage?;
-      if (message == null) continue;
-      (messagesByUser[message.senderId] ??= []).add(id);
-    }
-
+    final messagesByUser = _groupStreamMessageIdsByUser(event.messageIds, cachedMessages);
     final DeleteMessageEvent(:streamId!, :topic!) = event;
     final sendersInStream = streamSenders[streamId];
     final topicsInStream = topicSenders[streamId];
@@ -96,6 +90,19 @@ class RecentSenders {
     if (sendersInStream?.isEmpty ?? false) streamSenders.remove(streamId);
     if (sendersInTopic?.isEmpty ?? false) topicsInStream?.remove(topic);
     if (topicsInStream?.isEmpty ?? false) topicSenders.remove(streamId);
+  }
+
+  Map<int, QueueList<int>> _groupStreamMessageIdsByUser(
+    Iterable<int> messageIds,
+    Map<int, Message> cachedMessages,
+  ) {
+    final messagesByUser = <int, QueueList<int>>{};
+    for (final id in messageIds) {
+      final message = cachedMessages[id] as StreamMessage?;
+      if (message == null) continue;
+      (messagesByUser[message.senderId] ??= QueueList()).add(id);
+    }
+    return messagesByUser;
   }
 }
 
