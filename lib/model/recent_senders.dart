@@ -68,6 +68,34 @@ class RecentSenders {
       [senderId] ??= MessageIdTracker()).add(messageId);
   }
 
+  void handleUpdateMessageEvent(UpdateMessageEvent event, Map<int, Message> cachedMessages) {
+    final moveData = event.moveData;
+    if (moveData == null) {
+      return;
+    }
+
+    final messagesByUser = _groupStreamMessageIdsByUser(event.messageIds, cachedMessages);
+    final sendersInChannel = streamSenders[moveData.origStreamId];
+    final topicsInChannel = topicSenders[moveData.origStreamId];
+    final sendersInTopic = topicsInChannel?[moveData.origTopic];
+    for (final MapEntry(key: senderId, value: messages) in messagesByUser.entries) {
+      final streamTracker = sendersInChannel?[senderId];
+      streamTracker?.removeAll(messages);
+      if (streamTracker?.maxId == null) sendersInChannel?.remove(senderId);
+      ((streamSenders[moveData.newStreamId] ??= {})
+        [senderId] ??= MessageIdTracker()).addAll(messages);
+
+      final topicTracker = sendersInTopic?[senderId];
+      topicTracker?.removeAll(messages);
+      if (topicTracker?.maxId == null) sendersInTopic?.remove(senderId);
+      (((topicSenders[moveData.newStreamId] ??= {})[moveData.newTopic] ??= {})
+        [senderId] ??= MessageIdTracker()).addAll(messages);
+    }
+    if (sendersInChannel?.isEmpty ?? false) streamSenders.remove(moveData.origStreamId);
+    if (sendersInTopic?.isEmpty ?? false) topicsInChannel?.remove(moveData.origTopic);
+    if (topicsInChannel?.isEmpty ?? false) topicSenders.remove(moveData.origStreamId);
+  }
+
   void handleDeleteMessageEvent(DeleteMessageEvent event, Map<int, Message> cachedMessages) {
     if (event.messageType != MessageType.stream) return;
 
