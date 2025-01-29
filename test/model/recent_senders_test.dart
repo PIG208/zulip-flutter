@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:zulip/api/model/model.dart';
 import 'package:zulip/model/recent_senders.dart';
 import '../example_data.dart' as eg;
+import 'test_store.dart';
 
 /// [messages] should be sorted by [id] ascending.
 void checkMatchesMessages(RecentSenders model, List<Message> messages) {
@@ -138,6 +139,58 @@ void main() {
         eg.streamMessage(stream: streamB, topic: 'thing', sender: userX),
         eg.streamMessage(stream: streamA, topic: 'thing', sender: userY),
         eg.streamMessage(stream: streamA, topic: 'thing', sender: userX),
+      ]);
+    });
+  });
+
+  group('RecentSenders.handleUpdateMessageUpdate', () {
+    final store = eg.store();
+    final model = store.recentSenders;
+    final origChannel = eg.stream();
+    final origTopic = 'origTopic';
+    final newTopic = 'newTopic';
+    final userX = eg.user();
+    final userY = eg.user();
+
+    test('move to new topic', () async {
+      final messages = [
+        eg.streamMessage(stream: origChannel, topic: origTopic, sender: userX),
+        eg.streamMessage(stream: origChannel, topic: origTopic, sender: userX),
+        eg.streamMessage(stream: origChannel, topic: origTopic, sender: userY),
+      ];
+      await store.addMessages(messages);
+      checkMatchesMessages(model, messages);
+
+      await store.handleEvent(eg.updateMessageEventMoveFrom(
+        origMessages: [messages[0]],
+        newTopicStr: newTopic,
+      ));
+      checkMatchesMessages(model, [
+        Message.fromJson(messages[0].toJson()..['topic'] = newTopic),
+        messages[1],
+        messages[2],
+      ]);
+    });
+
+    test('move to new channel', () async {
+      final messages = [
+        eg.streamMessage(stream: origChannel, topic: origTopic, sender: userX),
+        eg.streamMessage(stream: origChannel, topic: origTopic, sender: userX),
+        eg.streamMessage(stream: origChannel, topic: origTopic, sender: userY),
+      ];
+      await store.addMessages(messages);
+      checkMatchesMessages(model, messages);
+
+      final newChannel = eg.stream();
+      await store.handleEvent(eg.updateMessageEventMoveFrom(
+        origMessages: [messages[0]],
+        newTopicStr: newTopic,
+        // newStreamId: ,
+      ));
+      checkMatchesMessages(model, [
+        Message.fromJson(messages[0].toJson()..['topic'] = newTopic),
+        messages[1],
+        messages[2],
       ]);
     });
   });

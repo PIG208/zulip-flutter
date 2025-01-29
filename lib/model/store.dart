@@ -674,6 +674,7 @@ class PerAccountStore extends ChangeNotifier with EmojiStore, ChannelStore, Mess
 
       case UpdateMessageEvent():
         assert(debugLog("server event: update_message ${event.messageId}"));
+        recentSenders.handleUpdateMessageEvent(event, messages);
         _messages.handleUpdateMessageEvent(event);
         unreads.handleUpdateMessageEvent(event);
 
