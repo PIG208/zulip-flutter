@@ -158,6 +158,22 @@ Map<String, dynamic> _$ProfileFieldUserDataToJson(
       'rendered_value': instance.renderedValue,
     };
 
+SavedSnippets _$SavedSnippetsFromJson(Map<String, dynamic> json) =>
+    SavedSnippets(
+      id: (json['id'] as num).toInt(),
+      title: json['title'] as String,
+      content: json['content'] as String,
+      dateCreated: (json['date_created'] as num).toInt(),
+    );
+
+Map<String, dynamic> _$SavedSnippetsToJson(SavedSnippets instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'title': instance.title,
+      'content': instance.content,
+      'date_created': instance.dateCreated,
+    };
+
 ZulipStream _$ZulipStreamFromJson(Map<String, dynamic> json) => ZulipStream(
       streamId: (json['stream_id'] as num).toInt(),
       name: json['name'] as String,
