@@ -277,6 +277,7 @@ class PerAccountStore extends ChangeNotifier with EmojiStore, ChannelStore, Mess
         realmUrl: realmUrl, allRealmEmoji: initialSnapshot.realmEmoji),
       accountId: accountId,
       selfUserId: account.userId,
+      savedSnippets: initialSnapshot.savedSnippets,
       userSettings: initialSnapshot.userSettings,
       typingNotifier: TypingNotifier(
         connection: connection,
@@ -319,6 +320,7 @@ class PerAccountStore extends ChangeNotifier with EmojiStore, ChannelStore, Mess
     required EmojiStoreImpl emoji,
     required this.accountId,
     required this.selfUserId,
+    required this.savedSnippets,
     required this.userSettings,
     required this.typingNotifier,
     required this.users,
@@ -422,6 +424,8 @@ class PerAccountStore extends ChangeNotifier with EmojiStore, ChannelStore, Mess
 
   /// Always equal to `account.userId`.
   final int selfUserId;
+
+  final List<SavedSnippets>? savedSnippets; // TODO(server-10)
 
   final UserSettings? userSettings; // TODO(server-5)
 
