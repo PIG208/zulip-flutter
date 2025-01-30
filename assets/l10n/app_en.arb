@@ -290,6 +290,10 @@
   "@composeBoxAttachFromCameraTooltip": {
     "description": "Tooltip for compose box icon to attach an image from the camera to the message."
   },
+  "composeBoxInsertSavedSnippetTooltip": "Insert saved snippet",
+  "@composeBoxInsertSavedSnippetTooltip": {
+    "description": "Tooltip for compose box icon to insert a saved snippet to the message."
+  },
   "composeBoxGenericContentHint": "Type a message",
   "@composeBoxGenericContentHint": {
     "description": "Hint text for content input when sending a message."

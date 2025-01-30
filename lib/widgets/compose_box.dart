@@ -910,6 +910,22 @@ class _AttachFromCameraButton extends _AttachUploadsButton {
   }
 }
 
+class _InsertSavedSnippetButton extends _ComposeButton {
+  const _InsertSavedSnippetButton({required super.controller});
+
+  @override
+  void handlePress(BuildContext context) {
+
+  }
+
+  @override
+  IconData get icon => ZulipIcons.message_square_text;
+
+  @override
+  String tooltip(ZulipLocalizations zulipLocalizations)
+    => zulipLocalizations.composeBoxInsertSavedSnippetTooltip;
+}
+
 class _SendButton extends StatefulWidget {
   const _SendButton({required this.controller, required this.getDestination});
 
@@ -1144,6 +1160,7 @@ abstract class _ComposeBoxBody extends StatelessWidget {
       _AttachFileButton(controller: controller),
       _AttachMediaButton(controller: controller),
       _AttachFromCameraButton(controller: controller),
+      _InsertSavedSnippetButton(controller: controller),
     ];
 
     final topicInput = buildTopicInput();

@@ -495,6 +495,12 @@ abstract class ZulipLocalizations {
   /// **'Take a photo'**
   String get composeBoxAttachFromCameraTooltip;
 
+  /// Tooltip for compose box icon to insert a saved snippet to the message.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert saved snippet'**
+  String get composeBoxInsertSavedSnippetTooltip;
+
   /// Hint text for content input when sending a message.
   ///
   /// In en, this message translates to:
