@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:app_settings/app_settings.dart';
@@ -915,7 +916,7 @@ class _InsertSavedSnippetButton extends _ComposeButton {
 
   @override
   void handlePress(BuildContext context) {
-
+    _showSavedSnippet(context: context, controller: controller);
   }
 
   @override
@@ -924,6 +925,76 @@ class _InsertSavedSnippetButton extends _ComposeButton {
   @override
   String tooltip(ZulipLocalizations zulipLocalizations)
     => zulipLocalizations.composeBoxInsertSavedSnippetTooltip;
+}
+
+void _showSavedSnippet({
+  required BuildContext context,
+  required ComposeBoxController controller,
+}) async {
+  final store = PerAccountStoreWidget.of(context);
+  unawaited(showModalBottomSheet(
+    context: context,
+      // Clip.hardEdge looks bad; Clip.antiAliasWithSaveLayer looks pixel-perfect
+      // on my iPhone 13 Pro but is marked as "much slower":
+      //   https://api.flutter.dev/flutter/dart-ui/Clip.html
+      clipBehavior: Clip.antiAlias,
+      useSafeArea: true,
+    builder: (BuildContext context) {
+      return PerAccountStoreWidget(
+        accountId: store.accountId,
+        child: _SavedSnippetPicker(context: context, controller: controller));
+    }));
+}
+
+class _SavedSnippetPicker extends StatelessWidget {
+  const _SavedSnippetPicker({required this.context, required this.controller});
+
+  final BuildContext context;
+  final ComposeBoxController controller;
+
+  void _handleSelect(String content) {
+    if (!content.endsWith('\n')) {
+      content = '$content\n';
+    }
+    controller.content.insertPadded(content);
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final store = PerAccountStoreWidget.of(context);
+    final designVariables = DesignVariables.of(context);
+    return ListView.builder(
+      itemCount: store.savedSnippets?.length ?? 0,
+      itemBuilder: (BuildContext context, int i) {
+        final savedSnippet = store.savedSnippets![i];
+        return Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton(
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              splashFactory: NoSplash.splashFactory),
+            onPressed: () => _handleSelect(savedSnippet.content),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  savedSnippet.title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 16.8 / 14,
+                    color: designVariables.foreground)),
+                Text(savedSnippet.content,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 15.78 / 13,
+                    color: designVariables.foreground.withFadedAlpha(0.5))),
+              ]),
+          ));
+      });
+  }
 }
 
 class _SendButton extends StatefulWidget {
