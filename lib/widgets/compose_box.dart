@@ -666,27 +666,27 @@ class _FixedDestinationContentInput extends StatelessWidget {
   final SendableNarrow narrow;
   final FixedDestinationComposeBoxController controller;
 
-  String _hintText(BuildContext context) {
+  Widget _hint(BuildContext context) {
     final zulipLocalizations = ZulipLocalizations.of(context);
     switch (narrow) {
       case TopicNarrow(:final streamId, :final topic):
         final store = PerAccountStoreWidget.of(context);
         final streamName = store.streams[streamId]?.name
           ?? zulipLocalizations.unknownChannelName;
-        return zulipLocalizations.composeBoxChannelContentHint(
-          '#$streamName > ${topic.displayName ?? store.realmEmptyTopicDisplayName}');
+        return Text(zulipLocalizations.composeBoxChannelContentHint(
+          '#$streamName > ${topic.displayName ?? store.realmEmptyTopicDisplayName}'));
 
       case DmNarrow(otherRecipientIds: []): // The self-1:1 thread.
-        return zulipLocalizations.composeBoxSelfDmContentHint;
+        return Text(zulipLocalizations.composeBoxSelfDmContentHint);
 
       case DmNarrow(otherRecipientIds: [final otherUserId]):
         final store = PerAccountStoreWidget.of(context);
         final fullName = store.users[otherUserId]?.fullName;
-        if (fullName == null) return zulipLocalizations.composeBoxGenericContentHint;
-        return zulipLocalizations.composeBoxDmContentHint(fullName);
+        if (fullName == null) return Text(zulipLocalizations.composeBoxGenericContentHint);
+        return Text(zulipLocalizations.composeBoxDmContentHint(fullName));
 
       case DmNarrow(): // A group DM thread.
-        return zulipLocalizations.composeBoxGroupDmContentHint;
+        return Text(zulipLocalizations.composeBoxGroupDmContentHint);
     }
   }
 
@@ -696,7 +696,7 @@ class _FixedDestinationContentInput extends StatelessWidget {
       narrow: narrow,
       destination: narrow,
       controller: controller,
-      hint: Text(_hintText(context)));
+      hint: _hint(context));
   }
 }
 
