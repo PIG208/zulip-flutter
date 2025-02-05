@@ -394,13 +394,13 @@ class _ContentInput extends StatefulWidget {
     required this.narrow,
     required this.destination,
     required this.controller,
-    required this.hintText,
+    required this.hint,
   });
 
   final Narrow narrow;
   final SendableNarrow destination;
   final ComposeBoxController controller;
-  final String hintText;
+  final Widget hint;
 
   @override
   State<_ContentInput> createState() => _ContentInputState();
@@ -507,6 +507,10 @@ class _ContentInputState extends State<_ContentInput> with WidgetsBindingObserve
   @override
   Widget build(BuildContext context) {
     final designVariables = DesignVariables.of(context);
+    final contentTextStyle = TextStyle(
+      fontSize: _fontSize,
+      height: _lineHeightRatio,
+      color: designVariables.textInput);
 
     return ComposeAutocomplete(
       narrow: widget.narrow,
@@ -525,10 +529,7 @@ class _ContentInputState extends State<_ContentInput> with WidgetsBindingObserve
               // Let the content show through the `contentPadding` so that
               // our [InsetShadowBox] can fade it smoothly there.
               clipBehavior: Clip.none,
-              style: TextStyle(
-                fontSize: _fontSize,
-                height: _lineHeightRatio,
-                color: designVariables.textInput),
+              style: contentTextStyle,
               // From the spec at
               //   https://www.figma.com/design/1JTNtYo9memgW7vV6d0ygq/Zulip-Mobile?node-id=3960-5147&node-type=text&m=dev
               // > Compose box has the height to fit 2 lines. This is [done] to
@@ -547,9 +548,10 @@ class _ContentInputState extends State<_ContentInput> with WidgetsBindingObserve
                 // that 54px distance while also making the scrolling work like
                 // this and offering two lines of touchable area.
                 contentPadding: const EdgeInsets.symmetric(vertical: _verticalPadding),
-                hintText: widget.hintText,
-                hintStyle: TextStyle(
-                  color: designVariables.textInput.withFadedAlpha(0.5))))))));
+                hint: DefaultTextStyle.merge(
+                  style: contentTextStyle.copyWith(
+                    color: designVariables.textInput.withFadedAlpha(0.5)),
+                  child: widget.hint)))))));
   }
 }
 
@@ -606,8 +608,8 @@ class _StreamContentInputState extends State<_StreamContentInput> {
       narrow: widget.narrow,
       destination: TopicNarrow(widget.narrow.streamId, topic),
       controller: widget.controller,
-      hintText: zulipLocalizations.composeBoxChannelContentHint(
-        '#$streamName > ${topic.displayName ?? store.realmEmptyTopicDisplayName}'));
+      hint: Text(zulipLocalizations.composeBoxChannelContentHint(
+        '#$streamName > ${topic.displayName ?? store.realmEmptyTopicDisplayName}')));
   }
 }
 
@@ -694,7 +696,7 @@ class _FixedDestinationContentInput extends StatelessWidget {
       narrow: narrow,
       destination: narrow,
       controller: controller,
-      hintText: _hintText(context));
+      hint: Text(_hintText(context)));
   }
 }
 

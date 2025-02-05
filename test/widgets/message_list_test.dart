@@ -687,16 +687,22 @@ void main() {
         matching: find.byType(TextField));
 
       await tester.enterText(channelContentInputFinder, 'Some text');
+      check(find.descendant(
+        of: channelContentInputFinder,
+        matching: find.text('Message #${channel.name} > $topic'))
+      ).findsOne();
       check(tester.widget<TextField>(channelContentInputFinder))
-        ..decoration.isNotNull().hintText.equals('Message #${channel.name} > $topic')
-        ..controller.isNotNull().text.equals('Some text');
+        .controller.isNotNull().text.equals('Some text');
 
       prepareGetMessageResponse([message]);
       handleMessageMoveEvent([message], 'new topic', newChannelId: otherChannel.streamId);
       await tester.pump(const Duration(seconds: 1));
+      check(find.descendant(
+        of: channelContentInputFinder,
+        matching: find.text('Message #${otherChannel.name} > new topic'))
+      ).findsOne();
       check(tester.widget<TextField>(channelContentInputFinder))
-        ..decoration.isNotNull().hintText.equals('Message #${otherChannel.name} > new topic')
-        ..controller.isNotNull().text.equals('Some text');
+        .controller.isNotNull().text.equals('Some text');
 
       connection.prepare(json: SendMessageResult(id: 1).toJson());
       await tester.tap(find.byIcon(ZulipIcons.send));
