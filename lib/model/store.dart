@@ -557,7 +557,6 @@ class PerAccountStore extends ChangeNotifier with EmojiStore, ChannelStore, Mess
     assert(!_disposed);
     recentDmConversationsView.dispose();
     unreads.dispose();
-    _messages.dispose();
     typingStatus.dispose();
     typingNotifier.dispose();
     updateMachine?.dispose();
