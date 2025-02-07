@@ -199,7 +199,13 @@ class _ZulipAppState extends State<ZulipApp> with WidgetsBindingObserver {
           theme: themeData,
 
           navigatorKey: ZulipApp.navigatorKey,
-          navigatorObservers: widget.navigatorObservers ?? const [],
+          navigatorObservers: [
+            if (widget.navigatorObservers != null)
+              ...widget.navigatorObservers!,
+            // This must be the last item to maintain the invariant
+            // that the navigator stack is always non-empty.
+            _EmptyStackNavigatorObserver(),
+          ],
           builder: (BuildContext context, Widget? child) {
             if (!ZulipApp.ready.value) {
               SchedulerBinding.instance.addPostFrameCallback(
@@ -227,6 +233,39 @@ class _ZulipAppState extends State<ZulipApp> with WidgetsBindingObserver {
             ];
           });
         }));
+  }
+}
+
+/// Pushes a route whenever the observed navigator stack becomes empty.
+class _EmptyStackNavigatorObserver extends NavigatorObserver {
+  void _pushRouteIfEmptyStack() async {
+    final navigator = await ZulipApp.navigator;
+    bool isEmptyStack = true;
+    // TODO: find a better way to inspect the navigator stack
+    navigator.popUntil((route) {
+      isEmptyStack = false;
+      return true; // never actually pops
+    });
+    if (isEmptyStack) {
+      unawaited(navigator.push(
+        MaterialWidgetRoute(page: const ChooseAccountPage())));
+    }
+  }
+
+  @override
+  void didRemove(Route<void> route, Route<void>? previousRoute) async {
+    if (previousRoute == null) {
+      // The route removed is the bottom-most one.
+      _pushRouteIfEmptyStack();
+    }
+  }
+
+  @override
+  void didPop(Route<void> route, Route<void>? previousRoute) async {
+    if (previousRoute == null) {
+      // The route popped is the bottom-most one.
+      _pushRouteIfEmptyStack();
+    }
   }
 }
 
