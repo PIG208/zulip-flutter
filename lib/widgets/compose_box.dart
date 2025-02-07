@@ -609,7 +609,12 @@ class _StreamContentInputState extends State<_StreamContentInput> {
       destination: TopicNarrow(widget.narrow.streamId, topic),
       controller: widget.controller,
       hint: Text(zulipLocalizations.composeBoxChannelContentHint(
-        '#$streamName > ${topic.displayName ?? store.realmEmptyTopicDisplayName}')));
+        '#$streamName > ${topic.displayName ?? store.realmEmptyTopicDisplayName}'),
+        style: TextStyle(
+          // TODO(#1285): This applies to the entire hint text; ideally we'd only
+          //   want to italize the "general chat" text, but this requires
+          //   special l10n support for the hint text string.
+          fontStyle: topic.displayName == null ? FontStyle.italic : null)));
   }
 }
 
@@ -674,7 +679,12 @@ class _FixedDestinationContentInput extends StatelessWidget {
         final streamName = store.streams[streamId]?.name
           ?? zulipLocalizations.unknownChannelName;
         return Text(zulipLocalizations.composeBoxChannelContentHint(
-          '#$streamName > ${topic.displayName ?? store.realmEmptyTopicDisplayName}'));
+          '#$streamName > ${topic.displayName ?? store.realmEmptyTopicDisplayName}'),
+          style: TextStyle(
+            // TODO(#1285): This applies to the entire hint text; ideally we'd only
+            //   want to italize the "general chat" text, but this requires
+            //   special l10n support for the hint text string.
+            fontStyle: topic.displayName == null ? FontStyle.italic : null));
 
       case DmNarrow(otherRecipientIds: []): // The self-1:1 thread.
         return Text(zulipLocalizations.composeBoxSelfDmContentHint);
