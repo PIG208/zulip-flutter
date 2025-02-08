@@ -483,7 +483,6 @@ class _MessageListState extends State<MessageList> with PerAccountStoreAwareStat
 
   @override
   void onNewStore() { // TODO(#464) try to keep using old model until new one gets messages
-    model?.dispose();
     _initModel(PerAccountStoreWidget.of(context));
   }
 

@@ -60,12 +60,14 @@ class MessageStoreImpl with MessageStore {
     }
   }
 
-  // No `dispose` method, because there's nothing for it to do.
-  // The [MessageListView]s are owned by (i.e., they get [dispose]d by)
-  // the [_MessageListState], including in the case where the [PerAccountStore]
-  // is replaced.  Discussion:
-  //   https://chat.zulip.org/#narrow/channel/243-mobile-team/topic/.60MentionAutocompleteView.2Edispose.60/near/2083074
-  // void dispose() { … }
+  void dispose() {
+    // When a MessageListView is disposed, it removes itself from the Set
+    // `MessageStoreImpl._messageListViews`. Instead of iterating on that Set,
+    // iterate on a copy, to avoid concurrent modifications.
+    for (final view in _messageListViews.toList()) {
+      view.dispose();
+    }
+  }
 
   @override
   void reconcileMessages(List<Message> messages) {
