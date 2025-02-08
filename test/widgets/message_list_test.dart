@@ -12,6 +12,7 @@ import 'package:zulip/api/model/initial_snapshot.dart';
 import 'package:zulip/api/model/model.dart';
 import 'package:zulip/api/model/narrow.dart';
 import 'package:zulip/api/route/messages.dart';
+import 'package:zulip/model/actions.dart';
 import 'package:zulip/model/localizations.dart';
 import 'package:zulip/model/narrow.dart';
 import 'package:zulip/model/store.dart';
@@ -129,6 +130,26 @@ void main() {
         messages: [eg.streamMessage(content: "<p>a message</p>")]);
       final state = MessageListPage.ancestorOf(tester.element(find.text("a message")));
       check(state.composeBoxController).isNull();
+    });
+
+    testWidgets('dispose MessageListView when logged out', (tester) async {
+      addTearDown(testBinding.reset);
+      await testBinding.globalStore.add(eg.selfAccount, eg.initialSnapshot());
+      store = await testBinding.globalStore.perAccount(eg.selfAccount.id);
+      (store.connection as FakeApiConnection).prepare(json: eg.newestGetMessagesResult(
+        foundOldest: true, messages: [eg.streamMessage()]).toJson());
+      await tester.pumpWidget(TestZulipApp(
+        accountId: eg.selfAccount.id,
+        skipAssertAccountExists: true,
+        child: MessageListPage(initNarrow: const CombinedFeedNarrow())));
+      await tester.pump();
+      await tester.pump();
+      check(store.debugMessageListViews).single;
+
+      final future = logOutAccount(testBinding.globalStore, eg.selfAccount.id);
+      await tester.pump(TestGlobalStore.removeAccountDuration);
+      await future;
+      check(store.debugMessageListViews).isEmpty();
     });
   });
 

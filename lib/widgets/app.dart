@@ -6,11 +6,11 @@ import 'package:flutter/scheduler.dart';
 
 import '../generated/l10n/zulip_localizations.dart';
 import '../log.dart';
+import '../model/actions.dart';
 import '../model/localizations.dart';
 import '../model/store.dart';
 import '../notifications/display.dart';
 import 'about_zulip.dart';
-import 'actions.dart';
 import 'dialog.dart';
 import 'home.dart';
 import 'login.dart';
@@ -84,7 +84,8 @@ class ZulipApp extends StatefulWidget {
   @visibleForTesting
   static void debugReset() {
     _snackBarCount = 0;
-    reportErrorToUserBriefly = defaultReportErrorToUserBriefly;
+    reportErrorToUserBriefly = reportErrorToConsole;
+    reportErrorToUserModally = reportErrorToConsole;
     _ready.dispose();
     _ready = ValueNotifier(false);
   }
@@ -128,10 +129,21 @@ class ZulipApp extends StatefulWidget {
     newSnackBar.closed.whenComplete(() => _snackBarCount--);
   }
 
+  /// The callback we normally use as [reportErrorToUserModally].
+  static void _reportErrorToUserModally(String message, {String? details}) {
+    assert(_ready.value);
+
+    showErrorDialog(
+      context: navigatorKey.currentContext!,
+      title: message,
+      message: details);
+  }
+
   void _declareReady() {
     assert(navigatorKey.currentContext != null);
     _ready.value = true;
     reportErrorToUserBriefly = _reportErrorToUserBriefly;
+    reportErrorToUserModally = _reportErrorToUserModally;
   }
 
   @override
@@ -187,7 +199,13 @@ class _ZulipAppState extends State<ZulipApp> with WidgetsBindingObserver {
           theme: themeData,
 
           navigatorKey: ZulipApp.navigatorKey,
-          navigatorObservers: widget.navigatorObservers ?? const [],
+          navigatorObservers: [
+            if (widget.navigatorObservers != null)
+              ...widget.navigatorObservers!,
+            // This must be the last item to maintain the invariant
+            // that the navigator stack is always non-empty.
+            _EmptyStackNavigatorObserver(),
+          ],
           builder: (BuildContext context, Widget? child) {
             if (!ZulipApp.ready.value) {
               SchedulerBinding.instance.addPostFrameCallback(
@@ -215,6 +233,39 @@ class _ZulipAppState extends State<ZulipApp> with WidgetsBindingObserver {
             ];
           });
         }));
+  }
+}
+
+/// Pushes a route whenever the observed navigator stack becomes empty.
+class _EmptyStackNavigatorObserver extends NavigatorObserver {
+  void _pushRouteIfEmptyStack() async {
+    final navigator = await ZulipApp.navigator;
+    bool isEmptyStack = true;
+    // TODO: find a better way to inspect the navigator stack
+    navigator.popUntil((route) {
+      isEmptyStack = false;
+      return true; // never actually pops
+    });
+    if (isEmptyStack) {
+      unawaited(navigator.push(
+        MaterialWidgetRoute(page: const ChooseAccountPage())));
+    }
+  }
+
+  @override
+  void didRemove(Route<void> route, Route<void>? previousRoute) async {
+    if (previousRoute == null) {
+      // The route removed is the bottom-most one.
+      _pushRouteIfEmptyStack();
+    }
+  }
+
+  @override
+  void didPop(Route<void> route, Route<void>? previousRoute) async {
+    if (previousRoute == null) {
+      // The route popped is the bottom-most one.
+      _pushRouteIfEmptyStack();
+    }
   }
 }
 
@@ -249,7 +300,7 @@ class ChooseAccountPage extends StatelessWidget {
                   actionButtonText: zulipLocalizations.logOutConfirmationDialogConfirmButton,
                   onActionButtonPress: () {
                     // TODO error handling if db write fails?
-                    logOutAccount(context, accountId);
+                    logOutAccount(GlobalStoreWidget.of(context), accountId);
                   });
               },
               child: Text(zulipLocalizations.chooseAccountPageLogOutButton)),
