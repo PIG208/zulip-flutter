@@ -616,12 +616,17 @@ class _TopicInputState extends State<_TopicInput> {
   @override
   void initState() {
     super.initState();
+    widget.controller.topic.addListener(_topicChanged);
     widget.controller.topicFocusNode.addListener(_focusChanged);
   }
 
   @override
   void didUpdateWidget(covariant _TopicInput oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.controller.topic != oldWidget.controller.topic) {
+      oldWidget.controller.topic.removeListener(_topicChanged);
+      widget.controller.topic.addListener(_topicChanged);
+    }
     if (widget.controller.topicFocusNode != oldWidget.controller.topicFocusNode) {
       oldWidget.controller.topicFocusNode.removeListener(_focusChanged);
       widget.controller.topicFocusNode.addListener(_focusChanged);
@@ -630,8 +635,15 @@ class _TopicInputState extends State<_TopicInput> {
 
   @override
   void dispose() {
+    widget.controller.topic.removeListener(_topicChanged);
     widget.controller.topicFocusNode.removeListener(_focusChanged);
     super.dispose();
+  }
+
+  void _topicChanged() {
+    setState(() {
+      // The actual state lives in `widget.controller.topic`.
+    });
   }
 
   void _focusChanged() {
@@ -677,7 +689,14 @@ class _TopicInputState extends State<_TopicInput> {
           controller: widget.controller.topic,
           focusNode: widget.controller.topicFocusNode,
           textInputAction: TextInputAction.next,
-          style: topicTextStyle,
+          style: topicTextStyle.copyWith(
+            fontStyle:
+              allowEmptyTopics
+              && widget.controller.topic.textNormalized
+                   == store.realmEmptyTopicDisplayName
+              ? FontStyle.italic
+              : null,
+          ),
           decoration: decoration)));
   }
 }
