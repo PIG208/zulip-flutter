@@ -602,11 +602,43 @@ class _StreamContentInputState extends State<_StreamContentInput> {
   }
 }
 
-class _TopicInput extends StatelessWidget {
+class _TopicInput extends StatefulWidget {
   const _TopicInput({required this.streamId, required this.controller});
 
   final int streamId;
   final StreamComposeBoxController controller;
+
+  @override
+  State<_TopicInput> createState() => _TopicInputState();
+}
+
+class _TopicInputState extends State<_TopicInput> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.topicFocusNode.addListener(_focusChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant _TopicInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.controller.topicFocusNode != oldWidget.controller.topicFocusNode) {
+      oldWidget.controller.topicFocusNode.removeListener(_focusChanged);
+      widget.controller.topicFocusNode.addListener(_focusChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.topicFocusNode.removeListener(_focusChanged);
+    super.dispose();
+  }
+
+  void _focusChanged() {
+    setState(() {
+      // The actual state lives in `widget.controller.topicFocusNode`.
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -619,8 +651,10 @@ class _TopicInput extends StatelessWidget {
       color: designVariables.textInput.withFadedAlpha(0.9),
     ).merge(weightVariableTextStyle(context, wght: 600));
 
+    final allowEmptyTopics =
+      store.connection.zulipFeatureLevel! >= 334 && !store.realmMandatoryTopics;
     final decoration =
-      store.connection.zulipFeatureLevel! >= 334 && !store.realmMandatoryTopics
+      allowEmptyTopics && !widget.controller.topicFocusNode.hasFocus
         ? InputDecoration(
             hintText: store.realmEmptyTopicDisplayName,
             hintStyle: topicTextStyle.copyWith(fontStyle: FontStyle.italic))
@@ -630,18 +664,18 @@ class _TopicInput extends StatelessWidget {
               color: designVariables.textInput.withFadedAlpha(0.5)));
 
     return TopicAutocomplete(
-      streamId: streamId,
-      controller: controller.topic,
-      focusNode: controller.topicFocusNode,
-      contentFocusNode: controller.contentFocusNode,
+      streamId: widget.streamId,
+      controller: widget.controller.topic,
+      focusNode: widget.controller.topicFocusNode,
+      contentFocusNode: widget.controller.contentFocusNode,
       fieldViewBuilder: (context) => Container(
         padding: const EdgeInsets.only(top: 10, bottom: 9),
         decoration: BoxDecoration(border: Border(bottom: BorderSide(
           width: 1,
           color: designVariables.foreground.withFadedAlpha(0.2)))),
         child: TextField(
-          controller: controller.topic,
-          focusNode: controller.topicFocusNode,
+          controller: widget.controller.topic,
+          focusNode: widget.controller.topicFocusNode,
           textInputAction: TextInputAction.next,
           style: topicTextStyle,
           decoration: decoration)));
