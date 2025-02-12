@@ -560,18 +560,11 @@ class _StreamContentInputState extends State<_StreamContentInput> {
     });
   }
 
-  void _focusChanged() {
-    setState(() {
-      // The actual state lives in `widget.controller.contentFocusNode`.
-    });
-  }
-
   @override
   void initState() {
     super.initState();
     _topicTextNormalized = widget.controller.topic.textNormalized;
     widget.controller.topic.addListener(_topicChanged);
-    widget.controller.contentFocusNode.addListener(_focusChanged);
   }
 
   @override
@@ -581,16 +574,11 @@ class _StreamContentInputState extends State<_StreamContentInput> {
       oldWidget.controller.topic.removeListener(_topicChanged);
       widget.controller.topic.addListener(_topicChanged);
     }
-    if (widget.controller.contentFocusNode != oldWidget.controller.contentFocusNode) {
-      widget.controller.contentFocusNode.removeListener(_focusChanged);
-      widget.controller.contentFocusNode.addListener(_focusChanged);
-    }
   }
 
   @override
   void dispose() {
     widget.controller.topic.removeListener(_topicChanged);
-    widget.controller.contentFocusNode.removeListener(_focusChanged);
     super.dispose();
   }
 
@@ -605,11 +593,8 @@ class _StreamContentInputState extends State<_StreamContentInput> {
       narrow: widget.narrow,
       destination: TopicNarrow(widget.narrow.streamId, topic),
       controller: widget.controller,
-      hintText: (store.realmMandatoryTopics
-        && widget.controller.topic.isTopicVacuumous)
-        // The alternative hint text can only be shown when the user is actively
-        // sending a message, i.e., when the content input is focused.
-        || !widget.controller.contentFocusNode.hasFocus
+      hintText: store.realmMandatoryTopics
+        && widget.controller.topic.isTopicVacuumous
           ? zulipLocalizations.composeBoxChannelContentHint(streamName)
           : zulipLocalizations.composeBoxChannelTopicContentHint(
               // ignore: dead_null_aware_expression // null topic names soon to be enabled
@@ -631,27 +616,27 @@ class _TopicInputState extends State<_TopicInput> {
   @override
   void initState() {
     super.initState();
-    widget.controller.contentFocusNode.addListener(_focusChanged);
+    widget.controller.topicFocusNode.addListener(_focusChanged);
   }
 
   @override
   void didUpdateWidget(covariant _TopicInput oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.controller.contentFocusNode != oldWidget.controller.contentFocusNode) {
-      oldWidget.controller.contentFocusNode.removeListener(_focusChanged);
-      widget.controller.contentFocusNode.addListener(_focusChanged);
+    if (widget.controller.topicFocusNode != oldWidget.controller.topicFocusNode) {
+      oldWidget.controller.topicFocusNode.removeListener(_focusChanged);
+      widget.controller.topicFocusNode.addListener(_focusChanged);
     }
   }
 
   @override
   void dispose() {
-    widget.controller.contentFocusNode.removeListener(_focusChanged);
+    widget.controller.topicFocusNode.removeListener(_focusChanged);
     super.dispose();
   }
 
   void _focusChanged() {
     setState(() {
-      // The actual state lives in `widget.controller.contentFocusNode`.
+      // The actual state lives in `widget.controller.topicFocusNode`.
     });
   }
 
@@ -669,7 +654,7 @@ class _TopicInputState extends State<_TopicInput> {
     final allowEmptyTopics =
       store.connection.zulipFeatureLevel! >= 334 && !store.realmMandatoryTopics;
     final decoration =
-      allowEmptyTopics && widget.controller.contentFocusNode.hasFocus
+      allowEmptyTopics && !widget.controller.topicFocusNode.hasFocus
         ? InputDecoration(
             hintText: store.realmEmptyTopicDisplayName,
             hintStyle: topicTextStyle.copyWith(fontStyle: FontStyle.italic))
