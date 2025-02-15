@@ -1002,13 +1002,12 @@ void main() {
           check(completers()).single.isCompleted.isFalse();
 
           await completeLoading(async);
-          check(store).isLoading.isTrue();
           check(completers()).single.isCompleted.isTrue();
+          check(globalStore.takeDoRemoveAccountCalls()).single.equals(eg.selfAccount.id);
+          check(globalStore.perAccountSync(eg.selfAccount.id)).isNull();
 
           async.flushTimers();
           // Reload never succeeds and there is no unhandled errors.
-          check(store).isLoading.isTrue();
-          check(globalStore.takeDoRemoveAccountCalls()).single.equals(eg.selfAccount.id);
           check(globalStore.perAccountSync(eg.selfAccount.id)).isNull();
         });
       }

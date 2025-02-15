@@ -71,6 +71,10 @@ Object? deepToJson(Object? object) {
   return (result, true);
 }
 
+extension CompleterChecks<T> on Subject<Completer<T>> {
+  Subject<bool> get isCompleted => has((x) => x.isCompleted, 'isCompleted');
+}
+
 extension JsonChecks on Subject<Object?> {
   /// Expects that the value is deeply equal to [expected],
   /// after calling [deepToJson] on both.
@@ -144,8 +148,4 @@ extension HttpMultipartFileChecks on Subject<http.MultipartFile> {
 
 extension MediaTypeChecks on Subject<MediaType> {
   Subject<String> get asString => has((x) => x.toString(), 'toString'); // TODO(checks): what's a good convention for this?
-}
-
-extension CompleterChecks<T> on Subject<Completer<T>> {
-  Subject<bool> get isCompleted => has((x) => x.isCompleted, 'isCompleted');
 }
