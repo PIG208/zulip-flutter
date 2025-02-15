@@ -143,9 +143,8 @@ void main() {
       updateMachine.debugPauseLoop();
       updateMachine.poll();
 
-      updateMachine.debugPrepareLoopError(ZulipApiException(
-        routeName: 'events', httpStatus: 400, code: 'BAD_EVENT_QUEUE_ID',
-        data: {'queue_id': updateMachine.queueId}, message: 'Bad event queue ID.'));
+      updateMachine.debugPrepareLoopError(
+        eg.apiExceptionBadEventQueueId(queueId: updateMachine.queueId));
       updateMachine.debugAdvanceLoop();
       await tester.pump();
       // Event queue has been replaced; but the [MessageList] hasn't been

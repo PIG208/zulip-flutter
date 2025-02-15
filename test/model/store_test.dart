@@ -758,11 +758,8 @@ void main() {
     }
 
     void prepareExpiredEventQueue() {
-      connection.prepare(httpStatus: 400, json: {
-        'result': 'error', 'code': 'BAD_EVENT_QUEUE_ID',
-        'queue_id': updateMachine.queueId,
-        'msg': 'Bad event queue ID: ${updateMachine.queueId}',
-      });
+      connection.prepare(httpStatus: 400,
+        exception: eg.apiExceptionBadEventQueueId());
     }
 
     Future<void> prepareHandleEventError() async {
@@ -973,33 +970,37 @@ void main() {
     });
 
     group('reload failure', () {
-      List<Completer<PerAccountStore>> completers() =>
-        (globalStore as LoadingTestGlobalStore).completers[eg.selfAccount.id]!;
+      late LoadingTestGlobalStore globalStore;
 
-      Future<void> preparePoll() async {
+      List<Completer<PerAccountStore>> completers() =>
+        globalStore.completers[eg.selfAccount.id]!;
+
+      Future<void> prepareReload(FakeAsync async) async {
         globalStore = LoadingTestGlobalStore(accounts: [eg.selfAccount]);
         final future = globalStore.perAccount(eg.selfAccount.id);
         completers()
           ..single.complete(
               eg.store(globalStore: globalStore, account: eg.selfAccount))
           ..clear();
-        await future;
-        updateFromGlobalStore();
+        final store = await future;
+        updateMachine = globalStore.updateMachines[eg.selfAccount.id] =
+          UpdateMachine.fromInitialSnapshot(
+            store: store, initialSnapshot: eg.initialSnapshot());
         updateMachine.debugPauseLoop();
         updateMachine.poll();
+
+        prepareExpiredEventQueue();
+        updateMachine.debugAdvanceLoop();
+        async.elapse(Duration.zero);
+        check(store).isLoading.isTrue();
+        check(completers()).single.isCompleted.isFalse();
       }
 
       void checkReloadFailure({
         required Future<void> Function(FakeAsync async) completeLoading,
       }) {
         awaitFakeAsync((async) async {
-          await preparePoll();
-
-          prepareExpiredEventQueue();
-          updateMachine.debugAdvanceLoop();
-          async.elapse(Duration.zero);
-          check(store).isLoading.isTrue();
-          check(completers()).single.isCompleted.isFalse();
+          await prepareReload(async);
 
           await completeLoading(async);
           check(completers()).single.isCompleted.isTrue();
@@ -1124,13 +1125,10 @@ class LoadingTestGlobalStore extends TestGlobalStore {
   Map<int, List<Completer<PerAccountStore>>> completers = {};
 
   @override
-  Future<PerAccountStore> doLoadPerAccount(int accountId) async {
+  Future<PerAccountStore> doLoadPerAccount(int accountId) {
     final completer = Completer<PerAccountStore>();
     (completers[accountId] ??= []).add(completer);
-    final store = await completer.future;
-    updateMachines[accountId] = UpdateMachine.fromInitialSnapshot(
-      store: store, initialSnapshot: eg.initialSnapshot());
-    return store;
+    return completer.future;
   }
 }
 
