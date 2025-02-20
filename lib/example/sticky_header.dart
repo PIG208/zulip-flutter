@@ -125,54 +125,75 @@ class ExampleVerticalDouble extends StatelessWidget {
     super.key,
     required this.title,
     // this.reverse = false,
-    // this.headerDirection = AxisDirection.down,
-  }); // : assert(axisDirectionToAxis(headerDirection) == Axis.vertical);
+    required this.headerPlacement,
+  });
 
   final String title;
   // final bool reverse;
-  // final AxisDirection headerDirection;
+  final HeaderPlacement headerPlacement;
 
   @override
   Widget build(BuildContext context) {
-    const centerSliverKey = ValueKey('center sliver');
-    const numSections = 100;
+    const numSections = 4;
     const numBottomSections = 2;
+    const numTopSections = numSections - numBottomSections;
     const numPerSection = 10;
+
+    final headerAtBottom = switch (headerPlacement) {
+      HeaderPlacement.scrollingStart => false,
+      HeaderPlacement.scrollingEnd   => true,
+    };
+
+    // Choose the "center" sliver so that the sliver which might need to paint
+    // a header overflowing the other header is the sliver that paints last.
+    final centerKey = headerAtBottom ?
+      const ValueKey('bottom') : const ValueKey('top');
+
+    // This is a side effect of our choice of centerKey.
+    final topSliverGrowsUpward = headerAtBottom;
+
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: CustomScrollView(
         semanticChildCount: numSections,
-        anchor: 0.5,
-        center: centerSliverKey,
+        center: centerKey,
         slivers: [
           SliverStickyHeaderList(
-            headerPlacement: HeaderPlacement.scrollingStart,
+            key: const ValueKey('top'),
+            headerPlacement: headerPlacement,
             delegate: SliverChildBuilderDelegate(
               childCount: numSections - numBottomSections,
               (context, i) {
-                final ii = i + numBottomSections;
+                final ii = numBottomSections
+                  + (topSliverGrowsUpward ? i : numTopSections - 1 - i);
                 return StickyHeaderItem(
+                  allowOverflow: true,
                   header: WideHeader(i: ii),
                   child: Column(
+                    verticalDirection: headerAtBottom
+                      ? VerticalDirection.up : VerticalDirection.down,
                     children: List.generate(numPerSection + 1, (j) {
                       if (j == 0) return WideHeader(i: ii);
                       return WideItem(i: ii, j: j-1);
                     })));
               })),
           SliverStickyHeaderList(
-            key: centerSliverKey,
-            headerPlacement: HeaderPlacement.scrollingStart,
+            key: const ValueKey('bottom'),
+            headerPlacement: headerPlacement,
             delegate: SliverChildBuilderDelegate(
               childCount: numBottomSections,
               (context, i) {
                 final ii = numBottomSections - 1 - i;
                 return StickyHeaderItem(
+                  allowOverflow: true,
                   header: WideHeader(i: ii),
                   child: Column(
+                    verticalDirection: headerAtBottom
+                      ? VerticalDirection.up : VerticalDirection.down,
                     children: List.generate(numPerSection + 1, (j) {
-                        if (j == 0) return WideHeader(i: ii);
-                        return WideItem(i: ii, j: j-1);
-                      })));
+                      if (j == 0) return WideHeader(i: ii);
+                      return WideItem(i: ii, j: j-1);
+                    })));
               })),
         ]));
   }
@@ -197,6 +218,7 @@ class WideHeader extends StatelessWidget {
     return Material(
       color: Theme.of(context).colorScheme.primaryContainer,
       child: ListTile(
+        onTap: () {}, // nop, but non-null so the ink splash appears
         title: Text("Section ${i + 1}",
           style: TextStyle(
             color: Theme.of(context).colorScheme.onPrimaryContainer))));
@@ -211,7 +233,9 @@ class WideItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(title: Text("Item ${i + 1}.${j + 1}"));
+    return ListTile(
+      onTap: () {}, // nop, but non-null so the ink splash appears
+      title: Text("Item ${i + 1}.${j + 1}"));
   }
 }
 
@@ -318,8 +342,15 @@ class MainPage extends StatelessWidget {
     ];
     final otherItems = [
       _buildButton(context,
-        title: 'Double slivers',
-        page: ExampleVerticalDouble(title: 'Double slivers')),
+        title: 'Double slivers, headers at top',
+        page: ExampleVerticalDouble(
+          title: 'Double slivers, headers at top',
+          headerPlacement: HeaderPlacement.scrollingStart)),
+      _buildButton(context,
+        title: 'Double slivers, headers at bottom',
+        page: ExampleVerticalDouble(
+          title: 'Double slivers, headers at bottom',
+          headerPlacement: HeaderPlacement.scrollingEnd)),
     ];
     return Scaffold(
         appBar: AppBar(title: const Text('Sticky Headers example')),

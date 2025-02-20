@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_color_models/flutter_color_models.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 
 import '../api/model/model.dart';
 import '../generated/l10n/zulip_localizations.dart';
@@ -153,7 +153,7 @@ class MessageListTheme extends ThemeExtension<MessageListTheme> {
     return MessageListTheme._(
       dateSeparator: Color.lerp(dateSeparator, other.dateSeparator, t)!,
       dateSeparatorText: Color.lerp(dateSeparatorText, other.dateSeparatorText, t)!,
-      dmRecipientHeaderBg: Color.lerp(streamMessageBgDefault, other.dmRecipientHeaderBg, t)!,
+      dmRecipientHeaderBg: Color.lerp(dmRecipientHeaderBg, other.dmRecipientHeaderBg, t)!,
       messageTimestamp: Color.lerp(messageTimestamp, other.messageTimestamp, t)!,
       recipientHeaderText: Color.lerp(recipientHeaderText, other.recipientHeaderText, t)!,
       senderBotIcon: Color.lerp(senderBotIcon, other.senderBotIcon, t)!,
@@ -188,7 +188,7 @@ abstract class MessageListPageState {
 class MessageListPage extends StatefulWidget {
   const MessageListPage({super.key, required this.initNarrow});
 
-  static Route<void> buildRoute({int? accountId, BuildContext? context,
+  static AccountRoute<void> buildRoute({int? accountId, BuildContext? context,
       required Narrow narrow}) {
     return MaterialAccountWidgetRoute(accountId: accountId, context: context,
       page: MessageListPage(initNarrow: narrow));
@@ -483,6 +483,7 @@ class _MessageListState extends State<MessageList> with PerAccountStoreAwareStat
 
   @override
   void onNewStore() { // TODO(#464) try to keep using old model until new one gets messages
+    model?.dispose();
     _initModel(PerAccountStoreWidget.of(context));
   }
 
@@ -1179,7 +1180,6 @@ class DmRecipientHeader extends StatelessWidget {
         .sorted()
         .join(", "));
     } else {
-      // TODO pick string; web has glitchy "You and $yourname"
       title = zulipLocalizations.messageListGroupYouWithYourself;
     }
 
@@ -1387,6 +1387,17 @@ class MessageWithPossibleSender extends StatelessWidget {
       case MessageEditState.none:
     }
 
+    Widget? star;
+    if (message.flags.contains(MessageFlag.starred)) {
+      final starOffset = switch (Directionality.of(context)) {
+        TextDirection.ltr => -2.0,
+        TextDirection.rtl => 2.0,
+      };
+      star = Transform.translate(
+        offset: Offset(starOffset, 0),
+        child: Icon(ZulipIcons.star_filled, size: 16, color: designVariables.star));
+    }
+
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onLongPress: () => showMessageActionSheet(context: context, message: message),
@@ -1418,9 +1429,7 @@ class MessageWithPossibleSender extends StatelessWidget {
                           context, 0.05, baseFontSize: 12))),
                 ])),
               SizedBox(width: 16,
-                child: message.flags.contains(MessageFlag.starred)
-                  ? Icon(ZulipIcons.star_filled, size: 16, color: designVariables.star)
-                  : null),
+                child: star),
             ]),
         ])));
   }

@@ -138,6 +138,11 @@ class ZulipLocalizationsJa extends ZulipLocalizations {
   }
 
   @override
+  String filenameAndSizeInMiB(String filename, String size) {
+    return '$filename: $size MiB';
+  }
+
+  @override
   String errorFilesTooLarge(int num, int maxFileUploadSizeMib, String listMessage) {
     String _temp0 = intl.Intl.pluralLogic(
       num,
@@ -311,7 +316,7 @@ class ZulipLocalizationsJa extends ZulipLocalizations {
   }
 
   @override
-  String get messageListGroupYouWithYourself => 'You with yourself';
+  String get messageListGroupYouWithYourself => 'Messages with yourself';
 
   @override
   String get contentValidationErrorTooLong => 'Message length shouldn\'t be greater than 10000 characters.';
@@ -370,7 +375,7 @@ class ZulipLocalizationsJa extends ZulipLocalizations {
   String get loginAddAnAccountPageTitle => 'Add an account';
 
   @override
-  String get loginServerUrlInputLabel => 'Your Zulip server URL';
+  String get loginServerUrlLabel => 'Your Zulip server URL';
 
   @override
   String get loginHidePassword => 'Hide password';
@@ -632,4 +637,10 @@ class ZulipLocalizationsJa extends ZulipLocalizations {
 
   @override
   String get scrollToBottomTooltip => 'Scroll to bottom';
+
+  @override
+  String get appVersionUnknownPlaceholder => '(…)';
+
+  @override
+  String get zulipAppTitle => 'Zulip';
 }

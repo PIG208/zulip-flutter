@@ -138,6 +138,11 @@ class ZulipLocalizationsRu extends ZulipLocalizations {
   }
 
   @override
+  String filenameAndSizeInMiB(String filename, String size) {
+    return '$filename: $size MiB';
+  }
+
+  @override
   String errorFilesTooLarge(int num, int maxFileUploadSizeMib, String listMessage) {
     String _temp0 = intl.Intl.pluralLogic(
       num,
@@ -370,7 +375,7 @@ class ZulipLocalizationsRu extends ZulipLocalizations {
   String get loginAddAnAccountPageTitle => 'Добавление учетной записи';
 
   @override
-  String get loginServerUrlInputLabel => 'URL вашего сервера Zulip';
+  String get loginServerUrlLabel => 'URL вашего сервера Zulip';
 
   @override
   String get loginHidePassword => 'Скрыть пароль';
@@ -632,4 +637,10 @@ class ZulipLocalizationsRu extends ZulipLocalizations {
 
   @override
   String get scrollToBottomTooltip => 'Scroll to bottom';
+
+  @override
+  String get appVersionUnknownPlaceholder => '(…)';
+
+  @override
+  String get zulipAppTitle => 'Zulip';
 }

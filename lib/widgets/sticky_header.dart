@@ -99,6 +99,18 @@ class RenderStickyHeaderItem extends RenderProxyBox {
 /// or if [scrollDirection] is horizontal then to the start in the
 /// reading direction of the ambient [Directionality].
 /// It can be controlled with [reverseHeader].
+///
+/// Much like [ListView], a [StickyHeaderListView] is basically
+/// a [CustomScrollView] with a single sliver in its [CustomScrollView.slivers]
+/// property.
+/// For a [StickyHeaderListView], that sliver is a [SliverStickyHeaderList].
+///
+/// If more than one sliver is needed, any code using [StickyHeaderListView]
+/// can be ported to use [CustomScrollView] directly, in much the same way
+/// as for code using [ListView].  See [ListView] for details.
+///
+/// See also:
+///  * [SliverStickyHeaderList], which provides the sticky-header behavior.
 class StickyHeaderListView extends BoxScrollView {
   // Like ListView, but with sticky headers.
   StickyHeaderListView({
@@ -296,6 +308,31 @@ enum _HeaderGrowthPlacement {
   growthEnd
 }
 
+/// A list sliver with sticky headers.
+///
+/// This widget takes most of its behavior from [SliverList],
+/// but adds sticky headers as described at [StickyHeaderListView].
+///
+/// ## Overflow across slivers
+///
+/// When the list item that controls the sticky header has
+/// [StickyHeaderItem.allowOverflow] true, the header will be permitted
+/// to overflow not only the item but this whole sliver.
+///
+/// The caller is responsible for arranging the paint order between slivers
+/// so that this works correctly: a sliver that might overflow must be painted
+/// after any sliver it might overflow onto.
+/// For example if [headerPlacement] puts headers at the left of the viewport
+/// (and any items with [StickyHeaderItem.allowOverflow] true are present),
+/// then this [SliverStickyHeaderList] must paint after any slivers that appear
+/// to the right of this sliver.
+///
+/// At present there's no off-the-shelf way to fully control the paint order
+/// between slivers.
+/// See the implementation of [RenderViewport.childrenInPaintOrder] for the
+/// paint order provided by [CustomScrollView]; it meets the above needs
+/// for some arrangements of slivers and values of [headerPlacement],
+/// but not others.
 class SliverStickyHeaderList extends RenderObjectWidget {
   SliverStickyHeaderList({
     super.key,
@@ -306,7 +343,16 @@ class SliverStickyHeaderList extends RenderObjectWidget {
     delegate: delegate,
   );
 
+  /// Whether the sticky header appears at the start or the end
+  /// in the scrolling direction.
+  ///
+  /// For example, if the enclosing [Viewport] has [Viewport.axisDirection]
+  /// of [AxisDirection.down], then
+  /// [HeaderPlacement.scrollingStart] means the header appears at
+  /// the top of the viewport, and
+  /// [HeaderPlacement.scrollingEnd] means it appears at the bottom.
   final HeaderPlacement headerPlacement;
+
   final _SliverStickyHeaderListInner _child;
 
   @override
@@ -592,26 +638,56 @@ class _RenderSliverStickyHeaderList extends RenderSliver with RenderSliverHelper
         // even if the (visible part of the) item is smaller than the header,
         // and even if the whole child sliver is smaller than the header.
 
-        final paintedHeaderSize = calculatePaintOffset(constraints, from: 0, to: headerExtent);
-        geometry = SliverGeometry( // TODO review interaction with other slivers
-          scrollExtent: geometry.scrollExtent,
-          layoutExtent: childExtent,
-          paintExtent: math.max(childExtent, paintedHeaderSize),
-          maxPaintExtent: math.max(geometry.maxPaintExtent, headerExtent),
-          hasVisualOverflow: geometry.hasVisualOverflow
-            || headerExtent > constraints.remainingPaintExtent,
+        if (headerExtent <= childExtent) {
+          // The header fits within the child sliver.
+          // So it doesn't affect this sliver's overall geometry.
 
-          // The cache extent is an extension of layout, not paint; it controls
-          // where the next sliver should start laying out content.  (See
-          // [SliverConstraints.remainingCacheExtent].)  The header isn't meant
-          // to affect where the next sliver gets laid out, so it shouldn't
-          // affect the cache extent.
-          cacheExtent: geometry.cacheExtent,
-        );
+          headerOffset = _headerAtCoordinateEnd()
+            ? childExtent - headerExtent
+            : 0.0;
+        } else {
+          // The header will overflow the child sliver.
+          // That makes this sliver's geometry a bit more complicated.
 
-        headerOffset = _headerAtCoordinateEnd()
-          ? childExtent - headerExtent
-          : 0.0;
+          // This sliver's paint region consists entirely of the header.
+          final paintExtent = headerExtent;
+          headerOffset = 0.0;
+
+          // Its layout region (affecting where the next sliver begins layout)
+          // is that given by the child sliver.
+          final layoutExtent = childExtent;
+
+          // The paint origin places this sliver's paint region relative to its
+          // layout region so that they share the edge the header appears at
+          // (which should be the edge of the viewport).
+          final headerGrowthPlacement =
+            _widget.headerPlacement._byGrowth(constraints.growthDirection);
+          final paintOrigin = switch (headerGrowthPlacement) {
+            _HeaderGrowthPlacement.growthStart => 0.0,
+            _HeaderGrowthPlacement.growthEnd => layoutExtent - paintExtent,
+          };
+          // TODO the child sliver should be painted at offset -paintOrigin
+          //   (This bug doesn't matter so long as the header is opaque,
+          //   because the header covers the child in that case.
+          //   For that reason the Zulip message list isn't affected.)
+
+          geometry = SliverGeometry( // TODO review interaction with other slivers
+            scrollExtent: geometry.scrollExtent,
+            layoutExtent: layoutExtent,
+            paintExtent: paintExtent,
+            paintOrigin: paintOrigin,
+            maxPaintExtent: math.max(geometry.maxPaintExtent, paintExtent),
+            hasVisualOverflow: geometry.hasVisualOverflow
+              || paintExtent > constraints.remainingPaintExtent,
+
+            // The cache extent is an extension of layout, not paint; it controls
+            // where the next sliver should start laying out content.  (See
+            // [SliverConstraints.remainingCacheExtent].)  The header isn't meant
+            // to affect where the next sliver gets laid out, so it shouldn't
+            // affect the cache extent.
+            cacheExtent: geometry.cacheExtent,
+          );
+        }
       } else {
         // The header's item has [StickyHeaderItem.allowOverflow] false.
         // Keep the header within the item, pushing the header partly out of
@@ -666,16 +742,21 @@ class _RenderSliverStickyHeaderList extends RenderSliver with RenderSliverHelper
   double childMainAxisPosition(RenderObject child) {
     if (child == this.child) return 0.0;
     assert(child == header);
+
+    final headerParentData = (header!.parentData as SliverPhysicalParentData);
+    final paintOffset = headerParentData.paintOffset;
+
     // We use Sliver*Physical*ParentData, so the header's position is stored in
     // physical coordinates.  To meet the spec of `childMainAxisPosition`, we
     // need to convert to the sliver's coordinate system.
-    final headerParentData = (header!.parentData as SliverPhysicalParentData);
-    final paintOffset = headerParentData.paintOffset;
+    // This is all a bit silly because callers like [hitTestBoxChild] are just
+    // going to do the same things in reverse to get physical coordinates.
+    // Ah well; that's the API.
     return switch (constraints.growthAxisDirection) {
       AxisDirection.right => paintOffset.dx,
-      AxisDirection.left  => geometry!.layoutExtent - header!.size.width  - paintOffset.dx,
+      AxisDirection.left  => geometry!.paintExtent - header!.size.width  - paintOffset.dx,
       AxisDirection.down  => paintOffset.dy,
-      AxisDirection.up    => geometry!.layoutExtent - header!.size.height - paintOffset.dy,
+      AxisDirection.up    => geometry!.paintExtent - header!.size.height - paintOffset.dy,
     };
   }
 
