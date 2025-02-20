@@ -1,7 +1,10 @@
 import 'package:checks/checks.dart';
+import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:zulip/model/database.dart';
+import 'package:zulip/model/settings.dart';
 import 'package:zulip/widgets/channel_colors.dart';
 import 'package:zulip/widgets/text.dart';
 import 'package:zulip/widgets/theme.dart';
@@ -9,6 +12,7 @@ import 'package:zulip/widgets/theme.dart';
 import '../example_data.dart' as eg;
 import '../flutter_checks.dart';
 import '../model/binding.dart';
+import '../model/store_checks.dart';
 import 'colors_checks.dart';
 import 'test_app.dart';
 
@@ -96,6 +100,48 @@ void main() {
         final b = DesignVariables.dark;
         check(() => a.lerp(b, 0.5)).returnsNormally();
       });
+    });
+
+    testWidgets('when globalSettings.themeSetting is unset, follow system setting', (tester) async {
+      addTearDown(testBinding.reset);
+
+      tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
+      addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+
+      await tester.pumpWidget(const TestZulipApp(child: Placeholder()));
+      await tester.pump();
+      check(testBinding.globalStore)
+        .globalSettings.themeSetting.equals(ThemeSetting.unset);
+
+      final element = tester.element(find.byType(Placeholder));
+      check(zulipThemeData(element)).brightness.equals(Brightness.light);
+
+      tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+      await tester.pump();
+      check(zulipThemeData(element)).brightness.equals(Brightness.dark);
+    });
+
+    testWidgets('when globalSettings.themeSetting is not unset, override system setting', (tester) async {
+      addTearDown(testBinding.reset);
+
+      tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
+      addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+
+      await tester.pumpWidget(const TestZulipApp(child: Placeholder()));
+      await tester.pump();
+      check(testBinding.globalStore)
+        .globalSettings.themeSetting.equals(ThemeSetting.unset);
+
+      final element = tester.element(find.byType(Placeholder));
+      check(zulipThemeData(element)).brightness.equals(Brightness.light);
+
+      await testBinding.globalStore.updateGlobalSettings(
+        const GlobalSettingsCompanion(themeSetting: Value(ThemeSetting.dark)));
+      check(zulipThemeData(element)).brightness.equals(Brightness.dark);
+
+      await testBinding.globalStore.updateGlobalSettings(
+        const GlobalSettingsCompanion(themeSetting: Value(ThemeSetting.unset)));
+      check(zulipThemeData(element)).brightness.equals(Brightness.light);
     });
   });
 

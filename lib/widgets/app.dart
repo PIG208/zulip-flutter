@@ -212,7 +212,6 @@ class _ZulipAppState extends State<ZulipApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final themeData = zulipThemeData(context);
     return GlobalStoreWidget(
       builder: (BuildContext context) => MaterialApp(
         onGenerateTitle: (BuildContext context) {
@@ -220,7 +219,7 @@ class _ZulipAppState extends State<ZulipApp> with WidgetsBindingObserver {
         },
         localizationsDelegates: ZulipLocalizations.localizationsDelegates,
         supportedLocales: ZulipLocalizations.supportedLocales,
-        theme: themeData,
+        theme: zulipThemeData(context),
 
         navigatorKey: ZulipApp.navigatorKey,
         navigatorObservers: [
