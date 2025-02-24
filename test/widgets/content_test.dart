@@ -1015,7 +1015,7 @@ void main() {
       final httpClient = prepareBoringImageHttpClient();
 
       await tester.pumpWidget(GlobalStoreWidget(
-        child: PerAccountStoreWidget(accountId: eg.selfAccount.id,
+        builder: (BuildContext context) => PerAccountStoreWidget(accountId: eg.selfAccount.id,
           child: RealmContentNetworkImage(src))));
       await tester.pump();
       await tester.pump();
@@ -1057,7 +1057,8 @@ void main() {
 
       prepareBoringImageHttpClient();
       await tester.pumpWidget(GlobalStoreWidget(
-        child: PerAccountStoreWidget(accountId: eg.selfAccount.id,
+        builder: (BuildContext context) => PerAccountStoreWidget(
+          accountId: eg.selfAccount.id,
           child: AvatarImage(userId: user.userId, size: size ?? 30))));
       await tester.pump();
       await tester.pump();

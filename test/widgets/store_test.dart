@@ -63,11 +63,10 @@ void main() {
     GlobalStore? globalStore;
     await tester.pumpWidget(
       GlobalStoreWidget(
-        child: Builder(
-          builder: (context) {
-            globalStore = GlobalStoreWidget.of(context);
-            return const SizedBox.shrink();
-          })));
+        builder: (BuildContext context) {
+          globalStore = GlobalStoreWidget.of(context);
+          return const SizedBox.shrink();
+        }));
     // First, shows a loading page instead of child.
     check(tester.any(find.byType(CircularProgressIndicator))).isTrue();
     check(globalStore).isNull();
@@ -91,7 +90,7 @@ void main() {
       Directionality(
         textDirection: TextDirection.ltr,
         child: GlobalStoreWidget(
-          child: PerAccountStoreWidget(
+          builder: (BuildContext context) => PerAccountStoreWidget(
             accountId: eg.selfAccount.id,
             child: Builder(
               builder: (context) {
@@ -111,7 +110,7 @@ void main() {
         textDirection: TextDirection.ltr,
         child: GlobalStoreWidget(
           // no PerAccountStoreWidget
-          child: Builder(
+          builder: (BuildContext context) => Builder(
             builder: (context) {
               final store = PerAccountStoreWidget.of(context);
               return Text('found store, account: ${store.accountId}');
@@ -130,7 +129,7 @@ void main() {
       Directionality(
         textDirection: TextDirection.ltr,
         child: GlobalStoreWidget(
-          child: PerAccountStoreWidget(
+          builder: (BuildContext context) => PerAccountStoreWidget(
             key: const ValueKey(1),
             accountId: eg.selfAccount.id,
             child: Builder(
@@ -158,7 +157,7 @@ void main() {
       Directionality(
         textDirection: TextDirection.ltr,
         child: GlobalStoreWidget(
-          child: PerAccountStoreWidget(
+          builder: (BuildContext context) => PerAccountStoreWidget(
             key: const ValueKey(2),
             accountId: eg.selfAccount.id,
             child: Builder(
@@ -254,7 +253,7 @@ void main() {
         MaterialApp(
           theme: light ? ThemeData.light() : ThemeData.dark(),
           home: GlobalStoreWidget(
-            child: PerAccountStoreWidget(
+            builder: (BuildContext context) => PerAccountStoreWidget(
               accountId: accountId,
               child: MyWidgetWithMixin(key: widgetWithMixinKey)))));
     }

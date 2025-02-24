@@ -17,11 +17,11 @@ class GlobalStoreWidget extends StatefulWidget {
   const GlobalStoreWidget({
     super.key,
     this.placeholder = const LoadingPlaceholder(),
-    required this.child,
+    required this.builder,
   });
 
   final Widget placeholder;
-  final Widget child;
+  final WidgetBuilder builder;
 
   /// The app's global data store.
   ///
@@ -73,7 +73,8 @@ class _GlobalStoreWidgetState extends State<GlobalStoreWidget> {
   Widget build(BuildContext context) {
     final store = this.store;
     if (store == null) return widget.placeholder;
-    return _GlobalStoreInheritedWidget(store: store, child: widget.child);
+    return _GlobalStoreInheritedWidget(
+      store: store, child: Builder(builder: widget.builder));
   }
 }
 

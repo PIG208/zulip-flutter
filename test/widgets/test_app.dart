@@ -45,7 +45,7 @@ class TestZulipApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlobalStoreWidget(child: Builder(builder: (context) {
+    return GlobalStoreWidget(builder: (BuildContext context) {
       assert(() {
         if (accountId != null && !skipAssertAccountExists) {
           final account = GlobalStoreWidget.of(context).getAccount(accountId!);
@@ -81,6 +81,6 @@ class TestZulipApp extends StatelessWidget {
           ? PerAccountStoreWidget(accountId: accountId!,
               child: PageRoot(child: child))
           : PageRoot(child: child));
-    }));
+    });
   }
 }
