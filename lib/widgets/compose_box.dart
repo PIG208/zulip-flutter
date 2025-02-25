@@ -204,16 +204,20 @@ class ComposeTopicController extends ComposeController<TopicValidationError> {
       return '#$streamName';
     }
 
-    // TODO(server-10): simplify
-    if (textNormalized.isEmpty) {
+    if (isTopicVacuous) {
+      if (!contentHasFocus) {
+        // Do not fall back to a default topic when the user is just looking
+        // at the channel narrow, because we would expect a call to action for
+        // the user to pick a topic first.
+        return '#$streamName';
+      }
+
       // [textNormalized] cannot be empty prior to empty topics.
-      assert(store.connection.zulipFeatureLevel! >= 334);
-      // We do not fall back to a default topic when the user is just looking
-      // at the channel narrow, because we would expect a call to action for
-      // the user to pick a topic first.
-      return contentHasFocus
+      // TODO(server-10): remove assertion
+      assert(textNormalized.isNotEmpty || store.connection.zulipFeatureLevel! >= 334);
+      return textNormalized.isEmpty
         ? '#$streamName > ${store.realmEmptyTopicDisplayName}'
-        : '#$streamName';
+        : '#$streamName > $textNormalized';
     }
 
     return '#$streamName > $textNormalized';
