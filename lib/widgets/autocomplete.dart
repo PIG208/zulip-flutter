@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../generated/l10n/zulip_localizations.dart';
 import '../model/emoji.dart';
-import '../model/store.dart';
 import 'content.dart';
 import 'emoji.dart';
 import 'icons.dart';
@@ -239,8 +238,8 @@ class _MentionAutocompleteItem extends StatelessWidget {
 
   Widget wildcardLabel(WildcardMentionOption wildcardOption, {
     required BuildContext context,
-    required PerAccountStore store,
   }) {
+    final store = PerAccountStoreWidget.of(context);
     final isDmNarrow = narrow is DmNarrow;
     final isChannelWildcardAvailable = store.zulipFeatureLevel >= 247; // TODO(server-9)
     final localizations = ZulipLocalizations.of(context);
@@ -273,7 +272,7 @@ class _MentionAutocompleteItem extends StatelessWidget {
         label = Text(user.fullName);
       case WildcardMentionAutocompleteResult(:var wildcardOption):
         avatar = const Icon(ZulipIcons.three_person, size: 29); // web uses 19px
-        label = wildcardLabel(wildcardOption, context: context, store: store);
+        label = wildcardLabel(wildcardOption, context: context);
     }
 
     return Padding(
