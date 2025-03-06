@@ -1307,9 +1307,6 @@ class _ComposeBoxContainer extends StatelessWidget {
 
 /// The text inputs, compose-button row, and send button for the compose box.
 abstract class _ComposeBoxBody extends StatelessWidget {
-  /// The narrow on view in the message list.
-  Narrow get narrow;
-
   BaseComposeBoxController get controller;
 
   Widget? buildTopicInput();
@@ -1378,7 +1375,6 @@ abstract class _ComposeBoxBody extends StatelessWidget {
 class _StreamComposeBoxBody extends _ComposeBoxBody {
   _StreamComposeBoxBody({required this.narrow, required this.controller});
 
-  @override
   final ChannelNarrow narrow;
 
   @override
@@ -1404,7 +1400,6 @@ class _StreamComposeBoxBody extends _ComposeBoxBody {
 class _FixedDestinationComposeBoxBody extends _ComposeBoxBody {
   _FixedDestinationComposeBoxBody({required this.narrow, required this.controller});
 
-  @override
   final SendableNarrow narrow;
 
   @override
@@ -1427,7 +1422,6 @@ class _FixedDestinationComposeBoxBody extends _ComposeBoxBody {
 class _EditMessageComposeBoxBody extends _ComposeBoxBody {
   _EditMessageComposeBoxBody({required this.narrow, required this.controller});
 
-  @override
   final Narrow narrow;
 
   @override
