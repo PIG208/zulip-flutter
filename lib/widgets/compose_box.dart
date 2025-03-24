@@ -655,8 +655,10 @@ class _StreamContentInputState extends State<_StreamContentInput> {
       // so don't make sense to translate. See:
       //   https://github.com/zulip/zulip-flutter/pull/1148#discussion_r1941990585
       ? '#$streamName'
-      // ignore: dead_null_aware_expression // null topic names soon to be enabled
-      : '#$streamName > ${hintTopic.displayName ?? store.realmEmptyTopicDisplayName}';
+      // null topic names soon to be enabled
+      : '#$streamName > '
+        '${hintTopic.displayName.isEmpty ? store.realmEmptyTopicDisplayName
+                                         : hintTopic.displayName}';
 
     return _TypingNotifier(
       destination: TopicNarrow(widget.narrow.streamId,
