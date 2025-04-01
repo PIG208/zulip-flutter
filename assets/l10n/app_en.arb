@@ -864,6 +864,10 @@
   "@messageIsMovedLabel": {
     "description": "Label for a moved message. (Use ALL CAPS for cased alphabets: Latin, Greek, Cyrillic, etc.)"
   },
+  "messageNotSentLabel": "MESSAGE NOT SENT",
+  "@messageNotSentLabel": {
+    "description": "Text on a message in the message list saying that a send message request failed. (Use ALL CAPS for cased alphabets: Latin, Greek, Cyrillic, etc.)"
+  },
   "pollVoterNames": "({voterNames})",
   "@pollVoterNames": {
     "description": "The list of people who voted for a poll option, wrapped in parentheses.",

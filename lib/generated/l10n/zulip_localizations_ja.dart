@@ -705,6 +705,9 @@ class ZulipLocalizationsJa extends ZulipLocalizations {
   String get messageIsMovedLabel => 'MOVED';
 
   @override
+  String get messageNotSentLabel => 'MESSAGE NOT SENT';
+
+  @override
   String pollVoterNames(String voterNames) {
     return '($voterNames)';
   }

@@ -1277,6 +1277,12 @@ abstract class ZulipLocalizations {
   /// **'MOVED'**
   String get messageIsMovedLabel;
 
+  /// Text on a message in the message list saying that a send message request failed. (Use ALL CAPS for cased alphabets: Latin, Greek, Cyrillic, etc.)
+  ///
+  /// In en, this message translates to:
+  /// **'MESSAGE NOT SENT'**
+  String get messageNotSentLabel;
+
   /// The list of people who voted for a poll option, wrapped in parentheses.
   ///
   /// In en, this message translates to:
