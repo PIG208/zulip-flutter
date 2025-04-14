@@ -595,11 +595,18 @@ class _StreamContentInputState extends State<_StreamContentInput> {
     });
   }
 
+  void _topicEditStatusChanged() {
+    setState(() {
+      // The relevant state lives on widget.controller.topicEditStatus itself.
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     widget.controller.topic.addListener(_topicChanged);
     widget.controller.contentFocusNode.addListener(_contentFocusChanged);
+    widget.controller.topicEditStatus.addListener(_topicEditStatusChanged);
   }
 
   @override
@@ -613,12 +620,17 @@ class _StreamContentInputState extends State<_StreamContentInput> {
       oldWidget.controller.contentFocusNode.removeListener(_contentFocusChanged);
       widget.controller.contentFocusNode.addListener(_contentFocusChanged);
     }
+    if (widget.controller.topicEditStatus != oldWidget.controller.topicEditStatus) {
+      oldWidget.controller.topicEditStatus.removeListener(_topicEditStatusChanged);
+      widget.controller.topicEditStatus.addListener(_topicEditStatusChanged);
+    }
   }
 
   @override
   void dispose() {
     widget.controller.topic.removeListener(_topicChanged);
     widget.controller.contentFocusNode.removeListener(_contentFocusChanged);
+    widget.controller.topicEditStatus.removeListener(_topicEditStatusChanged);
     super.dispose();
   }
 
@@ -629,9 +641,9 @@ class _StreamContentInputState extends State<_StreamContentInput> {
         // The chosen topic can't be sent to, so don't show it.
         return null;
       }
-      if (!widget.controller.contentFocusNode.hasFocus) {
+      if (widget.controller.topicEditStatus.value != ComposeTopicEditStatus.hasChosen) {
         // Do not fall back to a vacuous topic unless the user explicitly chooses
-        // to do so (by skipping topic input and moving focus to content input),
+        // to do so (by having edited topic input or moving focus to content input),
         // so that the user is not encouraged to use vacuous topic when they
         // have not interacted with the inputs at all.
         return null;
