@@ -1038,6 +1038,42 @@ void main() {
           valueBefore: valueBefore, message: message, rawContent: 'Hello world');
       });
 
+      testWidgets('in channel narrow, fill topic when topic input is vacuous', (tester) async {
+        // Regression test for: https://github.com/zulip/zulip-flutter/issues/1469
+        final message = eg.streamMessage(topic: 'test topic');
+        await setupToMessageActionSheet(tester, message: message, narrow: ChannelNarrow(message.streamId),
+          zulipFeatureLevel: 334);
+
+        final composeBoxController = findComposeBoxController(tester) as StreamComposeBoxController;
+        final topicController = composeBoxController.topic;
+        check(topicController).textNormalized.equals('');
+
+        connection.prepare(body:
+          jsonEncode(GetStreamTopicsResult(topics: [eg.getStreamTopicsEntry()]).toJson()));
+        prepareRawContentResponseSuccess(message: message, rawContent: 'Hello world');
+        await tapQuoteAndReplyButton(tester);
+        await tester.pump(Duration.zero);
+        check(topicController).textNormalized.equals('test topic');
+      });
+
+      testWidgets('legacy: in channel narrow, fill topic when topic input is vacuous', (tester) async {
+        // Regression test for: https://github.com/zulip/zulip-flutter/issues/1469
+        final message = eg.streamMessage(topic: 'test topic');
+        await setupToMessageActionSheet(tester, message: message, narrow: ChannelNarrow(message.streamId),
+          zulipFeatureLevel: 333);
+
+        final composeBoxController = findComposeBoxController(tester) as StreamComposeBoxController;
+        final topicController = composeBoxController.topic;
+        check(topicController).textNormalized.equals('(no topic)');
+
+        connection.prepare(body:
+          jsonEncode(GetStreamTopicsResult(topics: [eg.getStreamTopicsEntry()]).toJson()));
+        prepareRawContentResponseSuccess(message: message, rawContent: 'Hello world');
+        await tapQuoteAndReplyButton(tester);
+        await tester.pump(Duration.zero);
+        check(topicController).textNormalized.equals('test topic');
+      });
+
       group('in topic narrow', () {
         testWidgets('smoke', (tester) async {
           final message = eg.streamMessage();
