@@ -17,6 +17,7 @@ import 'package:zulip/api/route/messages.dart';
 import 'package:zulip/api/route/realm.dart';
 import 'package:zulip/log.dart';
 import 'package:zulip/model/actions.dart';
+import 'package:zulip/model/binding.dart';
 import 'package:zulip/model/store.dart';
 import 'package:zulip/notifications/receive.dart';
 
@@ -1289,6 +1290,8 @@ void main() {
       // learned the token before the store is created.
       // (This is probably the common case.)
       addTearDown(testBinding.reset);
+      testBinding.packageInfoResult = PackageInfo(
+        packageName: 'com.zulip.flutter.testing', version: '0.0.1', buildNumber: '1');
       testBinding.firebaseMessagingInitialToken = '012abc';
       addTearDown(NotificationService.debugReset);
       await NotificationService.instance.start();
@@ -1300,7 +1303,7 @@ void main() {
       if (defaultTargetPlatform == TargetPlatform.android) {
         checkLastRequestFcm(token: '012abc');
       } else {
-        checkLastRequestApns(token: '012abc', appid: 'com.zulip.flutter');
+        checkLastRequestApns(token: '012abc', appid: 'com.zulip.flutter.testing');
       }
 
       if (defaultTargetPlatform == TargetPlatform.android) {
@@ -1316,6 +1319,8 @@ void main() {
       // This tests the case where the store is created while our
       // request for the token is still pending.
       addTearDown(testBinding.reset);
+      testBinding.packageInfoResult = PackageInfo(
+        packageName: 'com.zulip.flutter.testing', version: '0.0.1', buildNumber: '1');
       testBinding.firebaseMessagingInitialToken = '012abc';
       addTearDown(NotificationService.debugReset);
       final startFuture = NotificationService.instance.start();
@@ -1339,7 +1344,8 @@ void main() {
       if (defaultTargetPlatform == TargetPlatform.android) {
         checkLastRequestFcm(token: '012abc');
       } else {
-        checkLastRequestApns(token: '012abc', appid: 'com.zulip.flutter');
+        async.flushMicrotasks();
+        checkLastRequestApns(token: '012abc', appid: 'com.zulip.flutter.testing');
       }
 
       if (defaultTargetPlatform == TargetPlatform.android) {

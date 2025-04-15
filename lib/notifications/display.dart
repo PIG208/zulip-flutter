@@ -71,7 +71,7 @@ class NotificationChannelManager {
     required String resourceTypeName,
     required String resourceEntryName,
   }) {
-    const packageName = 'com.zulip.flutter'; // TODO(#407)
+    final packageName = ZulipBinding.instance.syncPackageInfo!.packageName;
 
     // URL scheme for Android resource url.
     // See: https://developer.android.com/reference/android/content/ContentResolver#SCHEME_ANDROID_RESOURCE

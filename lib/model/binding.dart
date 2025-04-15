@@ -301,10 +301,12 @@ class LinuxDeviceInfo implements BaseDeviceInfo {
 
 /// Like [package_info_plus.PackageInfo], but without things we don't use.
 class PackageInfo {
+  final String packageName;
   final String version;
   final String buildNumber;
 
   const PackageInfo({
+    required this.packageName,
     required this.version,
     required this.buildNumber,
   });
@@ -409,6 +411,7 @@ class LiveZulipBinding extends ZulipBinding {
     try {
       final info = await package_info_plus.PackageInfo.fromPlatform();
       _syncPackageInfo = PackageInfo(
+        packageName: info.packageName,
         version: info.version,
         buildNumber: info.buildNumber,
       );

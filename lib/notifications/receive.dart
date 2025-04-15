@@ -149,8 +149,12 @@ class NotificationService {
         await addFcmToken(connection, token: token);
 
       case TargetPlatform.iOS:
-        const appBundleId = 'com.zulip.flutter'; // TODO(#407) find actual value live
-        await addApnsToken(connection, token: token, appid: appBundleId);
+        final packageInfo = await ZulipBinding.instance.packageInfo;
+        await addApnsToken(connection, token: token,
+          // When this is `null`, throw because there is no meaningful value to
+          // use.  If live, the original error should have been logged when
+          // LiveZulipBinding._prefetchPackageInfo was called.
+          appid: packageInfo!.packageName);
 
       case TargetPlatform.linux:
       case TargetPlatform.macOS:
