@@ -550,6 +550,15 @@ String? tryParseEmojiCodeToUnicode(String emojiCode) {
   }
 }
 
+/// The topic servers understand to mean "there is no topic".
+///
+/// This should match
+///   https://github.com/zulip/zulip/blob/6.0/zerver/actions/message_edit.py#L940
+/// or similar logic at the latest `main`.
+// This is hardcoded in the server, and therefore untranslated; that's
+// zulip/zulip#3639.
+const String kNoTopicTopic = '(no topic)';
+
 /// The name of a Zulip topic.
 // TODO(dart): Can we forbid calling Object members on this extension type?
 //   (The lack of "implements Object" ought to do that, but doesn't.)
@@ -603,6 +612,51 @@ extension type const TopicName(String _value) {
   /// Whether [this] and [other] have the same canonical form,
   /// using [canonicalize].
   bool isSameAs(TopicName other) => canonicalize() == other.canonicalize();
+
+  /// Process this topic to match how it would appear on a message object from
+  /// the server.
+  ///
+  /// This assumes that the topic is constructed from a string without
+  /// leading/trailing whitespace.
+  ///
+  /// For a client that does not support empty topics, when FL>=334, the server
+  /// converts empty topics to `store.realmEmptyTopicDisplayName`; when FL>=370,
+  /// the server converts "(no topic)" to `store.realmEmptyTopicDisplayName`
+  /// as well.
+  ///
+  /// See API docs:
+  ///   https://zulip.com/api/send-message#parameter-topic
+  TopicName processLikeServer({
+    required int zulipFeatureLevel,
+    required String? realmEmptyTopicDisplayName,
+  }) {
+    assert(_value.trim() == _value);
+    // TODO(server-10) simplify this away
+    if (zulipFeatureLevel < 334) {
+      // From the API docs:
+      // > Before Zulip 10.0 (feature level 334), empty string was not a valid
+      // > topic name for channel messages.
+      assert(_value.isNotEmpty);
+      return this;
+    }
+
+    // TODO(server-10) simplify this away
+    if (zulipFeatureLevel < 370 && _value == kNoTopicTopic) {
+      // From the API docs:
+      // > Before Zulip 10.0 (feature level 370), "(no topic)" was not
+      // > interpreted as an empty string.
+      return TopicName(kNoTopicTopic);
+    }
+
+    // TODO(#1250): This assumes that the 'empty_topic_name' client capability
+    //   is not declared. When we set 'empty_topic_name' to true,
+    //   make this return an empty topic if the value matches "(no topic)"
+    //   or realmEmptyTopicDisplayName.
+    if (_value == kNoTopicTopic || _value.isEmpty) {
+      return TopicName(realmEmptyTopicDisplayName!);
+    }
+    return TopicName(_value);
+  }
 
   TopicName.fromJson(this._value);
 
