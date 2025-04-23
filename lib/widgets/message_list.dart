@@ -718,7 +718,6 @@ class _MessageListState extends State<MessageList> with PerAccountStoreAwareStat
         return MessageItem(
           key: ValueKey(data.message.id),
           header: header,
-          trailingWhitespace: 11,
           item: data);
     }
   }
@@ -1017,12 +1016,10 @@ class MessageItem extends StatelessWidget {
     super.key,
     required this.item,
     required this.header,
-    this.trailingWhitespace,
   });
 
   final MessageListMessageBaseItem item;
   final Widget header;
-  final double? trailingWhitespace;
 
   @override
   Widget build(BuildContext context) {
@@ -1035,7 +1032,6 @@ class MessageItem extends StatelessWidget {
         switch (item) {
           MessageListMessageItem() => MessageWithPossibleSender(item: item),
         },
-        if (trailingWhitespace != null && item.isLastInBlock) SizedBox(height: trailingWhitespace!),
       ]));
     if (item case MessageListMessageItem(:final message)) {
       child = _UnreadMarker(
