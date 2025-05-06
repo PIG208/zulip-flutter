@@ -6,6 +6,7 @@ import '../model/narrow.dart';
 import '../model/recent_dm_conversations.dart';
 import '../model/unreads.dart';
 import 'action_sheet.dart';
+import 'color.dart';
 import 'icons.dart';
 import 'message_list.dart';
 import 'sticky_header.dart';
@@ -275,6 +276,7 @@ abstract class _HeaderItem extends StatelessWidget {
         onLongPress: this is _LongPressable
           ? (this as _LongPressable).onLongPress
           : null,
+        splashFactory: NoSplash.splashFactory,
         child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
           Padding(padding: const EdgeInsets.all(10),
             child: Icon(size: 20, color: designVariables.sectionCollapseIcon,
@@ -298,12 +300,16 @@ abstract class _HeaderItem extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               title(zulipLocalizations)))),
           const SizedBox(width: 12),
-          if (hasMention) const _IconMarker(icon: ZulipIcons.at_sign),
-          Padding(padding: const EdgeInsetsDirectional.only(end: 16),
-            child: UnreadCountBadge(
-              backgroundColor: unreadCountBadgeBackgroundColor(context),
-              bold: true,
-              count: count)),
+          Row(crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 4,
+            children: [
+              if (hasMention) const _IconMarker(icon: ZulipIcons.at_sign),
+              UnreadCountBadge(
+                backgroundColor: unreadCountBadgeBackgroundColor(context),
+                bold: true,
+                count: count),
+            ]),
+          const SizedBox(width: 12),
         ])));
   }
 }
@@ -404,27 +410,30 @@ class _DmItem extends StatelessWidget {
           Navigator.push(context,
             MessageListPage.buildRoute(context: context, narrow: narrow));
         },
-        child: ConstrainedBox(constraints: const BoxConstraints(minHeight: 34),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-            const SizedBox(width: 63),
-            Expanded(child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Text(
-                style: TextStyle(
-                  fontSize: 17,
-                  height: (20 / 17),
-                  // TODO(design) check if this is the right variable
-                  color: designVariables.labelMenuButton,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                title))),
-            const SizedBox(width: 12),
-            if (hasMention) const  _IconMarker(icon: ZulipIcons.at_sign),
-            Padding(padding: const EdgeInsetsDirectional.only(end: 16),
-              child: UnreadCountBadge(backgroundColor: null,
-                count: count)),
-          ]))));
+        splashFactory: NoSplash.splashFactory,
+        child: ConstrainedBox(constraints: const BoxConstraints(minHeight: 44),
+          child: Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(16 + 32, 0, 12, 0),
+            child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+              Expanded(child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                child: Text(
+                  style: TextStyle(
+                    fontSize: 17,
+                    height: (20 / 17),
+                    // TODO(design) check if this is the right variable
+                    color: designVariables.labelMenuButton,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  title))),
+              Row(crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 4,
+                children: [
+                  if (hasMention) const _IconMarker(icon: ZulipIcons.at_sign),
+                  UnreadCountBadge(backgroundColor: null, count: count),
+                ]),
+            ])))));
   }
 }
 
@@ -519,7 +528,6 @@ class _TopicItem extends StatelessWidget {
       :topic, :count, :hasMention, :lastUnreadId) = data;
 
     final store = PerAccountStoreWidget.of(context);
-    final subscription = store.subscriptions[streamId]!;
 
     final designVariables = DesignVariables.of(context);
     final visibilityIcon = iconDataForTopicVisibilityPolicy(
@@ -537,11 +545,15 @@ class _TopicItem extends StatelessWidget {
           channelId: streamId,
           topic: topic,
           someMessageIdInTopic: lastUnreadId),
-        child: ConstrainedBox(constraints: const BoxConstraints(minHeight: 34),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-            const SizedBox(width: 63),
+        splashFactory: NoSplash.splashFactory,
+        child: Padding(padding: EdgeInsetsDirectional.fromSTEB(28, 8, 12, 8),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            if (!topic.isResolved)
+              SizedBox.square(dimension: 16)
+            else
+              _IconMarker(icon: ZulipIcons.check),
             Expanded(child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Text(
                 style: TextStyle(
                   fontSize: 17,
@@ -554,15 +566,16 @@ class _TopicItem extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 // ignore: dead_null_aware_expression // null topic names soon to be enabled
-                topic.displayName ?? store.realmEmptyTopicDisplayName))),
-            const SizedBox(width: 12),
-            if (hasMention) const _IconMarker(icon: ZulipIcons.at_sign),
-            // TODO(design) copies the "@" marker color; is there a better color?
-            if (visibilityIcon != null) _IconMarker(icon: visibilityIcon),
-            Padding(padding: const EdgeInsetsDirectional.only(end: 16),
-              child: UnreadCountBadge(
-                backgroundColor: colorSwatchFor(context, subscription),
-                count: count)),
+                topic.unresolve().displayName ?? store.realmEmptyTopicDisplayName))),
+            Row(crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 4,
+              children: [
+                if (hasMention) const _IconMarker(icon: ZulipIcons.at_sign),
+                if (visibilityIcon != null) _IconMarker(icon: visibilityIcon),
+                UnreadCountBadge(
+                  count: count,
+                  backgroundColor: designVariables.bgCounterUnread),
+              ]),
           ]))));
   }
 }
@@ -576,11 +589,10 @@ class _IconMarker extends StatelessWidget {
   Widget build(BuildContext context) {
     final designVariables = DesignVariables.of(context);
     // Design for icon markers based on Figma screen:
-    //   https://www.figma.com/file/1JTNtYo9memgW7vV6d0ygq/Zulip-Mobile?type=design&node-id=224-16386&mode=design&t=JsNndFQ8fKFH0SjS-0
+    //   https://www.figma.com/design/1JTNtYo9memgW7vV6d0ygq/Zulip-Mobile?node-id=5990-291288&m=dev
     return Padding(
-      padding: const EdgeInsetsDirectional.only(end: 4),
-      // This color comes from the Figma screen for the "@" marker, but not
-      // the topic visibility markers.
-      child: Icon(icon, size: 14, color: designVariables.inboxItemIconMarker));
+      padding: EdgeInsets.only(top: 2),
+      child: Icon(icon, size: 16,
+        color: designVariables.textMessage.withFadedAlpha(0.4)));
   }
 }

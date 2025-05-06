@@ -316,6 +316,27 @@ void main() {
       check(find.text(eg.defaultRealmEmptyTopicDisplayName)).findsOne();
     }, skip: true); // null topic names soon to be enabled
 
+    testWidgets('resolved/unresolved topics', (tester) async {
+      final channel = eg.stream();
+      final resolvedTopic = TopicName('resolved').resolve();
+      final unresolvedTopic = TopicName('unresolved');
+      await setupPage(tester,
+        streams: [channel],
+        subscriptions: [eg.subscription(channel)],
+        unreadMessages: [
+          eg.streamMessage(stream: channel, topic: resolvedTopic.apiName),
+          eg.streamMessage(stream: channel, topic: unresolvedTopic.apiName),
+        ]);
+
+      assert(resolvedTopic.displayName == '✔ resolved', resolvedTopic.displayName);
+      check(findRowByLabel(tester, '✔ resolved')).isNull();
+      check(hasIcon(tester, parent: findRowByLabel(tester, 'resolved'),
+        icon: ZulipIcons.check)).isTrue();
+
+      check(hasIcon(tester, parent: findRowByLabel(tester, 'unresolved'),
+        icon: ZulipIcons.check)).isFalse();
+    });
+
     group('topic visibility', () {
       final channel = eg.stream();
       const topic = 'topic';
