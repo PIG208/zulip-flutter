@@ -500,7 +500,7 @@ class _ContentInput extends StatelessWidget {
   });
 
   final Narrow narrow;
-  final ComposeBoxController controller;
+  final BaseComposeBoxController controller;
   final String hintText;
 
   static double maxHeight(BuildContext context) {
@@ -891,9 +891,9 @@ Future<void> _uploadFiles({
 }
 
 abstract class _ComposeButton extends StatelessWidget {
-  const _ComposeButton({required this.controller});
+  const _ComposeButton();
 
-  final ComposeBoxController controller;
+  BaseComposeBoxController get controller;
 
   IconData get icon;
   String tooltip(ZulipLocalizations zulipLocalizations);
@@ -914,7 +914,10 @@ abstract class _ComposeButton extends StatelessWidget {
 }
 
 abstract class _AttachUploadsButton extends _ComposeButton {
-  const _AttachUploadsButton({required super.controller});
+  const _AttachUploadsButton({required this.controller});
+
+  @override
+  final BaseComposeBoxController controller;
 
   /// Request files from the user, in the way specific to this upload type.
   ///
@@ -1307,7 +1310,7 @@ abstract class _ComposeBoxBody extends StatelessWidget {
   /// The narrow on view in the message list.
   Narrow get narrow;
 
-  ComposeBoxController get controller;
+  BaseComposeBoxController get controller;
 
   Widget? buildTopicInput();
   Widget buildContentInput();
@@ -1439,7 +1442,7 @@ class _EditMessageComposeBoxBody extends _ComposeBoxBody {
   @override Widget? buildSendButton() => null;
 }
 
-sealed class ComposeBoxController {
+sealed class BaseComposeBoxController {
   final content = ComposeContentController();
   final contentFocusNode = FocusNode();
 
@@ -1449,6 +1452,9 @@ sealed class ComposeBoxController {
     contentFocusNode.dispose();
   }
 }
+
+/// The compose box controller for a [ComposeBox].
+sealed class ComposeBoxController extends BaseComposeBoxController {}
 
 class StreamComposeBoxController extends ComposeBoxController {
   StreamComposeBoxController({required PerAccountStore store})
