@@ -1451,8 +1451,8 @@ void main() {
       state.startEditInteraction(messageId: message.id, originalRawContent: 'foo');
       await tester.pump();
       final (actionButton, cancelButton) = checkSuggestedActionDialog(tester,
-        expectedTitle: 'Discard draft?',
-        expectedMessage: 'Progress on your current message will be lost. This cannot be undone.',
+        expectedTitle: 'Discard the message you’re writing?',
+        expectedMessage: 'When you edit a message, the content that was previously in the compose box is discarded.',
         expectedActionButtonText: 'Discard');
 
       await tester.tap(find.byWidget(cancelButton));
@@ -1474,8 +1474,8 @@ void main() {
       state.startEditInteraction(messageId: message.id, originalRawContent: 'foo');
       await tester.pump();
       final (actionButton, cancelButton) = checkSuggestedActionDialog(tester,
-        expectedTitle: 'Discard draft?',
-        expectedMessage: 'Progress on your current message will be lost. This cannot be undone.',
+        expectedTitle: 'Discard the message you’re writing?',
+        expectedMessage: 'When you edit a message, the content that was previously in the compose box is discarded.',
         expectedActionButtonText: 'Discard');
 
       await tester.tap(find.byWidget(actionButton));
