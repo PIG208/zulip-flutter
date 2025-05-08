@@ -67,7 +67,10 @@ class _SavedSnippetPicker extends StatelessWidget {
                     _SavedSnippetItem(
                       savedSnippet: savedSnippet,
                       onPressed:
-                        () => _handleSelect(context, savedSnippet.content)),
+                        () => _handleSelect(context, savedSnippet.content),
+                      onPressedEdit:
+                        () => showSavedSnippetComposeBox(
+                          context: context, savedSnippetId: savedSnippet.id)),
                   if (store.savedSnippets.isEmpty)
                     // TODO(design)
                     Padding(
@@ -126,7 +129,8 @@ class _SavedSnippetPickerHeader extends StatelessWidget {
           InkWell(
             splashFactory: NoSplash.splashFactory,
             overlayColor: overlayColor,
-            onTap: () => showNewSavedSnippetComposeBox(context: context),
+            onTap: () =>
+              showSavedSnippetComposeBox(context: context, savedSnippetId: null),
             child: Padding(
               padding: EdgeInsetsDirectional.fromSTEB(3, 10, 10, 6),
               child: Row(
@@ -146,10 +150,12 @@ class _SavedSnippetItem extends StatelessWidget {
   const _SavedSnippetItem({
     required this.savedSnippet,
     required this.onPressed,
+    required this.onPressedEdit,
   });
 
   final SavedSnippet savedSnippet;
   final void Function() onPressed;
+  final void Function() onPressedEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -165,34 +171,49 @@ class _SavedSnippetItem extends StatelessWidget {
         WidgetState.hovered: designVariables.pressedTint,
         WidgetState.any: Colors.transparent,
       }),
-      child: Padding(
-        // The end padding is 14px to account for the lack of edit button,
-        // whose visible part would be 14px away from the end of the text.  See:
-        //   https://www.figma.com/design/1JTNtYo9memgW7vV6d0ygq/Zulip-Mobile?node-id=7965-76050&t=IxXomdPIZ5bXvJKA-0
-        padding: EdgeInsetsDirectional.fromSTEB(16, 8, 14, 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: 4,
-          children: [
-            Text(savedSnippet.title,
-              style: TextStyle(
-                fontSize: 18,
-                height: 22 / 18,
-                color: designVariables.textMessage,
-              ).merge(weightVariableTextStyle(context, wght: 600))),
-            Text(savedSnippet.content,
-              style: TextStyle(
-                fontSize: 17,
-                height: 18 / 17,
-                color: designVariables.textMessage
-              ).merge(weightVariableTextStyle(context, wght: 400))),
-          ])));
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 4,
+        children: [
+          Expanded(child: Padding(
+            padding: EdgeInsetsDirectional.fromSTEB(16, 8, 0, 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: 4,
+              children: [
+                Text(savedSnippet.title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    height: 22 / 18,
+                    color: designVariables.textMessage,
+                  ).merge(weightVariableTextStyle(context, wght: 600))),
+                Text(savedSnippet.content,
+                  style: TextStyle(
+                    fontSize: 17,
+                    height: 18 / 17,
+                    color: designVariables.textMessage
+                  ).merge(weightVariableTextStyle(context, wght: 400))),
+              ]))),
+          GestureDetector(
+            onTap: onPressedEdit,
+            child: Padding(
+              padding: EdgeInsetsDirectional.fromSTEB(10, 10, 14, 10),
+              child: Icon(ZulipIcons.edit, size: 24, color: designVariables.icon)),
+          ),
+        ]));
   }
 }
 
-class _NewSavedSnippetHeader extends StatelessWidget {
-  const _NewSavedSnippetHeader();
+class _SavedSnippetHeader extends StatelessWidget {
+  const _SavedSnippetHeader({required this.savedSnippetId});
+
+  /// As in [SavedSnippet.id].
+  ///
+  /// When null, show the header for creating a new snippet.
+  ///
+  /// Otherwise, show the header for editing the snippet with the matching ID.
+  final int? savedSnippetId;
 
   @override
   Widget build(BuildContext context) {
@@ -205,7 +226,9 @@ class _NewSavedSnippetHeader extends StatelessWidget {
         children: [
           Center(child: Padding(
             padding: EdgeInsets.only(top: 10, bottom: 6),
-            child: Text(zulipLocalizations.newSavedSnippetTitle,
+            child: Text(
+              savedSnippetId == null ? zulipLocalizations.newSavedSnippetTitle
+                                     : zulipLocalizations.editSavedSnippetTitle,
               style: TextStyle(
                 color: designVariables.title,
                 fontSize: 20,
@@ -234,8 +257,9 @@ class _NewSavedSnippetHeader extends StatelessWidget {
   }
 }
 
-void showNewSavedSnippetComposeBox({
+void showSavedSnippetComposeBox({
   required BuildContext context,
+  required int? savedSnippetId,
 }) {
   final store = PerAccountStoreWidget.of(context);
   showModalBottomSheet<void>(context: context,
@@ -258,8 +282,8 @@ void showNewSavedSnippetComposeBox({
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const _NewSavedSnippetHeader(),
-                const SavedSnippetComposeBox(),
+                _SavedSnippetHeader(savedSnippetId: savedSnippetId),
+                SavedSnippetComposeBox(savedSnippetId: savedSnippetId),
               ]))));
     });
 }

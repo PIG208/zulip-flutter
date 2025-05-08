@@ -670,6 +670,12 @@ abstract class ZulipLocalizations {
   /// **'New snippet'**
   String get newSavedSnippetTitle;
 
+  /// Title for the bottom sheet to edit an existing saved snippet.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit snippet'**
+  String get editSavedSnippetTitle;
+
   /// Hint text for the title input when adding a new saved snippet.
   ///
   /// In en, this message translates to:
@@ -687,6 +693,12 @@ abstract class ZulipLocalizations {
   /// In en, this message translates to:
   /// **'Failed to create saved snippet'**
   String get errorFailedToCreateSavedSnippetTitle;
+
+  /// Error title when the saved snippet failed to be edited.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to edit saved snippet'**
+  String get errorFailedToEditSavedSnippetTitle;
 
   /// Validation error message when the title of the saved snippet is empty.
   ///

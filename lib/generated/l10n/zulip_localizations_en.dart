@@ -339,6 +339,9 @@ class ZulipLocalizationsEn extends ZulipLocalizations {
   String get newSavedSnippetTitle => 'New snippet';
 
   @override
+  String get editSavedSnippetTitle => 'Edit snippet';
+
+  @override
   String get newSavedSnippetTitleHint => 'Title';
 
   @override
@@ -347,6 +350,10 @@ class ZulipLocalizationsEn extends ZulipLocalizations {
   @override
   String get errorFailedToCreateSavedSnippetTitle =>
       'Failed to create saved snippet';
+
+  @override
+  String get errorFailedToEditSavedSnippetTitle =>
+      'Failed to edit saved snippet';
 
   @override
   String get savedSnippetTitleValidationErrorEmpty => 'Title cannot be empty.';

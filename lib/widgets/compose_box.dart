@@ -1404,6 +1404,11 @@ class _SavedSnipppetSaveButtonState extends State<_SavedSnipppetSaveButton> {
    });
   }
 
+  String errorTitle(ZulipLocalizations zulipLocalizations) =>
+    widget.controller.savedSnippetId == null
+      ? zulipLocalizations.errorFailedToCreateSavedSnippetTitle
+      : zulipLocalizations.errorFailedToEditSavedSnippetTitle;
+
   void _save() async {
     if (widget.controller.title.hasValidationErrors.value
         || widget.controller.content.hasValidationErrors.value) {
@@ -1415,17 +1420,23 @@ class _SavedSnipppetSaveButtonState extends State<_SavedSnipppetSaveButton> {
           error.messageForSavedSnippet(zulipLocalizations),
       ];
       showErrorDialog(context: context,
-        title: zulipLocalizations.errorFailedToCreateSavedSnippetTitle,
+        title: errorTitle(zulipLocalizations),
         message: validationErrorMessages.join('\n\n'));
       return;
     }
 
     final store = PerAccountStoreWidget.of(context);
     try {
-      // TODO(#1502) allow saving edits to an existing saved snippet as well
-      await createSavedSnippet(store.connection,
-        title: widget.controller.title.textNormalized,
-        content: widget.controller.content.textNormalized);
+      if (widget.controller.savedSnippetId == null) {
+        await createSavedSnippet(store.connection,
+          title: widget.controller.title.textNormalized,
+          content: widget.controller.content.textNormalized);
+      } else {
+        await editSavedSnippet(store.connection,
+          savedSnippetId: widget.controller.savedSnippetId!,
+          title: widget.controller.title.textNormalized,
+          content: widget.controller.content.textNormalized);
+      }
       if (!mounted) return;
       Navigator.pop(context);
     } on ApiRequestException catch (e) {
@@ -1436,7 +1447,7 @@ class _SavedSnipppetSaveButtonState extends State<_SavedSnipppetSaveButton> {
         _ => e.message,
       };
       showErrorDialog(context: context,
-        title: zulipLocalizations.errorFailedToCreateSavedSnippetTitle,
+        title: errorTitle(zulipLocalizations),
         message: message);
     }
   }
@@ -1720,10 +1731,11 @@ class EditMessageComposeBoxController extends ComposeBoxController {
 }
 
 class SavedSnippetComposeBoxController extends BaseComposeBoxController {
-  SavedSnippetComposeBoxController();
+  SavedSnippetComposeBoxController({required this.savedSnippetId});
 
   final title = ComposeSavedSnippetTitleController();
   final titleFocusNode = FocusNode();
+  final int? savedSnippetId;
 
   @override
   void dispose() {
@@ -2064,7 +2076,14 @@ class _ComposeBoxState extends State<ComposeBox> with PerAccountStoreAwareStateM
 }
 
 class SavedSnippetComposeBox extends StatefulWidget {
-  const SavedSnippetComposeBox({super.key});
+  const SavedSnippetComposeBox({super.key, required this.savedSnippetId});
+
+  /// As in [SavedSnippet.id].
+  ///
+  /// When null, the compose box creates a new saved snippet.
+  ///
+  /// When non-null, the compose box edits saved snippet with the matching ID.
+  final int? savedSnippetId;
 
   @override
   State<SavedSnippetComposeBox> createState() => _SavedSnippetComposeBoxState();
@@ -2072,23 +2091,36 @@ class SavedSnippetComposeBox extends StatefulWidget {
 
 class _SavedSnippetComposeBoxState extends State<SavedSnippetComposeBox> {
   // TODO: preserve the controller independent from this state
-  late SavedSnippetComposeBoxController _controller;
+  SavedSnippetComposeBoxController? _controller;
 
   @override
-  void initState() {
-    super.initState();
-    _controller = SavedSnippetComposeBoxController();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    assert(_controller == null || _controller!.savedSnippetId == widget.savedSnippetId);
+    if (_controller != null) return;
+    _controller =
+      SavedSnippetComposeBoxController(savedSnippetId: widget.savedSnippetId);
+
+    // While we do look at the PerAccountStore, there is no need to update
+    // the contents in the compose box when we get a new store.
+    final store = PerAccountStoreWidget.of(context);
+    if (widget.savedSnippetId != null
+        && store.savedSnippets.containsKey(widget.savedSnippetId!)) {
+      final savedSnippet = store.savedSnippets[widget.savedSnippetId!]!;
+      _controller!.title.text = savedSnippet.title;
+      _controller!.content.text = savedSnippet.content;
+    }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return _ComposeBoxContainer(
-      body: _SavedSnippetComposeBoxBody(controller: _controller));
+      body: _SavedSnippetComposeBoxBody(controller: _controller!));
   }
 }

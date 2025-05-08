@@ -1037,6 +1037,7 @@ void main() {
     late List<Route<void>> poppedRoutes;
 
     Future<void> prepareSavedSnippetComposeBox(WidgetTester tester, {
+      required int? savedSnippetId,
       required String title,
       required String content,
     }) async {
@@ -1050,7 +1051,7 @@ void main() {
         ..onPopped = (route, prevRoute) => poppedRoutes.add(route);
       await tester.pumpWidget(TestZulipApp(accountId: eg.selfAccount.id,
         navigatorObservers: [navigatorObserver],
-        child: const SavedSnippetComposeBox()));
+        child: SavedSnippetComposeBox(savedSnippetId: savedSnippetId)));
       await tester.pump();
       await tester.enterText(newSavedSnippetInputFinder.first, title);
       await tester.enterText(newSavedSnippetInputFinder.last, content);
@@ -1058,12 +1059,14 @@ void main() {
 
     testWidgets('should not offer _ShowSavedSnippetsButton', (tester) async {
       await prepareSavedSnippetComposeBox(tester,
+        savedSnippetId: null,
         title: 'title foo', content: 'content bar');
       check(find.byIcon(ZulipIcons.message_square_text)).findsNothing();
     });
 
     testWidgets('add new saved snippet', (tester) async {
       await prepareSavedSnippetComposeBox(tester,
+        savedSnippetId: null,
         title: 'title foo', content: 'content bar');
 
       connection.prepare(json: {});
@@ -1084,6 +1087,7 @@ void main() {
 
     testWidgets('handle unexpected API exception', (tester) async {
       await prepareSavedSnippetComposeBox(tester,
+        savedSnippetId: null,
         title: 'title foo', content: 'content bar');
 
       connection.prepare(apiException: eg.apiExceptionUnauthorized());
@@ -1098,6 +1102,7 @@ void main() {
     group('client validation errors', () {
       testWidgets('empty title', (tester) async {
         await prepareSavedSnippetComposeBox(tester,
+          savedSnippetId: null,
           title: '', content: 'content bar');
 
         await tester.tap(find.byIcon(ZulipIcons.check));
@@ -1111,6 +1116,7 @@ void main() {
 
       testWidgets('empty content', (tester) async {
         await prepareSavedSnippetComposeBox(tester,
+          savedSnippetId: null,
           title: 'title foo', content: '');
 
         await tester.tap(find.byIcon(ZulipIcons.check));
@@ -1124,6 +1130,7 @@ void main() {
 
       testWidgets('title is too long', (tester) async {
         await prepareSavedSnippetComposeBox(tester,
+          savedSnippetId: null,
           title: 'a' * 61, content: 'content bar');
 
         await tester.tap(find.byIcon(ZulipIcons.check));
@@ -1137,6 +1144,7 @@ void main() {
 
       testWidgets('content is too long', (tester) async {
         await prepareSavedSnippetComposeBox(tester,
+          savedSnippetId: null,
           title: 'title foo', content: 'a' * 10001);
 
         await tester.tap(find.byIcon(ZulipIcons.check));
@@ -1150,6 +1158,7 @@ void main() {
 
       testWidgets('disable send button if there are validation errors', (tester) async {
         await prepareSavedSnippetComposeBox(tester,
+          savedSnippetId: null,
           title: '', content: 'content bar');
         final iconElement = tester.element(find.byIcon(ZulipIcons.check));
         final designVariables = DesignVariables.of(iconElement);

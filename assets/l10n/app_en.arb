@@ -405,6 +405,10 @@
   "@newSavedSnippetTitle": {
     "description": "Title for the bottom sheet to add a new saved snippet."
   },
+  "editSavedSnippetTitle": "Edit snippet",
+  "@editSavedSnippetTitle": {
+    "description": "Title for the bottom sheet to edit an existing saved snippet."
+  },
   "newSavedSnippetTitleHint": "Title",
   "@newSavedSnippetTitleHint": {
     "description": "Hint text for the title input when adding a new saved snippet."
@@ -416,6 +420,10 @@
   "errorFailedToCreateSavedSnippetTitle": "Failed to create saved snippet",
   "@errorFailedToCreateSavedSnippetTitle": {
     "description": "Error title when the saved snippet failed to be created."
+  },
+  "errorFailedToEditSavedSnippetTitle": "Failed to edit saved snippet",
+  "@errorFailedToEditSavedSnippetTitle": {
+    "description": "Error title when the saved snippet failed to be edited."
   },
   "savedSnippetTitleValidationErrorEmpty": "Title cannot be empty.",
   "@savedSnippetTitleValidationErrorEmpty": {
