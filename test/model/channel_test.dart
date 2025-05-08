@@ -1,13 +1,19 @@
 
 import 'package:checks/checks.dart';
+import 'package:http/http.dart' as http;
 import 'package:test/scaffolding.dart';
 import 'package:zulip/api/model/events.dart';
 import 'package:zulip/api/model/initial_snapshot.dart';
 import 'package:zulip/api/model/model.dart';
+import 'package:zulip/api/route/channels.dart';
 import 'package:zulip/model/store.dart';
 import 'package:zulip/model/channel.dart';
 
+import '../api/fake_api.dart';
 import '../example_data.dart' as eg;
+import '../fake_async.dart';
+import '../stdlib_checks.dart';
+import 'store_checks.dart';
 import 'test_store.dart';
 
 void main() {
@@ -130,6 +136,355 @@ void main() {
         property: SubscriptionProperty.inHomeView,
         value: false));
       check(store.subscriptions[stream.streamId]!.isMuted).isTrue();
+    });
+  });
+
+  group('topics data', () {
+    final ZulipStream stream = eg.stream();
+    final ZulipStream otherStream = eg.stream();
+    late PerAccountStore store;
+    late FakeApiConnection connection;
+    late int notifiedCount;
+
+    void checkNotified({required int count}) {
+      check(notifiedCount).equals(count);
+      notifiedCount = 0;
+    }
+    void checkNotNotified() {
+      checkNotified(count: 0);
+    }
+    void checkNotifiedOnce() => checkNotified(count: 1);
+
+    Condition<Object?> conditionTopicMaxId(String topic, int maxId) =>
+      (it) => it.isA<TopicMaxId>()..topic.equals(eg.t(topic))
+                                  ..maxId.equals(maxId);
+
+    Future<void> prepare({
+      List<GetStreamTopicsEntry>? topics,
+      List<StreamMessage>? messages,
+    }) async {
+      notifiedCount = 0;
+      store = eg.store();
+      await store.addStreams([stream, otherStream]);
+      await store.addSubscriptions([
+        eg.subscription(stream),
+        eg.subscription(otherStream),
+      ]);
+      await store.addMessages(messages ?? []);
+      store.addListener(() {
+        notifiedCount++;
+      });
+
+      connection = store.connection as FakeApiConnection;
+      connection.prepare(json: GetStreamTopicsResult(topics:
+        topics ?? []
+      ).toJson());
+      await store.fetchTopics(stream.streamId);
+      check(connection.takeRequests()).single.isA<http.Request>()
+        ..method.equals('GET')
+        ..url.path.equals('/api/v1/users/me/${stream.streamId}/topics');
+    }
+
+    test('last successful fetchTopics overrides existing data', () => awaitFakeAsync((async) async {
+      await prepare(topics: []);
+
+      connection.prepare(json: GetStreamTopicsResult(topics: [
+        eg.getStreamTopicsEntry(name: 'foo'),
+      ]).toJson(), delay: Duration(seconds: 2));
+      final fetchFuture1 = store.fetchTopics(stream.streamId);
+
+      connection.prepare(json: GetStreamTopicsResult(topics: [
+        eg.getStreamTopicsEntry(name: 'bar'),
+      ]).toJson(), delay: Duration(seconds: 1));
+      final fetchFuture2 = store.fetchTopics(stream.streamId);
+
+      async.elapse(Duration(seconds: 1));
+      await fetchFuture2;
+      check(store).topicsMaxIdsInStream(stream.streamId).isNotNull().single
+        .topic.equals(eg.t('bar'));
+
+      async.elapse(Duration(seconds: 1));
+      await fetchFuture1;
+      check(store).topicsMaxIdsInStream(stream.streamId).isNotNull().single
+        .topic.equals(eg.t('foo'));
+    }));
+
+    test('topicsMaxIdsInStream sort descending by maxId', () async {
+      await prepare(topics: [
+        eg.getStreamTopicsEntry(name: 'bar', maxId: 200),
+        eg.getStreamTopicsEntry(name: 'foo', maxId: 100),
+        eg.getStreamTopicsEntry(name: 'baz', maxId: 300),
+      ]);
+      check(store).topicsMaxIdsInStream(stream.streamId).isNotNull().deepEquals([
+        conditionTopicMaxId('baz', 300),
+        conditionTopicMaxId('bar', 200),
+        conditionTopicMaxId('foo', 100),
+      ]);
+
+      await store.addMessage(eg.streamMessage(
+        id: 301, stream: stream, topic: 'foo'));
+      check(store).topicsMaxIdsInStream(stream.streamId).isNotNull().deepEquals([
+        conditionTopicMaxId('foo', 301),
+        conditionTopicMaxId('baz', 300),
+        conditionTopicMaxId('bar', 200),
+      ]);
+    });
+
+    group('handleMessageEvent', () {
+      test('new message in fetched stream', () async {
+        await prepare(topics: [
+          eg.getStreamTopicsEntry(name: 'old topic', maxId: 1),
+        ]);
+
+        await store.addMessage(
+          eg.streamMessage(id: 2, stream: stream, topic: 'new topic'));
+        check(store).topicsMaxIdsInStream(stream.streamId).isNotNull().deepEquals([
+          conditionTopicMaxId('new topic', 2),
+          conditionTopicMaxId('old topic', 1),
+        ]);
+        checkNotifiedOnce();
+
+        await store.addMessage(
+          eg.streamMessage(id: 3, stream: stream, topic: 'old topic'));
+        check(store).topicsMaxIdsInStream(stream.streamId).isNotNull().deepEquals([
+          conditionTopicMaxId('old topic', 3),
+          conditionTopicMaxId('new topic', 2),
+        ]);
+        checkNotifiedOnce();
+      });
+
+      test('new message in stream not fetched before', () async {
+        await prepare();
+        check(store).topicsMaxIdsInStream(otherStream.streamId).isNull();
+
+        await store.addMessage(
+          eg.streamMessage(id: 2, stream: otherStream, topic: 'new topic'));
+        check(store).topicsMaxIdsInStream(otherStream.streamId).isNull();
+        checkNotNotified();
+      });
+
+      test('new message with lower message ID', () async {
+        await prepare(topics: [
+          eg.getStreamTopicsEntry(name: 'topic', maxId: 2),
+        ]);
+
+        await check(store.addMessage(
+          eg.streamMessage(id: 1, stream: stream, topic: 'topic'))).throws();
+        check(store).topicsMaxIdsInStream(stream.streamId).isNotNull().single
+          ..topic.equals(eg.t('topic'))
+          ..maxId.equals(2);
+        checkNotNotified();
+      });
+
+      test('ignore DM messages', () async {
+        await prepare();
+        await store.addUsers([eg.selfUser, eg.otherUser]);
+        checkNotified(count: 2);
+
+        await store.addMessage(eg.dmMessage(from: eg.selfUser, to: [eg.otherUser]));
+        checkNotNotified();
+      });
+    });
+
+    group('handleUpdateMessageEvent', () {
+      Future<void> prepareWithMessages(List<StreamMessage> messages, {
+        required List<Condition<Object?>> expectedTopics,
+      }) async {
+        await prepare();
+        assert(messages.isNotEmpty);
+        assert(messages.every((m) => m.streamId == stream.streamId));
+        await store.addMessages(messages);
+        check(store).topicsMaxIdsInStream(stream.streamId).isNotNull().deepEquals(expectedTopics);
+        checkNotified(count: messages.length);
+      }
+
+      test('ignore content only update', () async {
+        final message = eg.streamMessage(id: 123, stream: stream, topic: 'foo');
+        await prepareWithMessages([message], expectedTopics: [
+          conditionTopicMaxId('foo', 123),
+        ]);
+
+        await store.handleEvent(eg.updateMessageEditEvent(message));
+        checkNotNotified();
+      });
+
+      group('PropagateMode.changedAll', () {
+        test('topic moved to another stream with no previously fetched topics', () async {
+          final messagesToMove = List.generate(10, (i) =>
+            eg.streamMessage(id: 100 + i, stream: stream, topic: 'foo'));
+          await prepareWithMessages(messagesToMove, expectedTopics: [
+            conditionTopicMaxId('foo', 109),
+          ]);
+
+          await store.handleEvent(eg.updateMessageEventMoveFrom(
+            origMessages: messagesToMove,
+            newStreamId: otherStream.streamId,
+            propagateMode: PropagateMode.changeAll));
+          check(store).topicsMaxIdsInStream(stream.streamId).isNotNull().isEmpty();
+          check(store).topicsMaxIdsInStream(otherStream.streamId).isNull();
+          checkNotifiedOnce();
+        });
+
+        test('topic moved to new topic in another stream', () async {
+          final messagesToMove = List.generate(10, (i) =>
+            eg.streamMessage(id: 100 + i, stream: stream, topic: 'foo'));
+          await prepareWithMessages(messagesToMove, expectedTopics: [
+            conditionTopicMaxId('foo', 109),
+          ]);
+
+          // Make sure that topics in othterStream has been fetched.
+          connection.prepare(json: GetStreamTopicsResult(topics: [
+            eg.getStreamTopicsEntry(name: 'foo', maxId: 1),
+          ]).toJson());
+          await store.fetchTopics(otherStream.streamId);
+          check(store).topicsMaxIdsInStream(otherStream.streamId).isNotNull().single
+            ..topic.equals(eg.t('foo'))
+            ..maxId.equals(1);
+          checkNotNotified();
+
+          await store.handleEvent(eg.updateMessageEventMoveFrom(
+            origMessages: messagesToMove,
+            newStreamId: otherStream.streamId,
+            newTopicStr: 'bar',
+            propagateMode: PropagateMode.changeAll));
+          check(store).topicsMaxIdsInStream(stream.streamId).isNotNull().isEmpty();
+          check(store).topicsMaxIdsInStream(otherStream.streamId).isNotNull().deepEquals([
+            conditionTopicMaxId('bar', 109),
+            conditionTopicMaxId('foo', 1),
+          ]);
+          checkNotifiedOnce();
+        });
+
+        test('topic moved to known topic in another stream', () async {
+          final messagesToMove = List.generate(10, (i) =>
+            eg.streamMessage(id: 100 + i, stream: stream, topic: 'foo'));
+          await prepareWithMessages(messagesToMove, expectedTopics: [
+            conditionTopicMaxId('foo', 109),
+          ]);
+
+          // Make sure that topics in othterStream has been fetched.
+          connection.prepare(json: GetStreamTopicsResult(topics: [
+            eg.getStreamTopicsEntry(name: 'foo', maxId: 1),
+          ]).toJson());
+          await store.fetchTopics(otherStream.streamId);
+          check(store).topicsMaxIdsInStream(otherStream.streamId).isNotNull().single
+            ..topic.equals(eg.t('foo'))
+            ..maxId.equals(1);
+          checkNotNotified();
+
+          await store.handleEvent(eg.updateMessageEventMoveFrom(
+            origMessages: messagesToMove,
+            newStreamId: otherStream.streamId,
+            propagateMode: PropagateMode.changeAll));
+          check(store).topicsMaxIdsInStream(stream.streamId).isNotNull().isEmpty();
+          check(store).topicsMaxIdsInStream(otherStream.streamId).isNotNull().single
+            ..topic.equals(eg.t('foo'))
+            ..maxId.equals(109);
+          checkNotifiedOnce();
+        });
+
+        test('topic moved to new topic in the same stream', () async {
+          final messagesToMove = List.generate(10, (i) =>
+            eg.streamMessage(id: 100 + i, stream: stream, topic: 'foo'));
+          await prepareWithMessages(messagesToMove, expectedTopics: [
+            conditionTopicMaxId('foo', 109),
+          ]);
+
+          await store.handleEvent(eg.updateMessageEventMoveFrom(
+            origMessages: messagesToMove,
+            newTopicStr: 'bar',
+            propagateMode: PropagateMode.changeAll));
+          check(store).topicsMaxIdsInStream(stream.streamId).isNotNull().single
+            ..topic.equals(eg.t('bar'))
+            ..maxId.equals(109);
+          checkNotifiedOnce();
+        });
+
+        test('topic moved to known topic in the same stream', () async {
+          final messagesToMove = List.generate(10, (i) =>
+            eg.streamMessage(id: 100 + i, stream: stream, topic: 'foo'));
+          await prepareWithMessages([
+            ...messagesToMove,
+            eg.streamMessage(id: 1, stream: stream, topic: 'bar'),
+          ], expectedTopics: [
+            conditionTopicMaxId('foo', 109),
+            conditionTopicMaxId('bar', 1),
+          ]);
+
+          await store.handleEvent(eg.updateMessageEventMoveFrom(
+            origMessages: messagesToMove,
+            newTopicStr: 'bar',
+            propagateMode: PropagateMode.changeAll));
+          check(store).topicsMaxIdsInStream(stream.streamId).isNotNull().single
+            ..topic.equals(eg.t('bar'))
+            ..maxId.equals(109);
+          checkNotifiedOnce();
+        });
+      });
+
+      test('message moved to new topic', () async {
+        final messageToMove =
+          eg.streamMessage(id: 101, stream: stream, topic: 'foo');
+        await prepareWithMessages([
+          messageToMove,
+        ], expectedTopics: [
+          conditionTopicMaxId('foo', 101),
+        ]);
+
+        await store.handleEvent(eg.updateMessageEventMoveFrom(
+          origMessages: [messageToMove],
+          newTopicStr: 'bar',
+          propagateMode: PropagateMode.changeOne));
+        check(store).topicsMaxIdsInStream(stream.streamId).isNotNull().deepEquals([
+          conditionTopicMaxId('foo', 101),
+          conditionTopicMaxId('bar', 101),
+        ]);
+        checkNotifiedOnce();
+      });
+
+      test('message moved to known topic; moved message ID < maxId', () async {
+        final messageToMove =
+          eg.streamMessage(id: 100, stream: stream, topic: 'foo');
+        await prepareWithMessages([
+          messageToMove,
+          eg.streamMessage(id: 999, stream: stream, topic: 'bar'),
+        ], expectedTopics: [
+          conditionTopicMaxId('bar', 999),
+          conditionTopicMaxId('foo', 100),
+        ]);
+
+        await store.handleEvent(eg.updateMessageEventMoveFrom(
+          origMessages: [messageToMove],
+          newTopicStr: 'bar',
+          propagateMode: PropagateMode.changeOne));
+        check(store).topicsMaxIdsInStream(stream.streamId).isNotNull().deepEquals([
+          conditionTopicMaxId('bar', 999),
+          conditionTopicMaxId('foo', 100),
+        ]);
+        checkNotNotified();
+      });
+
+      test('message moved to known topic; moved message ID > maxId', () async {
+        final messageToMove =
+          eg.streamMessage(id: 999, stream: stream, topic: 'foo');
+        await prepareWithMessages([
+          messageToMove,
+          eg.streamMessage(id: 100, stream: stream, topic: 'bar'),
+        ], expectedTopics: [
+          conditionTopicMaxId('foo', 999),
+          conditionTopicMaxId('bar', 100),
+        ]);
+
+        await store.handleEvent(eg.updateMessageEventMoveFrom(
+          origMessages: [messageToMove],
+          newTopicStr: 'bar',
+          propagateMode: PropagateMode.changeOne));
+        check(store).topicsMaxIdsInStream(stream.streamId).isNotNull().deepEquals([
+          conditionTopicMaxId('foo', 999),
+          conditionTopicMaxId('bar', 999),
+        ]);
+        checkNotifiedOnce();
+      });
     });
   });
 
@@ -411,4 +766,9 @@ void main() {
         .equals(UserTopicVisibilityPolicy.none);
     });
   });
+}
+
+extension TopicMaxIdChecks on Subject<TopicMaxId> {
+  Subject<TopicName> get topic => has((x) => x.topic, 'topic');
+  Subject<int> get maxId => has((x) => x.maxId, 'maxId');
 }

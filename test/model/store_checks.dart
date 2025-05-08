@@ -4,6 +4,7 @@ import 'package:zulip/api/model/initial_snapshot.dart';
 import 'package:zulip/api/model/model.dart';
 import 'package:zulip/model/autocomplete.dart';
 import 'package:zulip/model/binding.dart';
+import 'package:zulip/model/channel.dart';
 import 'package:zulip/model/database.dart';
 import 'package:zulip/model/recent_dm_conversations.dart';
 import 'package:zulip/model/settings.dart';
@@ -59,6 +60,7 @@ extension PerAccountStoreChecks on Subject<PerAccountStore> {
   Subject<Map<int, ZulipStream>> get streams => has((x) => x.streams, 'streams');
   Subject<Map<String, ZulipStream>> get streamsByName => has((x) => x.streamsByName, 'streamsByName');
   Subject<Map<int, Subscription>> get subscriptions => has((x) => x.subscriptions, 'subscriptions');
+  Subject<List<TopicMaxId>?> topicsMaxIdsInStream(int streamId) => has((x) => x.topicMaxIdsInStream(streamId), 'topicsMaxIdsInStream');
   Subject<Map<int, Message>> get messages => has((x) => x.messages, 'messages');
   Subject<Unreads> get unreads => has((x) => x.unreads, 'unreads');
   Subject<RecentDmConversationsView> get recentDmConversationsView => has((x) => x.recentDmConversationsView, 'recentDmConversationsView');

@@ -1,8 +1,13 @@
+import 'dart:async';
+
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 
 import '../api/model/events.dart';
 import '../api/model/initial_snapshot.dart';
 import '../api/model/model.dart';
+import '../api/route/channels.dart';
+import 'store.dart';
 
 /// The portion of [PerAccountStore] for channels, topics, and stuff about them.
 ///
@@ -33,6 +38,22 @@ mixin ChannelStore {
   /// The same [Subscription] objects are among the values in [streams]
   /// and [streamsByName].
   Map<int, Subscription> get subscriptions;
+
+  /// Fetch topics in a stream from the server.
+  ///
+  /// The results from the last successful fetch
+  /// can be retrieved with [topicMaxIdsInStream].
+  Future<void> fetchTopics(int streamId);
+
+  /// Pairs of the known topics and its latest message ID, in the given stream.
+  ///
+  /// The result is guaranteed to be sorted by maxId, and the topics are
+  /// guaranteed to be distinct.  In some cases when message moves occur,
+  /// the same maxId can be present in multiple topics.
+  ///
+  /// Returns null if the data has never been fetched yet.
+  /// To fetch it from the server, use [fetchTopics].
+  List<TopicMaxId>? topicMaxIdsInStream(int streamId);
 
   /// The visibility policy that the self-user has for the given topic.
   ///
@@ -208,6 +229,31 @@ class ChannelStoreImpl extends PerAccountStoreBase with ChannelStore {
   @override
   final Map<int, Subscription> subscriptions;
 
+  /// Maps indexed by stream IDs, of the the known latest message IDs in each
+  /// topic.
+  ///
+  /// For example: `_topicMaxIdsByStream[stream.id][topic] = maxId`.
+  final Map<int, Map<TopicName, int>> _topicMaxIdsByStream = {};
+
+  @override
+  Future<void> fetchTopics(int streamId) async {
+    final result = await getStreamTopics(connection, streamId: streamId);
+    _topicMaxIdsByStream[streamId] = {
+      for (final GetStreamTopicsEntry(:name, :maxId) in result.topics)
+        name: maxId,
+    };
+  }
+
+  @override
+  List<TopicMaxId>? topicMaxIdsInStream(int streamId) {
+    final topicMaxIdsInStream = _topicMaxIdsByStream[streamId];
+    if (topicMaxIdsInStream == null) return null;
+    return [
+      for (final MapEntry(:key, :value) in topicMaxIdsInStream.entries)
+        (topic: key, maxId: value)
+    ].sortedBy((value) => -value.maxId);
+  }
+
   @override
   Map<int, Map<TopicName, UserTopicVisibilityPolicy>> get debugTopicVisibility => topicVisibility;
 
@@ -374,4 +420,48 @@ class ChannelStoreImpl extends PerAccountStoreBase with ChannelStore {
       forStream[event.topicName] = visibilityPolicy;
     }
   }
+
+  /// Handle a [MessageEvent], returning whether listeners should be notified.
+  bool handleMessageEvent(MessageEvent event) {
+    if (event.message is! StreamMessage) return false;
+    final StreamMessage(:streamId, :topic) = event.message as StreamMessage;
+
+    final topicMaxIdsInStream = _topicMaxIdsByStream[streamId];
+    if (topicMaxIdsInStream == null) return false;
+    assert(!topicMaxIdsInStream.containsKey(topic)
+           || topicMaxIdsInStream[topic]! < event.message.id);
+    topicMaxIdsInStream[topic] = event.message.id;
+    return true;
+  }
+
+  /// Handle a [UpdateMessageEvent], returning whether listeners should be
+  /// notified.
+  bool handleUpdateMessageEvent(UpdateMessageEvent event) {
+    if (event.moveData == null) return false;
+    final UpdateMessageMoveData(
+      :origStreamId, :origTopic, :newStreamId, :newTopic, :propagateMode,
+    ) = event.moveData!;
+    bool shouldNotify = false;
+
+    final topicMaxIdsInOrigStream = _topicMaxIdsByStream[origStreamId];
+    if (propagateMode == PropagateMode.changeAll
+        && topicMaxIdsInOrigStream != null) {
+      shouldNotify = topicMaxIdsInOrigStream.remove(origTopic) != null;
+    }
+
+    final topicMaxIdsInNewStream = _topicMaxIdsByStream[newStreamId];
+    if (topicMaxIdsInNewStream != null) {
+      final movedMaxId = event.messageIds.max;
+      if (!topicMaxIdsInNewStream.containsKey(newTopic)
+          || topicMaxIdsInNewStream[newTopic]! < movedMaxId) {
+        topicMaxIdsInNewStream[newTopic] = movedMaxId;
+        shouldNotify = true;
+      }
+    }
+
+    return shouldNotify;
+  }
 }
+
+/// A topic and its known latest message ID.
+typedef TopicMaxId = ({TopicName topic, int maxId});
