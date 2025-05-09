@@ -230,6 +230,10 @@ class _TopicItem extends StatelessWidget {
     final isTopicVisibleInStream = store.isTopicVisibleInStream(streamId, topic);
     final visibilityIcon = iconDataForTopicVisibilityPolicy(
       store.topicVisibilityPolicy(streamId, topic));
+    final message = store.messages[maxId];
+    final isMaxIdValid = message is StreamMessage
+      && message.streamId == streamId
+      && message.topic.isSameAs(topic);
 
     return Material(
       color: designVariables.bgMessageRegular,
@@ -242,7 +246,7 @@ class _TopicItem extends StatelessWidget {
         onLongPress: () => showTopicActionSheet(context,
           channelId: streamId,
           topic: topic,
-          someMessageIdInTopic: maxId),
+          someMessageIdInTopic: isMaxIdValid ? maxId : null),
         splashFactory: NoSplash.splashFactory,
         child: Padding(padding: EdgeInsetsDirectional.fromSTEB(28, 8, 12, 8),
           child: Row(
