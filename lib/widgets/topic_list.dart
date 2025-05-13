@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../api/model/model.dart';
 import '../api/route/channels.dart';
@@ -241,7 +242,7 @@ class _TopicItem extends StatelessWidget {
     final trailingWidgets = [
       if (hasMention) const _IconMarker(icon: ZulipIcons.at_sign),
       if (visibilityIcon != null) _IconMarker(icon: visibilityIcon),
-      if (unreadCount > 0) _UnreadCountBadge(count: unreadCount),
+      if (unreadCount > 0) VerticalAlign(verticalOffset: 0.7, child: _UnreadCountBadge(count: unreadCount)),
     ];
 
     return Material(
@@ -265,15 +266,16 @@ class _TopicItem extends StatelessWidget {
             // (i.e., `align-items: flex-start`).  The icons are padded down
             // 2px relative to the start, to visibly sit on the baseline.
             // To account for scaled text, we align everything on the row
-            // to [CrossAxisAlignment.center] instead ([Row]'s default),
-            // like we do for the topic items on the inbox page.
+            // to [CrossAxisAlignment.baseline] instead.
             // CZO discussion:
-            //   https://chat.zulip.org/#narrow/channel/243-mobile-team/topic/topic.20list.20item.20alignment/near/2173252
+            //   https://chat.zulip.org/#narrow/channel/243-mobile-team/topic/topic.20list.20item.20alignment/near/2173433
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: localizedTextBaseline(context),
             children: [
               if (topic.isResolved)
                 _IconMarker(icon: ZulipIcons.check)
               else
-                SizedBox.square(dimension: 16),
+                SizedBox(width: 16),
               Expanded(child: Opacity(
                 opacity: isTopicVisibleInStream ? 1 : 0.5,
                 child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -287,6 +289,8 @@ class _TopicItem extends StatelessWidget {
                     topic.unresolve().displayName ?? store.realmEmptyTopicDisplayName)))),
               Opacity(opacity: isTopicVisibleInStream ? 1 : 0.5, child: Row(
                 spacing: 4,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: localizedTextBaseline(context),
                 children: [
                   ...trailingWidgets,
                   if (trailingWidgets.isEmpty)
@@ -306,8 +310,11 @@ class _IconMarker extends StatelessWidget {
     final designVariables = DesignVariables.of(context);
     // Since we align the icons to [CrossAxisAlignment.center], the top padding
     // from the Figma design is omitted.
-    return Icon(icon, size: 16,
-      color: designVariables.textMessage.withFadedAlpha(0.4));
+    return VerticalAlign(
+      verticalOffset: -2,
+      child: Icon(icon, size: 16,
+        color: designVariables.textMessage.withFadedAlpha(0.4)),
+    );
   }
 }
 
@@ -334,5 +341,60 @@ class _UnreadCountBadge extends StatelessWidget {
             height: 16 / 15,
             color: designVariables.labelCounterUnread,
           ).merge(weightVariableTextStyle(context, wght: 500)))));
+  }
+}
+
+class VerticalAlign extends SingleChildRenderObjectWidget {
+  const VerticalAlign({super.key, required this.verticalOffset, super.child});
+
+  final double verticalOffset;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) {
+    return RenderVerticalAlign(verticalOffset: verticalOffset);
+  }
+
+  @override
+  void updateRenderObject(BuildContext context, covariant RenderVerticalAlign renderObject) {
+    renderObject.verticalOffset = verticalOffset;
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DoubleProperty('verticalOffset', verticalOffset));
+  }
+}
+
+class RenderVerticalAlign extends RenderProxyBox {
+  RenderVerticalAlign({required double verticalOffset, RenderBox? child})
+    : _verticalOffset = verticalOffset,
+      super(child);
+
+  double get verticalOffset => _verticalOffset;
+  double _verticalOffset;
+  set verticalOffset(double value) {
+    _verticalOffset = value;
+    markNeedsLayout();
+  }
+
+  @override
+  double? computeDistanceToActualBaseline(TextBaseline baseline) {
+    final child = this.child;
+    if (child != null) {
+      final childOffset = child.getDistanceToActualBaseline(baseline);
+      if (childOffset != null) {
+        return childOffset + verticalOffset;
+      }
+      return null;
+    } else {
+      return super.computeDistanceToActualBaseline(baseline);
+    }
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DoubleProperty('verticalOffset', verticalOffset));
   }
 }
