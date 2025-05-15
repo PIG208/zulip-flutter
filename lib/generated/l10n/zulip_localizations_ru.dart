@@ -738,6 +738,9 @@ class ZulipLocalizationsRu extends ZulipLocalizations {
   String get openLinksWithInAppBrowser => 'Открывать ссылки внутри приложения';
 
   @override
+  String get languageSettingTitle => 'Language';
+
+  @override
   String get languageEn => 'English';
 
   @override
