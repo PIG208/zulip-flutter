@@ -13,6 +13,7 @@ import '../api/route/messages.dart';
 import '../generated/l10n/zulip_localizations.dart';
 import '../model/binding.dart';
 import '../model/compose.dart';
+import '../model/message.dart';
 import '../model/narrow.dart';
 import '../model/store.dart';
 import 'actions.dart';
@@ -1826,6 +1827,15 @@ class ComposeBox extends StatefulWidget {
 abstract class ComposeBoxState extends State<ComposeBox> {
   ComposeBoxController get controller;
 
+  /// Restore a [OutboxMessage] for a failed [sendMessage] request.
+  ///
+  /// [localMessageId], as in [OutboxMessage.localMessageId], must be present
+  /// in the message store.
+  ///
+  /// If there is already text in the compose box, gives a confirmation dialog
+  /// to confirm that it is OK to discard that text.
+  void restoreFailedSendRequest(int localMessageId);
+
   /// Switch the compose box to editing mode.
   ///
   /// If there is already text in the compose box, gives a confirmation dialog
@@ -1846,6 +1856,27 @@ abstract class ComposeBoxState extends State<ComposeBox> {
 class _ComposeBoxState extends State<ComposeBox> with PerAccountStoreAwareStateMixin<ComposeBox> implements ComposeBoxState {
   @override ComposeBoxController get controller => _controller!;
   ComposeBoxController? _controller;
+
+  @override
+  void restoreFailedSendRequest(int localMessageId) async {
+    if (controller is EditMessageComposeBoxController) return;
+    if (await _abortBecauseContentInputNotEmpty()) return;
+    if (!mounted) return;
+
+    final store = PerAccountStoreWidget.of(context);
+    final outboxMessage = store.takeOutboxMessage(localMessageId);
+    setState(() {
+      _setNewController(store);
+      final controller = this.controller;
+      controller
+        ..content.value = TextEditingValue(text: outboxMessage.contentMarkdown)
+        ..contentFocusNode.requestFocus();
+      if (controller is StreamComposeBoxController) {
+        controller.topic.setTopic((
+          outboxMessage.conversation as StreamConversation).topic);
+      }
+    });
+  }
 
   @override
   void startEditInteraction(int messageId) async {

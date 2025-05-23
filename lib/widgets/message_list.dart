@@ -1615,21 +1615,9 @@ class OutboxMessageWithPossibleSender extends StatelessWidget {
 
   final MessageListOutboxMessageItem item;
 
-  // TODO restore the topic too
   void _handlePress(BuildContext context) {
-    final store = PerAccountStoreWidget.of(context);
-    assert(store.outboxMessages.containsKey(item.message.localMessageId));
-    final message = store.takeOutboxMessage(item.message.localMessageId);
-
-    final content = message.contentMarkdown.endsWith('\n')
-      ? message.contentMarkdown : '${message.contentMarkdown}\n';
-
-    final composeBoxController =
-      MessageListPage.ancestorOf(context).composeBoxState!.controller;
-    composeBoxController.content.insertPadded(content);
-    if (!composeBoxController.contentFocusNode.hasFocus) {
-      composeBoxController.contentFocusNode.requestFocus();
-    }
+    MessageListPage.ancestorOf(context).composeBoxState!
+      .restoreFailedSendRequest(item.message.localMessageId);
   }
 
   @override

@@ -1412,6 +1412,142 @@ void main() {
     });
   });
 
+  group('restoreFailedSendRequest', () {
+    final channel = eg.stream();
+    final topic = 'topic';
+    final channelNarrow = ChannelNarrow(channel.streamId);
+    final topicNarrow = eg.topicNarrow(channel.streamId, topic);
+
+    testWidgets('in editing mode, do not restore', (tester) async {
+      // TODO move this to "edit message" test group
+    });
+
+    // TODO extract this helper
+    Future<void> expectAndHandleDiscardConfirmation(
+        WidgetTester tester, {
+          required bool shouldContinue,
+        }) async {
+      final (actionButton, cancelButton) = checkSuggestedActionDialog(tester,
+          expectedTitle: 'Discard the message you’re writing?',
+          expectedMessage: 'When you edit a message, the content that was previously in the compose box is discarded.',
+          expectedActionButtonText: 'Discard');
+      if (shouldContinue) {
+        await tester.tap(find.byWidget(actionButton));
+      } else {
+        await tester.tap(find.byWidget(cancelButton));
+      }
+    }
+
+    testWidgets('discard draft if interrupting new-message compose', (tester) async {
+      TypingNotifier.debugEnable = false;
+      addTearDown(TypingNotifier.debugReset);
+      await prepareComposeBox(tester, narrow: topicNarrow, streams: [channel]);
+
+      connection.prepare(httpException: SocketException('error'));
+      await enterContent(tester, 'failed message');
+      await tester.tap(find.byIcon(ZulipIcons.send));
+      await tester.pump(Duration.zero);
+
+      await tester.tap(find.byWidget(checkErrorDialog(tester,
+          expectedTitle: 'Message not sent')));
+      await tester.pump(Duration(milliseconds: 250));
+      final failedMessageFinder = find.widgetWithText(
+        OutboxMessageWithPossibleSender, 'failed message', skipOffstage: true);
+      check(failedMessageFinder).findsOne();
+
+      await enterContent(tester, 'composing something');
+
+      await tester.tap(failedMessageFinder);
+      await tester.pump();
+      check(state).controller.content.text.equals('composing something');
+
+      await expectAndHandleDiscardConfirmation(tester, shouldContinue: true);
+      await tester.pump();
+      check(state).controller.content.text.equals('failed message');
+    });
+
+    testWidgets('cancel if interrupting new-message compose', (tester) async {
+      TypingNotifier.debugEnable = false;
+      addTearDown(TypingNotifier.debugReset);
+      await prepareComposeBox(tester, narrow: topicNarrow, streams: [channel]);
+
+      connection.prepare(httpException: SocketException('error'));
+      await enterContent(tester, 'failed message');
+      await tester.tap(find.byIcon(ZulipIcons.send));
+      await tester.pump(Duration.zero);
+
+      await tester.tap(find.byWidget(checkErrorDialog(tester,
+        expectedTitle: 'Message not sent')));
+      await tester.pump(Duration(milliseconds: 250));
+      final failedMessageFinder = find.widgetWithText(
+        OutboxMessageWithPossibleSender, 'failed message', skipOffstage: true);
+      check(failedMessageFinder).findsOne();
+
+      await enterContent(tester, 'composing something');
+
+      await tester.tap(failedMessageFinder);
+      await tester.pump();
+      check(state).controller.content.text.equals('composing something');
+
+      await expectAndHandleDiscardConfirmation(tester, shouldContinue: false);
+      await tester.pump();
+      check(state).controller.content.text.equals('composing something');
+    });
+
+    testWidgets('restore content in narrow', (tester) async {
+      TypingNotifier.debugEnable = false;
+      addTearDown(TypingNotifier.debugReset);
+      await prepareComposeBox(tester, narrow: topicNarrow, streams: [channel]);
+
+      connection.prepare(httpException: SocketException('error'));
+      await enterContent(tester, 'failed message');
+      await tester.tap(find.byIcon(ZulipIcons.send));
+      await tester.pump(Duration.zero);
+
+      await tester.tap(find.byWidget(checkErrorDialog(tester,
+        expectedTitle: 'Message not sent')));
+      await tester.pump(Duration(milliseconds: 250));
+      final failedMessageFinder = find.widgetWithText(
+        OutboxMessageWithPossibleSender, 'failed message', skipOffstage: true);
+      check(failedMessageFinder).findsOne();
+
+      await tester.tap(failedMessageFinder);
+      await tester.pump();
+      check(state).controller.content.text.equals('failed message');
+    });
+
+    testWidgets('restore topic in channel narrow', (tester) async {
+      TypingNotifier.debugEnable = false;
+      addTearDown(TypingNotifier.debugReset);
+      await prepareComposeBox(tester, narrow: channelNarrow, streams: [channel]);
+
+      await enterTopic(tester, narrow: channelNarrow, topic: 'foo');
+      await enterContent(tester, 'failed message');
+      connection.prepare(httpException: SocketException('error'));
+      await tester.tap(find.byIcon(ZulipIcons.send));
+      await tester.pump(Duration.zero);
+      connection.takeRequests();
+
+      await tester.tap(find.byWidget(checkErrorDialog(tester,
+        expectedTitle: 'Message not sent')));
+      await tester.pump(Duration(milliseconds: 250));
+      final failedMessageFinder = find.widgetWithText(
+        OutboxMessageWithPossibleSender, 'failed message', skipOffstage: true);
+      check(failedMessageFinder).findsOne();
+
+      await tester.enterText(topicInputFinder, 'bar');
+      check(state).controller.isA<StreamComposeBoxController>()
+        ..topic.text.equals('bar')
+        ..content.text.isNotNull().isEmpty();
+
+      await tester.tap(failedMessageFinder);
+      await tester.pump();
+      check(state).controller.isA<StreamComposeBoxController>()
+        ..topic.text.equals('foo')
+        ..content.text.equals('failed message');
+    });
+  });
+
   group('edit message', () {
     final channel = eg.stream();
     final topic = 'topic';
