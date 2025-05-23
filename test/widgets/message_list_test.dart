@@ -1522,7 +1522,7 @@ void main() {
       await tester.enterText(topicInputFinder, 'test topic');
       await sendMessageAndFail(tester);
 
-      final controller = tester.state<ComposeBoxState>(find.byType(ComposeBox)).controller;
+      var controller = tester.state<ComposeBoxState>(find.byType(ComposeBox)).controller;
       controller as StreamComposeBoxController;
       await tester.enterText(topicInputFinder, 'different topic');
       check(controller.content).text.isNotNull().isEmpty();
@@ -1531,9 +1531,11 @@ void main() {
       // and remove it.
       await tester.tap(outboxMessageFinder);
       await tester.pump();
+      controller = tester.state<ComposeBoxState>(find.byType(ComposeBox)).controller;
+      controller as StreamComposeBoxController;
       check(outboxMessageFinder).findsNothing();
       check(controller.topic).text.equals('test topic');
-      check(controller.content).text.equals('$content\n\n');
+      check(controller.content).text.equals(content);
 
       await tester.pump(kLocalEchoDebounceDuration);
     });
