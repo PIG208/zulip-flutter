@@ -84,6 +84,10 @@
   "@actionSheetOptionMarkChannelAsRead": {
     "description": "Label for marking a channel as read."
   },
+  "actionSheetOptionListOfTopics": "List of topics",
+  "@actionSheetOptionListOfTopics": {
+    "description": "Label for navigating to a channel's topic-list page."
+  },
   "actionSheetOptionMuteTopic": "Mute topic",
   "@actionSheetOptionMuteTopic":  {
     "description": "Label for muting a topic on action sheet."
@@ -127,6 +131,10 @@
   "actionSheetOptionMarkAsUnread": "Mark as unread from here",
   "@actionSheetOptionMarkAsUnread":  {
     "description": "Label for mark as unread button on action sheet."
+  },
+  "actionSheetOptionHideMutedMessage": "Hide muted message again",
+  "@actionSheetOptionHideMutedMessage":  {
+    "description": "Label for hide muted message again button on action sheet."
   },
   "actionSheetOptionShare": "Share",
   "@actionSheetOptionShare":  {
@@ -373,9 +381,13 @@
   "@discardDraftConfirmationDialogTitle": {
     "description": "Title for a confirmation dialog for discarding message text that was typed into the compose box."
   },
-  "discardDraftConfirmationDialogMessage": "When you edit a message, the content that was previously in the compose box is discarded.",
-  "@discardDraftConfirmationDialogMessage": {
-    "description": "Message for a confirmation dialog for discarding message text that was typed into the compose box."
+  "discardDraftForEditConfirmationDialogMessage": "When you edit a message, the content that was previously in the compose box is discarded.",
+  "@discardDraftForEditConfirmationDialogMessage": {
+    "description": "Message for a confirmation dialog for discarding message text that was typed into the compose box, when editing a message."
+  },
+  "discardDraftForMessageNotSentConfirmationDialogMessage": "When you restore a message not sent, the content that was previously in the compose box is discarded.",
+  "@discardDraftForMessageNotSentConfirmationDialogMessage": {
+    "description": "Message for a confirmation dialog when restoring a message not sent, for discarding message text that was typed into the compose box."
   },
   "discardDraftConfirmationDialogConfirmButton": "Discard",
   "@discardDraftConfirmationDialogConfirmButton": {
@@ -396,6 +408,34 @@
   "composeBoxGenericContentHint": "Type a message",
   "@composeBoxGenericContentHint": {
     "description": "Hint text for content input when sending a message."
+  },
+  "newDmSheetBackButtonLabel": "Back",
+  "@newDmSheetBackButtonLabel": {
+    "description": "Label for the back button in the new DM sheet, allowing the user to return to the previous screen."
+  },
+  "newDmSheetNextButtonLabel": "Next",
+  "@newDmSheetNextButtonLabel": {
+    "description": "Label for the front button in the new DM sheet, if applicable, for navigation or action."
+  },
+  "newDmSheetScreenTitle": "New DM",
+  "@newDmSheetScreenTitle": {
+    "description": "Title displayed at the top of the new DM screen."
+  },
+  "newDmFabButtonLabel": "New DM",
+  "@newDmFabButtonLabel": {
+    "description": "Label for the floating action button (FAB) that opens the new DM sheet."
+  },
+  "newDmSheetSearchHintEmpty": "Add one or more users",
+  "@newDmSheetSearchHintEmpty": {
+    "description": "Hint text for the search bar when no users are selected"
+  },
+  "newDmSheetSearchHintSomeSelected": "Add another user…",
+  "@newDmSheetSearchHintSomeSelected": {
+    "description": "Hint text for the search bar when at least one user is selected"
+  },
+  "newDmSheetNoUsersFound": "No users found",
+  "@newDmSheetNoUsersFound": {
+    "description": "Message shown in the new DM sheet when no users match the search."
   },
   "composeBoxDmContentHint": "Message @{user}",
   "@composeBoxDmContentHint": {
@@ -769,6 +809,10 @@
   "@mainMenuMyProfile": {
     "description": "Label for main-menu button leading to the user's own profile."
   },
+  "topicsButtonLabel": "TOPICS",
+  "@topicsButtonLabel": {
+    "description": "Label for message list button leading to topic-list page. (Use ALL CAPS for cased alphabets: Latin, Greek, Cyrillic, etc.)"
+  },
   "channelFeedButtonTooltip": "Channel feed",
   "@channelFeedButtonTooltip": {
     "description": "Tooltip for button to navigate to a given channel's feed"
@@ -864,6 +908,10 @@
   "@messageIsMovedLabel": {
     "description": "Label for a moved message. (Use ALL CAPS for cased alphabets: Latin, Greek, Cyrillic, etc.)"
   },
+  "messageNotSentLabel": "MESSAGE NOT SENT",
+  "@messageNotSentLabel": {
+    "description": "Text on a message in the message list saying that a send message request failed. (Use ALL CAPS for cased alphabets: Latin, Greek, Cyrillic, etc.)"
+  },
   "pollVoterNames": "({voterNames})",
   "@pollVoterNames": {
     "description": "The list of people who voted for a poll option, wrapped in parentheses.",
@@ -911,9 +959,9 @@
   "@errorNotificationOpenTitle": {
     "description": "Error title when notification opening fails"
   },
-  "errorNotificationOpenAccountMissing": "The account associated with this notification no longer exists.",
-  "@errorNotificationOpenAccountMissing": {
-    "description": "Error message when the account associated with the notification is not found"
+  "errorNotificationOpenAccountNotFound": "The account associated with this notification could not be found.",
+  "@errorNotificationOpenAccountNotFound": {
+    "description": "Error message when the account associated with the notification could not be found"
   },
   "errorReactionAddingFailedTitle": "Adding reaction failed",
   "@errorReactionAddingFailedTitle": {
@@ -934,6 +982,18 @@
   "noEarlierMessages": "No earlier messages",
   "@noEarlierMessages": {
     "description": "Text to show at the start of a message list if there are no earlier messages."
+  },
+  "mutedSender": "Muted sender",
+  "@mutedSender": {
+    "description": "Name for a muted user to display in message list."
+  },
+  "revealButtonLabel": "Reveal message for muted sender",
+  "@revealButtonLabel": {
+    "description": "Label for the button revealing hidden message from a muted sender in message list."
+  },
+  "mutedUser": "Muted user",
+  "@mutedUser": {
+    "description": "Name for a muted user to display all over the app."
   },
   "scrollToBottomTooltip": "Scroll to bottom",
   "@scrollToBottomTooltip": {

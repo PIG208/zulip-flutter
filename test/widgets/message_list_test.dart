@@ -11,6 +11,7 @@ import 'package:zulip/api/model/events.dart';
 import 'package:zulip/api/model/initial_snapshot.dart';
 import 'package:zulip/api/model/model.dart';
 import 'package:zulip/api/model/narrow.dart';
+import 'package:zulip/api/route/channels.dart';
 import 'package:zulip/api/route/messages.dart';
 import 'package:zulip/model/actions.dart';
 import 'package:zulip/model/localizations.dart';
@@ -18,6 +19,7 @@ import 'package:zulip/model/message_list.dart';
 import 'package:zulip/model/narrow.dart';
 import 'package:zulip/model/store.dart';
 import 'package:zulip/model/typing_status.dart';
+import 'package:zulip/widgets/app_bar.dart';
 import 'package:zulip/widgets/autocomplete.dart';
 import 'package:zulip/widgets/color.dart';
 import 'package:zulip/widgets/compose_box.dart';
@@ -27,6 +29,8 @@ import 'package:zulip/widgets/message_list.dart';
 import 'package:zulip/widgets/page.dart';
 import 'package:zulip/widgets/store.dart';
 import 'package:zulip/widgets/channel_colors.dart';
+import 'package:zulip/widgets/theme.dart';
+import 'package:zulip/widgets/topic_list.dart';
 
 import '../api/fake_api.dart';
 import '../example_data.dart' as eg;
@@ -208,6 +212,36 @@ void main() {
         channel.name, eg.defaultRealmEmptyTopicDisplayName);
     });
 
+    void testChannelIconInChannelRow(IconData expectedIcon, {
+      required bool isWebPublic,
+      required bool inviteOnly,
+    }) {
+      final description = 'channel icon in channel row; '
+        'web-public: $isWebPublic, invite-only: $inviteOnly';
+      testWidgets(description, (tester) async {
+        final color = 0xff95a5fd;
+
+        final channel = eg.stream(isWebPublic: isWebPublic, inviteOnly: inviteOnly);
+        final subscription = eg.subscription(channel, color: color);
+
+        await setupMessageListPage(tester,
+          narrow: ChannelNarrow(channel.streamId),
+          streams: [channel],
+          subscriptions: [subscription],
+          messages: [eg.streamMessage(stream: channel)]);
+
+        final iconElement = tester.element(find.descendant(
+          of: find.byType(ZulipAppBar),
+          matching: find.byIcon(expectedIcon)));
+
+        check(Theme.brightnessOf(iconElement)).equals(Brightness.light);
+        check(iconElement.widget as Icon).color.equals(Color(0xff5972fc));
+      });
+    }
+    testChannelIconInChannelRow(ZulipIcons.globe, isWebPublic: true, inviteOnly: false);
+    testChannelIconInChannelRow(ZulipIcons.lock, isWebPublic: false, inviteOnly: true);
+    testChannelIconInChannelRow(ZulipIcons.hash_sign, isWebPublic: false, inviteOnly: false);
+
     testWidgets('has channel-feed action for topic narrows', (tester) async {
       final pushedRoutes = <Route<void>>[];
       final navObserver = TestNavigatorObserver()
@@ -228,6 +262,25 @@ void main() {
           .equals(ChannelNarrow(channel.streamId));
     });
 
+    testWidgets('has topic-list action for topic narrows', (tester) async {
+      final channel = eg.stream(name: 'channel foo');
+      await setupMessageListPage(tester,
+        narrow: eg.topicNarrow(channel.streamId, 'topic foo'),
+        streams: [channel],
+        messages: [eg.streamMessage(stream: channel, topic: 'topic foo')]);
+
+      connection.prepare(json: GetStreamTopicsResult(topics: [
+        eg.getStreamTopicsEntry(name: 'topic foo'),
+      ]).toJson());
+      await tester.tap(find.text('TOPICS'));
+      await tester.pump(); // tap the button
+      await tester.pump(Duration.zero); // wait for request
+      check(find.descendant(
+        of: find.byType(TopicListPage),
+        matching: find.text('channel foo')),
+      ).findsOne();
+    });
+
     testWidgets('show topic visibility policy for topic narrows', (tester) async {
       final channel = eg.stream();
       const topic = 'topic';
@@ -242,6 +295,25 @@ void main() {
       check(find.descendant(
         of: find.byType(MessageListAppBarTitle),
         matching: find.byIcon(ZulipIcons.mute))).findsOne();
+    });
+
+    testWidgets('has topic-list action for channel narrows', (tester) async {
+      final channel = eg.stream(name: 'channel foo');
+      await setupMessageListPage(tester,
+        narrow: ChannelNarrow(channel.streamId),
+        streams: [channel],
+        messages: [eg.streamMessage(stream: channel, topic: 'topic foo')]);
+
+      connection.prepare(json: GetStreamTopicsResult(topics: [
+        eg.getStreamTopicsEntry(name: 'topic foo'),
+      ]).toJson());
+      await tester.tap(find.text('TOPICS'));
+      await tester.pump(); // tap the button
+      await tester.pump(Duration.zero); // wait for request
+      check(find.descendant(
+        of: find.byType(TopicListPage),
+        matching: find.text('channel foo')),
+      ).findsOne();
     });
   });
 
@@ -282,17 +354,17 @@ void main() {
       return widget.color;
     }
 
-    check(backgroundColor()).isSameColorAs(MessageListTheme.light.bgMessageRegular);
+    check(backgroundColor()).isSameColorAs(DesignVariables.light.bgMessageRegular);
 
     tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
     await tester.pump();
 
     await tester.pump(kThemeAnimationDuration * 0.4);
-    final expectedLerped = MessageListTheme.light.lerp(MessageListTheme.dark, 0.4);
+    final expectedLerped = DesignVariables.light.lerp(DesignVariables.dark, 0.4);
     check(backgroundColor()).isSameColorAs(expectedLerped.bgMessageRegular);
 
     await tester.pump(kThemeAnimationDuration * 0.6);
-    check(backgroundColor()).isSameColorAs(MessageListTheme.dark.bgMessageRegular);
+    check(backgroundColor()).isSameColorAs(DesignVariables.dark.bgMessageRegular);
   });
 
   group('fetch initial batch of messages', () {
@@ -943,7 +1015,8 @@ void main() {
 
       connection.prepare(json: SendMessageResult(id: 1).toJson());
       await tester.tap(find.byIcon(ZulipIcons.send));
-      await tester.pump();
+      await tester.pump(Duration.zero);
+      final localMessageId = store.outboxMessages.keys.single;
       check(connection.lastRequest).isA<http.Request>()
         ..method.equals('POST')
         ..url.path.equals('/api/v1/messages')
@@ -952,8 +1025,12 @@ void main() {
           'to': '${otherChannel.streamId}',
           'topic': 'new topic',
           'content': 'Some text',
-          'read_by_sender': 'true'});
-      await tester.pumpAndSettle();
+          'read_by_sender': 'true',
+          'queue_id': store.queueId,
+          'local_id': localMessageId.toString()});
+      // Remove the outbox message and its timers created when sending message.
+      await store.handleEvent(
+        eg.messageEvent(message, localMessageId: localMessageId));
     });
 
     testWidgets('Move to narrow with existing messages', (tester) async {
@@ -1366,6 +1443,30 @@ void main() {
   });
 
   group('MessageWithPossibleSender', () {
+    testWidgets('known user', (tester) async {
+      final user = eg.user(fullName: 'Old Name');
+      await setupMessageListPage(tester,
+        messages: [eg.streamMessage(sender: user)],
+        users: [user]);
+
+      check(find.widgetWithText(MessageWithPossibleSender, 'Old Name')).findsOne();
+
+      // If the user's name changes, the sender row should update.
+      await store.handleEvent(RealmUserUpdateEvent(id: 1,
+        userId: user.userId, fullName: 'New Name'));
+      await tester.pump();
+      check(find.widgetWithText(MessageWithPossibleSender, 'New Name')).findsOne();
+    });
+
+    testWidgets('unknown user', (tester) async {
+      final user = eg.user(fullName: 'Some User');
+      await setupMessageListPage(tester, messages: [eg.streamMessage(sender: user)]);
+      check(store.getUser(user.userId)).isNull();
+
+      // The sender row should fall back to the name in the message.
+      check(find.widgetWithText(MessageWithPossibleSender, 'Some User')).findsOne();
+    });
+
     testWidgets('Updates avatar on RealmUserUpdateEvent', (tester) async {
       addTearDown(testBinding.reset);
 

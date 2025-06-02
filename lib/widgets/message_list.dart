@@ -24,11 +24,11 @@ import 'sticky_header.dart';
 import 'store.dart';
 import 'text.dart';
 import 'theme.dart';
+import 'topic_list.dart';
 
 /// Message-list styles that differ between light and dark themes.
 class MessageListTheme extends ThemeExtension<MessageListTheme> {
   static final light = MessageListTheme._(
-    bgMessageRegular: const HSLColor.fromAHSL(1, 0, 0, 1).toColor(),
     dmRecipientHeaderBg: const HSLColor.fromAHSL(1, 46, 0.35, 0.93).toColor(),
     labelTime: const HSLColor.fromAHSL(0.49, 0, 0, 0).toColor(),
     senderBotIcon: const HSLColor.fromAHSL(1, 180, 0.08, 0.65).toColor(),
@@ -46,7 +46,6 @@ class MessageListTheme extends ThemeExtension<MessageListTheme> {
   );
 
   static final dark = MessageListTheme._(
-    bgMessageRegular: const HSLColor.fromAHSL(1, 0, 0, 0.11).toColor(),
     dmRecipientHeaderBg: const HSLColor.fromAHSL(1, 46, 0.15, 0.2).toColor(),
     labelTime: const HSLColor.fromAHSL(0.5, 0, 0, 1).toColor(),
     senderBotIcon: const HSLColor.fromAHSL(1, 180, 0.05, 0.5).toColor(),
@@ -63,7 +62,6 @@ class MessageListTheme extends ThemeExtension<MessageListTheme> {
   );
 
   MessageListTheme._({
-    required this.bgMessageRegular,
     required this.dmRecipientHeaderBg,
     required this.labelTime,
     required this.senderBotIcon,
@@ -82,7 +80,6 @@ class MessageListTheme extends ThemeExtension<MessageListTheme> {
     return extension!;
   }
 
-  final Color bgMessageRegular;
   final Color dmRecipientHeaderBg;
   final Color labelTime;
   final Color senderBotIcon;
@@ -92,7 +89,6 @@ class MessageListTheme extends ThemeExtension<MessageListTheme> {
 
   @override
   MessageListTheme copyWith({
-    Color? bgMessageRegular,
     Color? dmRecipientHeaderBg,
     Color? labelTime,
     Color? senderBotIcon,
@@ -101,7 +97,6 @@ class MessageListTheme extends ThemeExtension<MessageListTheme> {
     Color? unreadMarkerGap,
   }) {
     return MessageListTheme._(
-      bgMessageRegular: bgMessageRegular ?? this.bgMessageRegular,
       dmRecipientHeaderBg: dmRecipientHeaderBg ?? this.dmRecipientHeaderBg,
       labelTime: labelTime ?? this.labelTime,
       senderBotIcon: senderBotIcon ?? this.senderBotIcon,
@@ -117,7 +112,6 @@ class MessageListTheme extends ThemeExtension<MessageListTheme> {
       return this;
     }
     return MessageListTheme._(
-      bgMessageRegular: Color.lerp(bgMessageRegular, other.bgMessageRegular, t)!,
       dmRecipientHeaderBg: Color.lerp(dmRecipientHeaderBg, other.dmRecipientHeaderBg, t)!,
       labelTime: Color.lerp(labelTime, other.labelTime, t)!,
       senderBotIcon: Color.lerp(senderBotIcon, other.senderBotIcon, t)!,
@@ -227,14 +221,23 @@ class _MessageListPageState extends State<MessageListPage> implements MessageLis
         removeAppBarBottomBorder = true;
     }
 
-    List<Widget>? actions;
-    if (narrow case TopicNarrow(:final streamId)) {
-      (actions ??= []).add(IconButton(
-        icon: const Icon(ZulipIcons.message_feed),
-        tooltip: zulipLocalizations.channelFeedButtonTooltip,
-        onPressed: () => Navigator.push(context,
-          MessageListPage.buildRoute(context: context,
-            narrow: ChannelNarrow(streamId)))));
+    List<Widget> actions = [];
+    switch (narrow) {
+      case CombinedFeedNarrow():
+      case MentionsNarrow():
+      case StarredMessagesNarrow():
+      case DmNarrow():
+        break;
+      case ChannelNarrow(:final streamId):
+        actions.add(_TopicListButton(streamId: streamId));
+      case TopicNarrow(:final streamId):
+        actions.add(IconButton(
+          icon: const Icon(ZulipIcons.message_feed),
+          tooltip: zulipLocalizations.channelFeedButtonTooltip,
+          onPressed: () => Navigator.push(context,
+            MessageListPage.buildRoute(context: context,
+              narrow: ChannelNarrow(streamId)))));
+        actions.add(_TopicListButton(streamId: streamId));
     }
 
     // Insert a PageRoot here, to provide a context that can be used for
@@ -284,6 +287,35 @@ class _MessageListPageState extends State<MessageListPage> implements MessageLis
   }
 }
 
+class _TopicListButton extends StatelessWidget {
+  const _TopicListButton({required this.streamId});
+
+  final int streamId;
+
+  @override
+  Widget build(BuildContext context) {
+    final zulipLocalizations = ZulipLocalizations.of(context);
+    final designVariables = DesignVariables.of(context);
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(TopicListPage.buildRoute(
+          context: context, streamId: streamId));
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: EdgeInsetsDirectional.fromSTEB(12, 8, 12, 8),
+        child: Center(child: Text(zulipLocalizations.topicsButtonLabel,
+          style: TextStyle(
+            color: designVariables.icon,
+            fontSize: 18,
+            height: 19 / 18,
+            // This is equivalent to css `all-small-caps`, see:
+            //   https://developer.mozilla.org/en-US/docs/Web/CSS/font-variant-caps#all-small-caps
+            fontFeatures: const [FontFeature.enable('c2sc'), FontFeature.enable('smcp')],
+          ).merge(weightVariableTextStyle(context, wght: 600))))));
+  }
+}
+
 class MessageListAppBarTitle extends StatelessWidget {
   const MessageListAppBarTitle({
     super.key,
@@ -297,9 +329,18 @@ class MessageListAppBarTitle extends StatelessWidget {
   Widget _buildStreamRow(BuildContext context, {
     ZulipStream? stream,
   }) {
+    final store = PerAccountStoreWidget.of(context);
     final zulipLocalizations = ZulipLocalizations.of(context);
+
     // A null [Icon.icon] makes a blank space.
-    final icon = stream != null ? iconDataForStream(stream) : null;
+    IconData? icon;
+    Color? iconColor;
+    if (stream != null) {
+      icon = iconDataForStream(stream);
+      iconColor = colorSwatchFor(context, store.subscriptions[stream.streamId])
+        .iconOnBarBackground;
+    }
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       // TODO(design): The vertical alignment of the stream privacy icon is a bit ad hoc.
@@ -307,7 +348,7 @@ class MessageListAppBarTitle extends StatelessWidget {
       //     https://github.com/zulip/zulip-flutter/pull/219#discussion_r1281024746
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Icon(size: 16, icon),
+        Icon(size: 16, color: iconColor, icon),
         const SizedBox(width: 4),
         Flexible(child: Text(
           stream?.name ?? zulipLocalizations.unknownChannelName)),
@@ -718,7 +759,6 @@ class _MessageListState extends State<MessageList> with PerAccountStoreAwareStat
         return MessageItem(
           key: ValueKey(data.message.id),
           header: header,
-          trailingWhitespace: 11,
           item: data);
     }
   }
@@ -981,13 +1021,12 @@ class DateSeparator extends StatelessWidget {
     // to align with the vertically centered divider lines.
     const textBottomPadding = 2.0;
 
-    final messageListTheme = MessageListTheme.of(context);
     final designVariables = DesignVariables.of(context);
 
     final line = BorderSide(width: 0, color: designVariables.foreground);
 
     // TODO(#681) use different color for DM messages
-    return ColoredBox(color: messageListTheme.bgMessageRegular,
+    return ColoredBox(color: designVariables.bgMessageRegular,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
         child: Row(children: [
@@ -1017,25 +1056,25 @@ class MessageItem extends StatelessWidget {
     super.key,
     required this.item,
     required this.header,
-    this.trailingWhitespace,
   });
 
   final MessageListMessageBaseItem item;
   final Widget header;
-  final double? trailingWhitespace;
 
   @override
   Widget build(BuildContext context) {
-    final messageListTheme = MessageListTheme.of(context);
+    final designVariables = DesignVariables.of(context);
 
     final item = this.item;
     Widget child = ColoredBox(
-      color: messageListTheme.bgMessageRegular,
+      color: designVariables.bgMessageRegular,
       child: Column(children: [
         switch (item) {
           MessageListMessageItem() => MessageWithPossibleSender(item: item),
         },
-        if (trailingWhitespace != null && item.isLastInBlock) SizedBox(height: trailingWhitespace!),
+        // TODO refine this padding; discussion:
+        //   https://github.com/zulip/zulip-flutter/pull/1453#discussion_r2106526985
+        if (item.isLastInBlock) const SizedBox(height: 11),
       ]));
     if (item case MessageListMessageItem(:final message)) {
       child = _UnreadMarker(
@@ -1377,7 +1416,7 @@ final _kMessageTimestampFormat = DateFormat('h:mm aa', 'en_US');
 class _SenderRow extends StatelessWidget {
   const _SenderRow({required this.message, required this.showTimestamp});
 
-  final Message message;
+  final MessageBase message;
   final bool showTimestamp;
 
   @override
@@ -1407,7 +1446,9 @@ class _SenderRow extends StatelessWidget {
                     userId: message.senderId),
                   const SizedBox(width: 8),
                   Flexible(
-                    child: Text(message.senderFullName, // TODO(#716): use `store.senderDisplayName`
+                    child: Text(message is Message
+                        ? store.senderDisplayName(message as Message)
+                        : store.userDisplayName(message.senderId),
                       style: TextStyle(
                         fontSize: 18,
                         height: (22 / 18),
@@ -1496,7 +1537,7 @@ class MessageWithPossibleSender extends StatelessWidget {
       behavior: HitTestBehavior.translucent,
       onLongPress: () => showMessageActionSheet(context: context, message: message),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.only(top: 4),
         child: Column(children: [
           if (item.showSender)
             _SenderRow(message: message, showTimestamp: true),
@@ -1514,14 +1555,18 @@ class MessageWithPossibleSender extends StatelessWidget {
                   if (editMessageErrorStatus != null)
                     _EditMessageStatusRow(messageId: message.id, status: editMessageErrorStatus)
                   else if (editStateText != null)
-                    Text(editStateText,
-                      textAlign: TextAlign.end,
-                      style: TextStyle(
-                        color: designVariables.labelEdited,
-                        fontSize: 12,
-                        height: (12 / 12),
-                        letterSpacing: proportionalLetterSpacing(
-                          context, 0.05, baseFontSize: 12))),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(editStateText,
+                        textAlign: TextAlign.end,
+                        style: TextStyle(
+                          color: designVariables.labelEdited,
+                          fontSize: 12,
+                          height: (12 / 12),
+                          letterSpacing: proportionalLetterSpacing(context,
+                            0.05, baseFontSize: 12))))
+                  else
+                    Padding(padding: const EdgeInsets.only(bottom: 4))
                 ])),
               SizedBox(width: 16,
                 child: star),
@@ -1552,30 +1597,34 @@ class _EditMessageStatusRow extends StatelessWidget {
 
     return switch (status) {
       // TODO parse markdown and show new content as local echo?
-      false => Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 1.5,
-        children: [
-          Text(
+      false => Padding(
+        padding: const EdgeInsets.only(bottom: 2),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: 1.5,
+          children: [
+            Text(
+              style: baseTextStyle
+                .copyWith(color: designVariables.btnLabelAttLowIntInfo),
+              textAlign: TextAlign.end,
+              zulipLocalizations.savingMessageEditLabel),
+            // TODO instead place within bottom outer padding:
+            //   https://github.com/zulip/zulip-flutter/pull/1498#discussion_r2087576108
+            LinearProgressIndicator(
+              minHeight: 2,
+              color: designVariables.foreground.withValues(alpha: 0.5),
+              backgroundColor: designVariables.foreground.withValues(alpha: 0.2),
+            ),
+          ])),
+      true => Padding(
+        padding: const EdgeInsets.only(bottom: 4),
+        child: _RestoreEditMessageGestureDetector(
+          messageId: messageId,
+          child: Text(
             style: baseTextStyle
-              .copyWith(color: designVariables.btnLabelAttLowIntInfo),
+              .copyWith(color: designVariables.btnLabelAttLowIntDanger),
             textAlign: TextAlign.end,
-            zulipLocalizations.savingMessageEditLabel),
-          // TODO instead place within bottom outer padding:
-          //   https://github.com/zulip/zulip-flutter/pull/1498#discussion_r2087576108
-          LinearProgressIndicator(
-            minHeight: 2,
-            color: designVariables.foreground.withValues(alpha: 0.5),
-            backgroundColor: designVariables.foreground.withValues(alpha: 0.2),
-          ),
-        ]),
-      true => _RestoreEditMessageGestureDetector(
-        messageId: messageId,
-        child: Text(
-          style: baseTextStyle
-            .copyWith(color: designVariables.btnLabelAttLowIntDanger),
-          textAlign: TextAlign.end,
-          zulipLocalizations.savingMessageEditFailedLabel)),
+            zulipLocalizations.savingMessageEditFailedLabel))),
     };
   }
 }
@@ -1595,6 +1644,7 @@ class _RestoreEditMessageGestureDetector extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: () {
         final composeBoxState = MessageListPage.ancestorOf(context).composeBoxState;
+        // TODO(#1518) allow restore-edit-message from any message-list page
         if (composeBoxState == null) return;
         composeBoxState.startEditInteraction(messageId);
       },
