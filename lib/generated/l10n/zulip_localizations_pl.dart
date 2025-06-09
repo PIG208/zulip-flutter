@@ -35,7 +35,7 @@ class ZulipLocalizationsPl extends ZulipLocalizations {
   }
 
   @override
-  String get tryAnotherAccountButton => 'Sprawdź inne konto';
+  String get tryAnotherAccountButton => 'Użyj innego konta';
 
   @override
   String get chooseAccountPageLogOutButton => 'Wyloguj';
@@ -45,7 +45,7 @@ class ZulipLocalizationsPl extends ZulipLocalizations {
 
   @override
   String get logOutConfirmationDialogMessage =>
-      'Aby użyć tego konta należy wypełnić URL organizacji oraz dane konta.';
+      'Aby użyć tego konta należy wskazać URL organizacji oraz dane konta.';
 
   @override
   String get logOutConfirmationDialogConfirmButton => 'Wyloguj';
@@ -77,6 +77,9 @@ class ZulipLocalizationsPl extends ZulipLocalizations {
   @override
   String get actionSheetOptionMarkChannelAsRead =>
       'Oznacz kanał jako przeczytany';
+
+  @override
+  String get actionSheetOptionListOfTopics => 'Lista wątków';
 
   @override
   String get actionSheetOptionMuteTopic => 'Wycisz wątek';
@@ -114,6 +117,10 @@ class ZulipLocalizationsPl extends ZulipLocalizations {
   @override
   String get actionSheetOptionMarkAsUnread =>
       'Odtąd oznacz jako nieprzeczytane';
+
+  @override
+  String get actionSheetOptionHideMutedMessage =>
+      'Ukryj ponownie wyciszone wiadomości';
 
   @override
   String get actionSheetOptionShare => 'Udostępnij';
@@ -322,8 +329,12 @@ class ZulipLocalizationsPl extends ZulipLocalizations {
       'Czy chcesz przerwać szykowanie wpisu?';
 
   @override
-  String get discardDraftConfirmationDialogMessage =>
+  String get discardDraftForEditConfirmationDialogMessage =>
       'Miej na uwadze, że przechodząc do zmiany wiadomości wyczyścisz okno nowej wiadomości.';
+
+  @override
+  String get discardDraftForMessageNotSentConfirmationDialogMessage =>
+      'Odzyskanie wiadomości, która nie została wysłana, skutkuje wyczyszczeniem zawartości pola dodania wpisu.';
 
   @override
   String get discardDraftConfirmationDialogConfirmButton => 'Odrzuć';
@@ -339,6 +350,28 @@ class ZulipLocalizationsPl extends ZulipLocalizations {
 
   @override
   String get composeBoxGenericContentHint => 'Wpisz wiadomość';
+
+  @override
+  String get newDmSheetBackButtonLabel => 'Wróć';
+
+  @override
+  String get newDmSheetNextButtonLabel => 'Dalej';
+
+  @override
+  String get newDmSheetScreenTitle => 'Nowa DM';
+
+  @override
+  String get newDmFabButtonLabel => 'Nowa DM';
+
+  @override
+  String get newDmSheetSearchHintEmpty =>
+      'Dodaj jednego lub więcej użytkowników';
+
+  @override
+  String get newDmSheetSearchHintSomeSelected => 'Dodaj kolejnego użytkownika…';
+
+  @override
+  String get newDmSheetNoUsersFound => 'Nie odnaleziono użytkowników';
 
   @override
   String composeBoxDmContentHint(String user) {
@@ -639,6 +672,9 @@ class ZulipLocalizationsPl extends ZulipLocalizations {
   String get mainMenuMyProfile => 'Mój profil';
 
   @override
+  String get topicsButtonLabel => 'WĄTKI';
+
+  @override
   String get channelFeedButtonTooltip => 'Strumień kanału';
 
   @override
@@ -714,6 +750,9 @@ class ZulipLocalizationsPl extends ZulipLocalizations {
   String get messageIsMovedLabel => 'PRZENIESIONO';
 
   @override
+  String get messageNotSentLabel => 'NIE WYSŁANO WIADOMOŚCI';
+
+  @override
   String pollVoterNames(String voterNames) {
     return '($voterNames)';
   }
@@ -751,8 +790,8 @@ class ZulipLocalizationsPl extends ZulipLocalizations {
       'Otwieranie powiadomienia bez powodzenia';
 
   @override
-  String get errorNotificationOpenAccountMissing =>
-      'Konto związane z tym powiadomieniem już nie istnieje.';
+  String get errorNotificationOpenAccountNotFound =>
+      'Nie odnaleziono konta powiązanego z tym powiadomieniem.';
 
   @override
   String get errorReactionAddingFailedTitle => 'Dodanie reakcji bez powodzenia';
@@ -769,6 +808,15 @@ class ZulipLocalizationsPl extends ZulipLocalizations {
 
   @override
   String get noEarlierMessages => 'Brak historii';
+
+  @override
+  String get mutedSender => 'Wyciszony nadawca';
+
+  @override
+  String get revealButtonLabel => 'Odsłoń wiadomość od wyciszonego użytkownika';
+
+  @override
+  String get mutedUser => 'Wyciszony użytkownik';
 
   @override
   String get scrollToBottomTooltip => 'Przewiń do dołu';

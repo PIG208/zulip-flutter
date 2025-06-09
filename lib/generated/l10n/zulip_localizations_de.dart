@@ -9,10 +9,10 @@ class ZulipLocalizationsDe extends ZulipLocalizations {
   ZulipLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
-  String get aboutPageTitle => 'About Zulip';
+  String get aboutPageTitle => 'Über Zulip';
 
   @override
-  String get aboutPageAppVersion => 'App version';
+  String get aboutPageAppVersion => 'App-Version';
 
   @override
   String get aboutPageOpenSourceLicenses => 'Open-source licenses';
@@ -21,13 +21,13 @@ class ZulipLocalizationsDe extends ZulipLocalizations {
   String get aboutPageTapToView => 'Tap to view';
 
   @override
-  String get chooseAccountPageTitle => 'Choose account';
+  String get chooseAccountPageTitle => 'Konto auswählen';
 
   @override
-  String get settingsPageTitle => 'Settings';
+  String get settingsPageTitle => 'Einstellungen';
 
   @override
-  String get switchAccountButton => 'Switch account';
+  String get switchAccountButton => 'Konto wechseln';
 
   @override
   String tryAnotherAccountMessage(Object url) {
@@ -77,6 +77,9 @@ class ZulipLocalizationsDe extends ZulipLocalizations {
   String get actionSheetOptionMarkChannelAsRead => 'Mark channel as read';
 
   @override
+  String get actionSheetOptionListOfTopics => 'List of topics';
+
+  @override
   String get actionSheetOptionMuteTopic => 'Mute topic';
 
   @override
@@ -109,6 +112,9 @@ class ZulipLocalizationsDe extends ZulipLocalizations {
 
   @override
   String get actionSheetOptionMarkAsUnread => 'Mark as unread from here';
+
+  @override
+  String get actionSheetOptionHideMutedMessage => 'Hide muted message again';
 
   @override
   String get actionSheetOptionShare => 'Share';
@@ -315,8 +321,12 @@ class ZulipLocalizationsDe extends ZulipLocalizations {
       'Discard the message you’re writing?';
 
   @override
-  String get discardDraftConfirmationDialogMessage =>
+  String get discardDraftForEditConfirmationDialogMessage =>
       'When you edit a message, the content that was previously in the compose box is discarded.';
+
+  @override
+  String get discardDraftForMessageNotSentConfirmationDialogMessage =>
+      'When you restore a message not sent, the content that was previously in the compose box is discarded.';
 
   @override
   String get discardDraftConfirmationDialogConfirmButton => 'Discard';
@@ -332,6 +342,27 @@ class ZulipLocalizationsDe extends ZulipLocalizations {
 
   @override
   String get composeBoxGenericContentHint => 'Type a message';
+
+  @override
+  String get newDmSheetBackButtonLabel => 'Back';
+
+  @override
+  String get newDmSheetNextButtonLabel => 'Next';
+
+  @override
+  String get newDmSheetScreenTitle => 'New DM';
+
+  @override
+  String get newDmFabButtonLabel => 'New DM';
+
+  @override
+  String get newDmSheetSearchHintEmpty => 'Add one or more users';
+
+  @override
+  String get newDmSheetSearchHintSomeSelected => 'Add another user…';
+
+  @override
+  String get newDmSheetNoUsersFound => 'No users found';
 
   @override
   String composeBoxDmContentHint(String user) {
@@ -630,6 +661,9 @@ class ZulipLocalizationsDe extends ZulipLocalizations {
   String get mainMenuMyProfile => 'My profile';
 
   @override
+  String get topicsButtonLabel => 'TOPICS';
+
+  @override
   String get channelFeedButtonTooltip => 'Channel feed';
 
   @override
@@ -705,6 +739,9 @@ class ZulipLocalizationsDe extends ZulipLocalizations {
   String get messageIsMovedLabel => 'MOVED';
 
   @override
+  String get messageNotSentLabel => 'MESSAGE NOT SENT';
+
+  @override
   String pollVoterNames(String voterNames) {
     return '($voterNames)';
   }
@@ -741,8 +778,8 @@ class ZulipLocalizationsDe extends ZulipLocalizations {
   String get errorNotificationOpenTitle => 'Failed to open notification';
 
   @override
-  String get errorNotificationOpenAccountMissing =>
-      'The account associated with this notification no longer exists.';
+  String get errorNotificationOpenAccountNotFound =>
+      'The account associated with this notification could not be found.';
 
   @override
   String get errorReactionAddingFailedTitle => 'Adding reaction failed';
@@ -758,6 +795,15 @@ class ZulipLocalizationsDe extends ZulipLocalizations {
 
   @override
   String get noEarlierMessages => 'No earlier messages';
+
+  @override
+  String get mutedSender => 'Muted sender';
+
+  @override
+  String get revealButtonLabel => 'Reveal message for muted sender';
+
+  @override
+  String get mutedUser => 'Muted user';
 
   @override
   String get scrollToBottomTooltip => 'Scroll to bottom';
