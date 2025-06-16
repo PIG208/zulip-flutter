@@ -12,6 +12,7 @@ import 'package:zulip/api/route/realm.dart';
 import 'package:zulip/api/route/channels.dart';
 import 'package:zulip/model/binding.dart';
 import 'package:zulip/model/database.dart';
+import 'package:zulip/model/message.dart';
 import 'package:zulip/model/narrow.dart';
 import 'package:zulip/model/settings.dart';
 import 'package:zulip/model/store.dart';
@@ -588,20 +589,81 @@ DmMessage dmMessage({
   }) as Map<String, dynamic>);
 }
 
-/// A GetMessagesResult the server might return on an `anchor=newest` request.
+/// A GetMessagesResult the server might return for
+/// a request that sent the given [anchor].
+///
+/// The request's anchor controls the response's [GetMessagesResult.anchor],
+/// affects the default for [foundAnchor],
+/// and in some cases forces the value of [foundOldest] or [foundNewest].
+GetMessagesResult getMessagesResult({
+  required Anchor anchor,
+  bool? foundAnchor,
+  bool? foundOldest,
+  bool? foundNewest,
+  bool historyLimited = false,
+  required List<Message> messages,
+}) {
+  final resultAnchor = switch (anchor) {
+    AnchorCode.oldest => 0,
+    NumericAnchor(:final messageId) => messageId,
+    AnchorCode.firstUnread =>
+      throw ArgumentError("firstUnread not accepted in this helper; try NumericAnchor"),
+    AnchorCode.newest => 10_000_000_000_000_000, // that's 16 zeros
+  };
+
+  switch (anchor) {
+    case AnchorCode.oldest || AnchorCode.newest:
+      assert(foundAnchor == null);
+      foundAnchor = false;
+    case AnchorCode.firstUnread || NumericAnchor():
+      foundAnchor ??= true;
+  }
+
+  if (anchor == AnchorCode.oldest) {
+    assert(foundOldest == null);
+    foundOldest = true;
+  } else if (anchor == AnchorCode.newest) {
+    assert(foundNewest == null);
+    foundNewest = true;
+  }
+  if (foundOldest == null || foundNewest == null) throw ArgumentError();
+
+  return GetMessagesResult(
+    anchor: resultAnchor,
+    foundAnchor: foundAnchor,
+    foundOldest: foundOldest,
+    foundNewest: foundNewest,
+    historyLimited: historyLimited,
+    messages: messages,
+  );
+}
+
+/// A GetMessagesResult the server might return on an `anchor=newest` request,
+/// or `anchor=first_unread` when there are no unreads.
 GetMessagesResult newestGetMessagesResult({
   required bool foundOldest,
   bool historyLimited = false,
   required List<Message> messages,
 }) {
-  return GetMessagesResult(
-    // These anchor, foundAnchor, and foundNewest values are what the server
-    // appears to always return when the request had `anchor=newest`.
-    anchor: 10000000000000000, // that's 16 zeros
-    foundAnchor: false,
-    foundNewest: true,
+  return getMessagesResult(anchor: AnchorCode.newest, foundOldest: foundOldest,
+    historyLimited: historyLimited, messages: messages);
+}
 
+/// A GetMessagesResult the server might return on an initial request
+/// when the anchor is in the middle of history (e.g., a /near/ link).
+GetMessagesResult nearGetMessagesResult({
+  required int anchor,
+  bool foundAnchor = true,
+  required bool foundOldest,
+  required bool foundNewest,
+  bool historyLimited = false,
+  required List<Message> messages,
+}) {
+  return GetMessagesResult(
+    anchor: anchor,
+    foundAnchor: foundAnchor,
     foundOldest: foundOldest,
+    foundNewest: foundNewest,
     historyLimited: historyLimited,
     messages: messages,
   );
@@ -623,6 +685,63 @@ GetMessagesResult olderGetMessagesResult({
     historyLimited: historyLimited,
     messages: messages,
   );
+}
+
+/// A GetMessagesResult the server might return when we request newer messages.
+GetMessagesResult newerGetMessagesResult({
+  required int anchor,
+  bool foundAnchor = false, // the value if the server understood includeAnchor false
+  required bool foundNewest,
+  bool historyLimited = false,
+  required List<Message> messages,
+}) {
+  return GetMessagesResult(
+    anchor: anchor,
+    foundAnchor: foundAnchor,
+    foundOldest: false,
+    foundNewest: foundNewest,
+    historyLimited: historyLimited,
+    messages: messages,
+  );
+}
+
+int _nextLocalMessageId = 1;
+
+StreamOutboxMessage streamOutboxMessage({
+  int? localMessageId,
+  int? selfUserId,
+  int? timestamp,
+  ZulipStream? stream,
+  String? topic,
+  String? content,
+}) {
+  final effectiveStream = stream ?? _stream(streamId: defaultStreamMessageStreamId);
+  return OutboxMessage.fromConversation(
+    StreamConversation(
+      effectiveStream.streamId, TopicName(topic ?? 'topic'),
+      displayRecipient: null,
+    ),
+    localMessageId: localMessageId ?? _nextLocalMessageId++,
+    selfUserId: selfUserId ?? selfUser.userId,
+    timestamp: timestamp ?? utcTimestamp(),
+    contentMarkdown: content ?? 'content') as StreamOutboxMessage;
+}
+
+DmOutboxMessage dmOutboxMessage({
+  int? localMessageId,
+  required User from,
+  required List<User> to,
+  int? timestamp,
+  String? content,
+}) {
+  final allRecipientIds =
+    [from, ...to].map((user) => user.userId).toList()..sort();
+  return OutboxMessage.fromConversation(
+    DmConversation(allRecipientIds: allRecipientIds),
+    localMessageId: localMessageId ?? _nextLocalMessageId++,
+    selfUserId: from.userId,
+    timestamp: timestamp ?? utcTimestamp(),
+    contentMarkdown: content ?? 'content') as DmOutboxMessage;
 }
 
 PollWidgetData pollWidgetData({
@@ -695,8 +814,13 @@ UserTopicEvent userTopicEvent(
   );
 }
 
-MessageEvent messageEvent(Message message) =>
-  MessageEvent(id: 0, message: message, localMessageId: null);
+MutedUsersEvent mutedUsersEvent(List<int> userIds) {
+  return MutedUsersEvent(id: 1,
+    mutedUsers: userIds.map((id) => MutedUserItem(id: id)).toList());
+}
+
+MessageEvent messageEvent(Message message, {int? localMessageId}) =>
+  MessageEvent(id: 0, message: message, localMessageId: localMessageId?.toString());
 
 DeleteMessageEvent deleteMessageEvent(List<StreamMessage> messages) {
   assert(messages.isNotEmpty);
@@ -979,6 +1103,7 @@ InitialSnapshot initialSnapshot({
   int? serverTypingStartedExpiryPeriodMilliseconds,
   int? serverTypingStoppedWaitPeriodMilliseconds,
   int? serverTypingStartedWaitPeriodMilliseconds,
+  List<MutedUserItem>? mutedUsers,
   Map<String, RealmEmojiItem>? realmEmoji,
   List<RecentDmConversation>? recentPrivateConversations,
   List<SavedSnippet>? savedSnippets,
@@ -1015,6 +1140,7 @@ InitialSnapshot initialSnapshot({
       serverTypingStoppedWaitPeriodMilliseconds ?? 5000,
     serverTypingStartedWaitPeriodMilliseconds:
       serverTypingStartedWaitPeriodMilliseconds ?? 10000,
+    mutedUsers: mutedUsers ?? [],
     realmEmoji: realmEmoji ?? {},
     recentPrivateConversations: recentPrivateConversations ?? [],
     savedSnippets: savedSnippets ?? [],

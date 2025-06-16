@@ -3,6 +3,222 @@
 ## Unreleased
 
 
+## 30.0.257 (2025-06-15)
+
+This release branch includes some experimental changes
+not yet merged to the main branch.
+
+
+### Highlights for users (vs legacy app)
+
+Welcome to the new Zulip mobile app!  You'll find
+a familiar experience in a faster, sleeker package.
+
+For more information or to send us feedback,
+see the announcement blog post:
+https://blog.zulip.com/flutter-mobile-app-launch
+
+
+### Highlights for users (vs previous alpha, v30.0.256)
+
+* Translation updates, including near-complete translations
+  for German (de) and Italian (it).
+
+
+### Highlights for developers
+
+* User-visible changes not described above:
+  * Updated link in welcome dialog. (part of #1580)
+  * Skip ackedPushToken in migrated account data.
+    (part of #1070)
+
+* Resolved in main: #1537, #1582
+
+* Resolved in the experimental branch:
+  * more toward #46 via PR #1452
+  * further toward #46 via PR #1559
+  * #296 via PR #1561
+  * #1070 via PR #1588
+  * #1580 via PR #1590
+
+
+## 30.0.256 (2025-06-15)
+
+With this release, this new app takes on the identity
+of the main Zulip app!
+
+This was an alpha-only release.
+
+This release branch includes some experimental changes
+not yet merged to the main branch.
+
+
+### Highlights for users (vs legacy app)
+
+Welcome to the new Zulip mobile app!  You'll find
+a familiar experience in a faster, sleeker package.
+
+For more information or to send us feedback,
+see the announcement blog post:
+https://blog.zulip.com/flutter-mobile-app-launch
+
+
+### Highlights for users (vs last beta, v0.0.33)
+
+* This app now uses the app ID of the main Zulip mobile app,
+  formerly used by the legacy app.  It therefore installs over
+  any previous install of the legacy app, rather than of the
+  Flutter beta app. (#1582)
+* The app's icon and name no longer say "beta". (#1537)
+* Migrate accounts and settings from the legacy app's data. (#1070)
+* Show welcome dialog on upgrading from legacy app. (#1580)
+
+
+### Highlights for developers
+
+* Resolved in the experimental branch:
+  * more toward #46 via PR #1452
+  * further toward #46 via PR #1559
+  * #296 via PR #1561
+  * #1537 via PR #1577
+  * #1582 via PR #1586
+  * #1070 via PR #1588
+  * #1580 via PR #1590
+
+
+## 0.0.33 (2025-06-13)
+
+This is a preview beta, including some experimental changes
+not yet merged to the main branch.
+
+
+### Highlights for users
+
+This app is nearing ready to replace the legacy Zulip mobile app,
+planned for next week.
+
+In addition to all the features in the last beta:
+* Messages are automatically marked read as you scroll through
+  a conversation. (#81)
+* More translations.
+
+
+### Highlights for developers
+
+* User-visible changes not described above:
+  * "Quote message" button label rather than "Quote and reply"
+    (PR #1575)
+
+* Resolved in main: PR #1575, #81
+
+* Resolved in the experimental branch:
+  * more toward #46 via PR #1452
+  * further toward #46 via PR #1559
+  * #296 via PR #1561
+
+
+## 0.0.32 (2025-06-12)
+
+This is a preview beta, including some experimental changes
+not yet merged to the main branch.
+
+
+### Highlights for users
+
+This app is nearing ready to replace the legacy Zulip mobile app,
+planned for next week.
+
+In addition to all the features in the last beta:
+* The keyboard opens immediately when you start a
+  new conversation. (#1543)
+* Translation updates, including new near-complete translations
+  for Slovenian (sl) and Chinese (Simplified, China) (zh_Hans_CN).
+* Several small improvements to the newest features:
+  muted users (#296), message links going directly to message (#82).
+
+
+### Highlights for developers
+
+* User-visible changes not described above:
+  * upgraded Flutter and deps (PR #1568)
+  * suppress long-press on muted-sender message,
+    and hide muted users in new-DM list (part of #296)
+  * reject internal links with malformed /near/ operands
+    (part of #82)
+
+* Resolved in main: #276 (though external to the tree),
+  #1543, #82, #80, #1147, #1441
+
+* Resolved in the experimental branch:
+  * more toward #46 via PR #1452
+  * further toward #46 via PR #1559
+  * #296 via PR #1561
+
+
+## 0.0.31 (2025-06-11)
+
+This is a preview beta, including some experimental changes
+not yet merged to the main branch.
+
+
+### Highlights for users
+
+This app is nearing ready to replace the legacy Zulip mobile app,
+planned for next week.
+
+In addition to all the features in the last beta:
+* Conversations open at your first unread message. (#80)
+* TeX support now enabled by default, and covers a larger
+  set of expressions.  More to come later. (#46)
+* Numerous small improvements to the newest features:
+  muted users (#296), start a DM thread (#127),
+  recover failed send (#1441), open mid-history (#82).
+
+
+### Highlights for developers
+
+* Resolved in main: #1540, #385, #386, #127
+
+* Resolved in the experimental branch:
+  * #82 via PR #1566
+  * #80 via PR #1517
+  * #1441 via PR #1453
+  * more toward #46 via PR #1452
+  * further toward #46 via PR #1559
+  * #1147 via PR #1379
+  * #296 via PR #1561
+
+
+## 0.0.30 (2025-05-28)
+
+This is a preview beta, including some experimental changes
+not yet merged to the main branch.
+
+
+### Highlights for users
+
+We're nearing ready to have this new app replace the legacy
+Zulip mobile app, a few weeks from now.
+
+In addition to all the features in the last beta:
+* Muted users are now muted. (#296)
+* Improved logic to recover from failed send. (#1441)
+* Numerous small improvements to the newest features.
+
+
+### Highlights for developers
+
+* Resolved in main: #83, #1495, #1456, #1158
+
+* Resolved in the experimental branch:
+  * #82, and #80 behind a flag, via PR #1517
+  * #1441 via PR #1453
+  * #127 via PR #1322
+  * more toward #46 via PR #1452
+  * #1147 via PR #1379
+  * #296 via PR #1429
+
+
 ## 0.0.29 (2025-05-19)
 
 This is a preview beta, including some experimental changes
